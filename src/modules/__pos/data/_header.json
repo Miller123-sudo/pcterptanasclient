@@ -1,0 +1,41 @@
+{
+  "header": {
+    "name": "Point of Sale",
+    "id": "pointofsale",
+    "baseRoute": "pos",
+    "navbar_left": {
+      "nav_link": [
+        {
+          "nav_link_name": "Orders",
+          "nav_link_navigation": "orders"
+        }
+      ],
+      "nav_dropdowns": [
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Reports",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Sales Report",
+                "item_navigation": "salesreport"
+              },
+              {
+                "item_name": "Customer Report",
+                "item_navigation": "customersreport"
+              },
+              {
+                "item_name": "Employees Report",
+                "item_navigation": "employeesreport"
+              },
+              {
+                "item_name": "Inventory",
+                "item_navigation": "inventory"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "navbar_right": null
+  }
+}

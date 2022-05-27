@@ -1,0 +1,116 @@
+{
+  "header": {
+    "name": "Purchase",
+    "id": "purchase",
+    "baseRoute": "purchase",
+    "navbar_left": {
+      "nav_dropdowns": [
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Orders",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Purchase Orders",
+                "item_navigation": "purchases"
+              },
+              {
+                "item_name": "Received Products",
+                "item_navigation": "receivedproducts"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Vendors",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Vendors",
+                "item_navigation": "vendors"
+              },
+              {
+                "item_name": "Import Vendors",
+                "item_navigation": "importvendors"
+              },
+              {
+                "item_name": "Vendor Bills",
+                "item_navigation": "bills"
+              },
+              {
+                "item_name": "Vendor Bill Payments",
+                "item_navigation": "billpayment"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Products",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Products",
+                "item_navigation": "product"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Reportings",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Purchase Analysis",
+                "item_navigation": "purchasereportsdashboard"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Item Category",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Product Master",
+                "item_navigation": "productmaster"
+              },
+              {
+                "item_name": "Group Master",
+                "item_navigation": "groupmaster"
+              },
+              {
+                "item_name": "Brand",
+                "item_navigation": "brand"
+              },
+              {
+                "item_name": "Category1",
+                "item_navigation": "category1"
+              },
+              {
+                "item_name": "Category2",
+                "item_navigation": "category2"
+              },
+              {
+                "item_name": "Size",
+                "item_navigation": "size"
+              },
+              {
+                "item_name": "Size List",
+                "item_navigation": "sizelist"
+              },
+              {
+                "item_name": "Price Chart Upload",
+                "item_navigation": "pricechartupload"
+              },
+              {
+                "item_name": "Price Chart List",
+                "item_navigation": "pricechartlist"
+              }
+            ]
+          }
+        }
+      ],
+      "nav_link": []
+    },
+    "navbar_right": null
+  }
+}

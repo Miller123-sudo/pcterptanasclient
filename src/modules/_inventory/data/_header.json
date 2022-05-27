@@ -1,0 +1,46 @@
+{
+    "header": {
+        "name": "Inventory",
+        "id": "inventory",
+        "baseRoute": "inventory",
+        "navbar_left": {
+            "nav_dropdowns": [
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Operations",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Inventory Adjustment",
+                                "item_navigation": "inventoryadjustment"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Products",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Products",
+                                "item_navigation": "product"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Reportings",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Inventory Stocks Report",
+                                "item_navigation": "inventorystocksreport"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "nav_link": []
+        },
+        "navbar_right": null
+    }
+}

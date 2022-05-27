@@ -1,0 +1,63 @@
+.pct-app-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: 0.2s;
+
+}
+
+.pct-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.pct-app-content-container {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    background-color: white;
+
+
+}
+
+
+.pct-app-content {
+    flex: 1;
+    background-color: transparent;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pct-app-content-header {
+    display: flex;
+    flex-direction: column;
+    padding: 0 5px 5px 0px;
+    color: black;
+    border-bottom: 2px solid black;
+
+}
+
+.pct-app-content-body {
+    width: 100%;
+    overflow-y: auto;
+    height: 100vh;
+    padding-top: 5px;
+}
+
+.pct-app-content-line {
+    overflow-y: hidden;
+    /* min-height: 20rem; */
+    height: 100%;
+}
+
+.pct-app-content-section {
+    width: 100%;
+    min-height: 20rem;
+
+}

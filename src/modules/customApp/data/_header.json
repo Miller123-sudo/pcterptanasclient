@@ -1,0 +1,16 @@
+{
+    "header": {
+        "name": "Custom Apps",
+        "id": "customapps",
+        "baseRoute": "customapps",
+        "navbar_left": {
+            "nav_link": [
+                {
+                    "nav_link_name": "Custom App Types",
+                    "nav_link_navigation": "customapptype/list"
+                }
+            ]
+        },
+        "navbar_right": null
+    }
+}

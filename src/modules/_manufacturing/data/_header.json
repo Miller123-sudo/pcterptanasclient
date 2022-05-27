@@ -1,0 +1,50 @@
+{
+    "header": {
+        "name": "Manufacturing",
+        "id": "manufacturing",
+        "baseRoute": "manufacturing",
+        "navbar_left": {
+            "nav_dropdowns": [
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Orders",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Job Orders",
+                                "item_navigation": "joborders"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Products",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Products",
+                                "item_navigation": "product"
+                            },
+                            {
+                                "item_name": "Bills of Materials",
+                                "item_navigation": "boms"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "nav_dropdown": {
+                        "nav_dropdown_name": "Settings",
+                        "nav_dropdown_items": [
+                            {
+                                "item_name": "Work Centers",
+                                "item_navigation": "workcenters"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "nav_link": []
+        },
+        "navbar_right": null
+    }
+}

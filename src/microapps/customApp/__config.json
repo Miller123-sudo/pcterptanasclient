@@ -1,0 +1,15 @@
+{
+    "index": {
+        "documentAdd": "add",
+        "documentEdit": "edit",
+        "documentList": "list"
+    },
+    "queryPath": {
+        "baseUrl": "customDocumentType/customDocument",
+        "add": "customapps/customapp/add",
+        "edit": "customapp/edit"
+    },
+    "schemaId": {
+        "id": "PurchaseOrder"
+    }
+}

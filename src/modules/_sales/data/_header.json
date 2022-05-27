@@ -1,0 +1,81 @@
+{
+  "header": {
+    "name": "Sales",
+    "id": "sales",
+    "baseRoute": "sales",
+    "navbar_left": {
+      "nav_dropdowns": [
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Orders",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Sales Orders",
+                "item_navigation": "salesorders"
+              },
+              {
+                "item_name": "Cash Sales",
+                "item_navigation": "purchases"
+              },
+              {
+                "item_name": "Delivered Products",
+                "item_navigation": "productdeliveries"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Customers",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Customers",
+                "item_navigation": "customers"
+              },
+              {
+                "item_name": "Import Customers",
+                "item_navigation": "importcustomers"
+              },
+              {
+                "item_name": "Customer Invoices",
+                "item_navigation": "invoices"
+              },
+              {
+                "item_name": "Customer Invoice Payments",
+                "item_navigation": "invoicepayment"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Products",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Products",
+                "item_navigation": "product"
+              },
+              {
+                "item_name": "Import Product",
+                "item_navigation": "importproduct"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Reportings",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Sales Analysis",
+                "item_navigation": "salesanalysis"
+              }
+            ]
+          }
+        }
+      ],
+      "nav_link": []
+    },
+    "navbar_right": null
+  }
+}

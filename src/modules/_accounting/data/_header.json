@@ -1,0 +1,80 @@
+{
+  "header": {
+    "name": "Accounting",
+    "id": "accounting",
+    "baseRoute": "accounting",
+    "navbar_left": {
+      "nav_dropdowns": [
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Customs",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Invoices",
+                "item_navigation": "customerinvoices"
+              },
+              {
+                "item_name": "Payments",
+                "item_navigation": "customerpayments"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Vendors",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Bills",
+                "item_navigation": "bills"
+              },
+              {
+                "item_name": "Bill Payments",
+                "item_navigation": "billpayment"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Accounting",
+            "nav_dropdown_items": [
+              {
+                "item_name": "General Ledger",
+                "item_navigation": "generalledgers"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Reportings",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Inventory Analysis",
+                "item_navigation": "inventoryanalysis"
+              },
+              {
+                "item_name": "Standard Inventory Reports",
+                "item_navigation": "standardinventoryreports"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Settings",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Charts of Account",
+                "item_navigation": "accounts"
+              }
+            ]
+          }
+        }
+      ],
+      "nav_link": []
+    },
+    "navbar_right": null
+  }
+}

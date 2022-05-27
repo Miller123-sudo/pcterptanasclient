@@ -1,0 +1,41 @@
+{
+    "header": {
+        "name": "Custom Apps",
+        "id": "employee",
+        "baseRoute": "customapps",
+        "navbar_left": {
+            "nav_link": [
+                {
+                    "nav_link_name": "Custom Document Types",
+                    "nav_link_navigation": "customdocumenttype"
+                }
+            ],
+            "nav_dropdown": {
+                "nav_dropdown_name": "Settings",
+                "nav_dropdown_items": [
+                    {
+                        "item_name": "Roles",
+                        "item_navigation": "roles"
+                    },
+                    {
+                        "item_name": "Job Position",
+                        "item_navigation": "jobpositions"
+                    },
+                    {
+                        "item_name": "Locations",
+                        "item_navigation": "locations"
+                    },
+                    {
+                        "item_name": "Departments",
+                        "item_navigation": "departments"
+                    },
+                    {
+                        "item_name": "Custom Document Type",
+                        "item_navigation": "customdocumenttypes"
+                    }
+                ]
+            }
+        },
+        "navbar_right": null
+    }
+}

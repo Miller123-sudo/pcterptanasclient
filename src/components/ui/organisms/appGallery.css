@@ -1,0 +1,64 @@
+.appGallery {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+}
+
+.appBoxes {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.appBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 20px;
+    padding: 5px 10px;
+    width: 100px;
+    height: 100px;
+    border-radius: 0.5rem;
+    transition: 0.1s all ease-in-out;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+@media screen and (max-width: 360px) {
+    .appBox {
+        width: 100px;
+        height: 100px;
+    }
+
+    .appBoxName {
+        font-weight: 600;
+        font-size: 13px;
+    }
+}
+
+.appBox:hover {
+    cursor: pointer;
+    transform: scale(1.02);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+}
+
+.appBoxName {
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+}
+
+.appBoxLogo img {
+    width: 70px;
+}
+
+.appBoxLogo {
+    display: flex;
+    justify-content: center;
+    width: 90px;
+    height: 90px;
+}

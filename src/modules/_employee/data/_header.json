@@ -1,0 +1,51 @@
+{
+  "header": {
+    "name": "Employee",
+    "id": "employee",
+    "baseRoute": "employees",
+    "navbar_left": {
+      "nav_link": [
+        {
+          "nav_link_name": "Employees",
+          "nav_link_navigation": "employees"
+        }
+      ],
+      "nav_password": [
+        {
+          "nav_link_name": "Reset Password",
+          "nav_link_navigation": "forgotpassword"
+        }
+      ],
+      "nav_dropdown": {
+        "nav_dropdown_name": "Settings",
+        "nav_dropdown_items": [
+          {
+            "item_name": "Roles",
+            "item_navigation": "roles"
+          },
+          {
+            "item_name": "Job Position",
+            "item_navigation": "jobpositions"
+          },
+          {
+            "item_name": "Locations",
+            "item_navigation": "locations"
+          },
+          {
+            "item_name": "Departments",
+            "item_navigation": "departments"
+          },
+          {
+            "item_name": "Company",
+            "item_navigation": "company"
+          },
+          {
+            "item_name": "Import Employees",
+            "item_navigation": "importemployees"
+          }
+        ]
+      }
+    },
+    "navbar_right": null
+  }
+}
