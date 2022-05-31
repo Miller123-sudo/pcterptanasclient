@@ -1,7 +1,8 @@
 import { React, useState, useEffect } from 'react'
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Breadcrumb, Form, Card, FormSelect } from 'react-bootstrap'
-import { useForm } from 'react-hook-form'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Breadcrumb, Form, Card, FormSelect, OverlayTrigger, Popover } from 'react-bootstrap'
+import { useForm, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { Typeahead } from 'react-bootstrap-typeahead';
 import { BsArrowLeft, BsArrowRight, BsPauseBtnFill, BsFillCreditCardFill, BsFillBarChartFill, BsSaveFill } from 'react-icons/bs';
 import ApiService from '../../helpers/ApiServices'
 import { errorMessage } from '../../helpers/Utils'
@@ -23,8 +24,9 @@ export default function Product() {
     const [state, setState] = useState(null)
     const [colleapse, setcolleapse] = useState(false);
     const [productMasterList, setProductMasterList] = useState([])
-    const [accountObj, setaccountObj] = useState()
     const [rangeList, setrangeList] = useState([])
+    const [accounts, setaccounts] = useState([])
+    const [accountObj, setaccountObj] = useState()
     const [colleapseRange, setcolleapseRange] = useState(false);
     const [productList, setProductList] = useState([])
     const [MaxMinSizeList, setMaxMinSizeList] = useState([])
@@ -61,6 +63,9 @@ export default function Product() {
     // Functions
 
     const onSubmit = (formData) => {
+        formData.incomeAccount = accountObj.incomeAcc
+        formData.expenseAccount = accountObj.expenseAcc
+        formData.assetAccount = accountObj.assetAcc
         console.log(formData);
         return isAddMode
             ? createDocument(formData)
@@ -609,6 +614,19 @@ export default function Product() {
             findOneDocument()
         }
 
+        //Get all accounts 
+        await ApiService.get('/account/list')
+            .then(response => {
+                console.log(response);
+                if (response.data.isSuccess) {
+                    console.log(response.data.document);
+                    setaccounts(response.data.document)
+                }
+            }).catch(e => {
+                console.log(e);
+                errorMessage(e.response?.data.message);
+            })
+
         // Get Income, Expense, Asset Accounts
         await ApiService.get('/product/getIncomeExpenseAssetAccount')
             .then(response => {
@@ -708,22 +726,22 @@ export default function Product() {
                 </Container>
                 {/* BODY FIELDS */}
                 <Container className='mt-2' fluid>
-                    <Row style={{ display: "flex", justifyContent: "center" }}>
+                    <Row style={{ display: "flex", justifyContent: "center", paddingBottom: 7 }}>
                         {
                             isAddMode ?
                                 <Card className="card" style={{ marginTop: 1 }}>
-                                    <Card.Header className="title" onClick={collapseCard} style={{ cursor: "pointer" }}>  Item Category</Card.Header>
+                                    <Card.Header className="title" onClick={collapseCard} style={{ cursor: "pointer" }}>  ITEM CATEGORY</Card.Header>
                                     {
                                         colleapse && (
                                             <Card.Body>
                                                 <Row>
-                                                    <Form.Group as={Col} md="4" className="mb-2">
+                                                    {/* <Form.Group as={Col} md="4" className="mb-2">
                                                         <Form.Label>Name</Form.Label>
                                                         <Form.Control type="text" id="itemName" name="itemName" {...register("itemName")} disabled />
-                                                    </Form.Group>
+                                                    </Form.Group> */}
                                                     <Form.Group as={Col} md="4" className="mb-2" >
-                                                        <Form.Label>Product Master</Form.Label>
-                                                        <FormSelect id="productMaster" name="productMaster" {...register("productMaster")} onChange={event => filterCategory(event)}  >
+                                                        <Form.Label className="m-0">PRODUCT MASTER</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="productMaster" name="productMaster" {...register("productMaster")} onChange={event => filterCategory(event)}  >
                                                             <option value={null} selected>Choose..</option>
                                                             {productMasterList && productMasterList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
@@ -731,8 +749,8 @@ export default function Product() {
                                                         </FormSelect>
                                                     </Form.Group>
                                                     <Form.Group as={Col} md="4" className="mb-2">
-                                                        <Form.Label>Group Master</Form.Label>
-                                                        <FormSelect id="groupMaster" name="groupMaster" {...register("groupMaster")} onChange={event => filterCategory(event)} >
+                                                        <Form.Label className="m-0">GROUP MASTER</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="groupMaster" name="groupMaster" {...register("groupMaster")} onChange={event => filterCategory(event)} >
                                                             <option value={null} selected>Choose..</option>
                                                             {groupMasterList && groupMasterList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
@@ -740,20 +758,21 @@ export default function Product() {
                                                         </FormSelect>
                                                     </Form.Group>
 
-                                                </Row>
-                                                <Row>
                                                     <Form.Group as={Col} md="4" className="mb-2">
-                                                        <Form.Label>Brand</Form.Label>
-                                                        <FormSelect id="brand" name="brand" {...register("brand")} onChange={event => filterCategory(event)} >
+                                                        <Form.Label className="m-0">BRAND</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="brand" name="brand" {...register("brand")} onChange={event => filterCategory(event)} >
                                                             <option value={null} selected>Choose..</option>
                                                             {brandList && brandList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
                                                             })}
                                                         </FormSelect>
                                                     </Form.Group>
+                                                </Row>
+                                                <Row>
+
                                                     <Form.Group className="mb-2" as={Col} md="4">
-                                                        <Form.Label>First Category</Form.Label>
-                                                        <FormSelect id="firstCategory" name="firstCategory" {...register("firstCategory")} onChange={event => filterCategory(event)} >
+                                                        <Form.Label className="m-0">FIRST CATEGORY</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="firstCategory" name="firstCategory" {...register("firstCategory")} onChange={event => filterCategory(event)} >
                                                             <option value={null} selected>Choose..</option>
                                                             {firstCategoryList && firstCategoryList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
@@ -761,19 +780,17 @@ export default function Product() {
                                                         </FormSelect>
                                                     </Form.Group>
                                                     <Form.Group className="mb-2" as={Col} md="4">
-                                                        <Form.Label>Second Category</Form.Label>
-                                                        <FormSelect id="secondCategory" name="secondCategory" {...register("secondCategory")} onChange={event => filterCategory(event)} >
+                                                        <Form.Label className="m-0">SECOND CATEGORY</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="secondCategory" name="secondCategory" {...register("secondCategory")} onChange={event => filterCategory(event)} >
                                                             <option value={null} selected>Choose..</option>
                                                             {secondCategoryList && secondCategoryList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
                                                             })}
                                                         </FormSelect>
                                                     </Form.Group>
-                                                </Row>
-                                                <Row>
                                                     <Form.Group className="mb-2" as={Col} md="4">
-                                                        <Form.Label>Size</Form.Label>
-                                                        <FormSelect id="size" name="size" {...register("size")}
+                                                        <Form.Label className="m-0">SIZE</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="size" name="size" {...register("size")}
                                                             onChange={(e) => {
                                                                 console.log(e.target.value);
                                                                 if (e.target.value) {
@@ -797,11 +814,14 @@ export default function Product() {
                                                             })}
                                                         </FormSelect>
                                                     </Form.Group>
-                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                </Row>
+                                                <Row>
+
+                                                    {/*<Form.Group className="mb-2" as={Col} md="4">
                                                         <Form.Label>Quantity</Form.Label>
                                                         <Form.Control type="number" defaultValue={0} min="0" id="itemQty" name="itemQty" {...register("itemQty")} />
                                                     </Form.Group>
-                                                    {/* <Form.Group className="mb-2" as={Col} md="4">
+                                                     <Form.Group className="mb-2" as={Col} md="4">
                                                             <Form.Label>Age</Form.Label>
                                                             <Form.Control type="number" min="0" id="age" name="age" {...register("age")} />
                                                         </Form.Group> */}
@@ -842,7 +862,7 @@ export default function Product() {
                                         colleapse && (
                                             <Card.Footer>
                                                 <Button type="button" size="sm" onClick={generateItemName}>Add</Button>
-                                                <Button type="button" variant="btn btn-outline-secondary" size="sm" onClick={resetItemCategory}>Reset</Button>
+                                                <Button type="button" size="sm" onClick={resetItemCategory}>Reset</Button>
                                             </Card.Footer>
                                         )
                                     }
@@ -1069,7 +1089,7 @@ export default function Product() {
                         <Tab eventKey="tax" title="TAX INFORMATION">
                             <Container className="mt-2" fluid>
                                 <Row>
-                                    <SelectField
+                                    {/* <SelectField
                                         control={control}
                                         errors={errors}
                                         field={{
@@ -1092,6 +1112,20 @@ export default function Product() {
 
                                         }}
                                         blurHandler={null}
+                                    /> */}
+                                    <Decimal128Field
+                                        register={register}
+                                        errors={errors}
+                                        field={{
+                                            description: "HSN/SAC",
+                                            label: "HSN/SACS CODE",
+                                            fieldId: "HSNSACS",
+                                            placeholder: "",
+                                            required: true,
+                                            validationMessage: "Please enter the HSN code !"
+                                        }}
+                                        changeHandler={null}
+                                        blurHandler={null}
                                     />
                                     <Decimal128Field
                                         register={register}
@@ -1112,7 +1146,7 @@ export default function Product() {
                                         errors={errors}
                                         field={{
                                             description: "",
-                                            label: "SGST / UTGST(%)",
+                                            label: "SGST RATE(%)",
                                             fieldId: "sgstRate",
                                             placeholder: "",
                                             // required: true,
@@ -1140,8 +1174,8 @@ export default function Product() {
                                         errors={errors}
                                         field={{
                                             description: "",
-                                            label: "CESS (%)",
-                                            fieldId: "cess",
+                                            label: "UTGST RATE (%)",
+                                            fieldId: "utgstRate",
                                             placeholder: "",
                                             // required: true,
                                             // validationMessage: "Please enter the department name!"
@@ -1150,7 +1184,7 @@ export default function Product() {
                                         blurHandler={null}
                                     />
 
-                                    <PCTTax control={control}
+                                    {/* <PCTTax control={control}
                                         errors={errors}
                                         field={{
                                             description: "",
@@ -1164,7 +1198,7 @@ export default function Product() {
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
-                                    />
+                                    /> */}
 
                                     {/* <SelectField
                                         control={control}
@@ -1186,63 +1220,70 @@ export default function Product() {
                                 </Row>
                             </Container>
                         </Tab>
-                        <Tab eventKey="accounting" title="ACCOUNTINGS">
-                            <Row style={{ marginTop: 2 }}>
-                                <SelectField
-                                    control={control}
-                                    errors={errors}
-                                    field={{
-                                        description: "income Account",
-                                        label: "INCOME ACCOUNT",
-                                        fieldId: "incomeAccount",
-                                        placeholder: "",
-                                        required: true,
-                                        validationMessage: "Please select income account !",
-                                        selectRecordType: "account",
-                                        multiple: false,
-                                        default: accountObj?.incomeAcc
-                                    }}
-                                    changeHandler={null}
-                                    blurHandler={null}
-                                />
-                                <SelectField
-                                    control={control}
-                                    errors={errors}
-                                    field={{
-                                        description: "Expense Account",
-                                        label: "EXPENSE ACCOUNT",
-                                        fieldId: "expenseAccount",
-                                        placeholder: "",
-                                        required: true,
-                                        validationMessage: "Please select expence account !",
-                                        selectRecordType: "account",
-                                        multiple: false,
-                                        default: accountObj?.expenseAcc
-                                    }}
-                                    changeHandler={null}
-                                    blurHandler={null}
-                                />
+                        {
+                            !isAddMode && (
 
-                                <SelectField
-                                    control={control}
-                                    errors={errors}
-                                    field={{
-                                        description: "Asset Account",
-                                        label: "ASSET ACCOUNT",
-                                        fieldId: "assetAccount",
-                                        placeholder: "",
-                                        required: true,
-                                        validationMessage: "Please select asset account !",
-                                        selectRecordType: "account",
-                                        multiple: false,
-                                        default: accountObj?.assetAcc
-                                    }}
-                                    changeHandler={null}
-                                    blurHandler={null}
-                                />
+                                <Tab eventKey="accounting" title="ACCOUNTINGS">
+                                    <Row style={{ marginTop: 2 }}>
+                                        <SelectField
+                                            control={control}
+                                            errors={errors}
+                                            field={{
+                                                description: "income Account",
+                                                label: "INCOME ACCOUNT",
+                                                fieldId: "incomeAccount",
+                                                placeholder: "",
+                                                required: true,
+                                                validationMessage: "Please select income account !",
+                                                selectRecordType: "account",
+                                                multiple: false,
+                                                disabled: true
+                                            }}
+                                            changeHandler={null}
+                                            blurHandler={null}
+                                        />
+                                        <SelectField
+                                            control={control}
+                                            errors={errors}
+                                            field={{
+                                                description: "Expense Account",
+                                                label: "EXPENSE ACCOUNT",
+                                                fieldId: "expenseAccount",
+                                                placeholder: "",
+                                                required: true,
+                                                validationMessage: "Please select expence account !",
+                                                selectRecordType: "account",
+                                                multiple: false,
+                                                disabled: true
 
-                            </Row>
-                        </Tab>
+                                            }}
+                                            changeHandler={null}
+                                            blurHandler={null}
+                                        />
+
+                                        <SelectField
+                                            control={control}
+                                            errors={errors}
+                                            field={{
+                                                description: "Asset Account",
+                                                label: "ASSET ACCOUNT",
+                                                fieldId: "assetAccount",
+                                                placeholder: "",
+                                                required: true,
+                                                validationMessage: "Please select asset account !",
+                                                selectRecordType: "account",
+                                                multiple: false,
+                                                disabled: true
+
+                                            }}
+                                            changeHandler={null}
+                                            blurHandler={null}
+                                        />
+
+                                    </Row>
+                                </Tab>
+                            )
+                        }
                         {!isAddMode && <Tab eventKey="auditTrail" title="ADUIT TRAIL">
                             <Container className="mt-2" fluid>
                                 {!isAddMode && <LogHistories documentPath={"product"} documentId={id} />}
