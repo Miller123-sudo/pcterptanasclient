@@ -334,6 +334,7 @@ export default function Employee() {
                                             label: "SALES REP",
                                             fieldId: "isSalesRep",
                                             placeholder: "",
+                                            checked: true
                                             // required: true,
                                             // validationMessage: "Please enter the Email of the employee!"
                                         }}

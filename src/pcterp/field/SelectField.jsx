@@ -22,7 +22,7 @@ export default function SelectField({ control, field, errors, queryPath, index, 
             getList();
         }
     }, []);
-
+    console.log(field?.default);
 
     return <Form.Group key={index} as={Col} md="4" className="mb-2">
         <OverlayTrigger trigger="click" rootClose placement="auto" overlay={<Popover id="popover-basic">
@@ -38,25 +38,30 @@ export default function SelectField({ control, field, errors, queryPath, index, 
             name={field?.fieldId}
             control={control}
             rules={{ required: field?.required ? field?.validationMessage : false }}
-            render={({ field: { onChange, value }, fieldState: { error } }) => (
-                <Typeahead key={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
-                    isInvalid={errors[field?.fieldId]}
-                    disabled={field?.disabled}
-                    labelKey="name"
-                    multiple={field?.multiple}
-                    onChange={(event) => {
-                        onChange(event);
-                        if (changeHandler) changeHandler(event, { type: field.type, id: field.fieldId, value: event.length > 0 ? event[0] : event })
-                    }}
-                    onBlur={(event) =>
-                        blurHandler && blurHandler(event, { type: field.type, id: field.fieldId, value: value, targetValue: event.target?.value })
-                    }
-                    options={state}
-                    placeholder={field.placeholder}
-                    selected={value}
-                    flip={true}
+            render={({ field: { onChange, value }, fieldState: { error } }) => {
 
-                />)}
+                return (
+                    <Typeahead key={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
+                        isInvalid={errors[field?.fieldId]}
+                        disabled={field?.disabled}
+                        labelKey="name"
+                        multiple={field?.multiple}
+                        onChange={(event) => {
+                            onChange(event);
+                            if (changeHandler) changeHandler(event, { type: field.type, id: field.fieldId, value: event.length > 0 ? event[0] : event })
+                        }}
+                        onBlur={(event) =>
+                            blurHandler && blurHandler(event, { type: field.type, id: field.fieldId, value: value, targetValue: event.target?.value })
+                        }
+                        options={state}
+                        placeholder={field.placeholder}
+                        selected={value}
+                        flip={true}
+
+                    />
+                )
+            }
+            }
         />
         {errors[field?.fieldId] &&
             <Form.Text className="" style={{ color: '#dc3545' }}>

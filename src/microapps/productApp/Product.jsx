@@ -31,6 +31,7 @@ export default function Product() {
     const [groupMasterList, setGroupMasterList] = useState([])
     const [brandList, setBrandList] = useState([])
     const [firstCategoryList, setFirstCategoryList] = useState([])
+    const [departments, setdepartments] = useState([])
     const [sizeList, setSizeList] = useState([])
     const [secondCategoryList, setSecondCategoryList] = useState([])
     const navigate = useNavigate();
@@ -58,9 +59,9 @@ export default function Product() {
 
     const onSubmit = (formData) => {
         console.log(formData);
-        return isAddMode
-            ? createDocument(formData)
-            : updateDocument(id, formData);
+        // return isAddMode
+        //     ? createDocument(formData)
+        //     : updateDocument(id, formData);
     }
 
     const createDocument = (data) => {
@@ -599,7 +600,7 @@ export default function Product() {
 
 
     useEffect(async () => {
-
+        // Get Income, Expense, Asset Accounts
         await ApiService.get('/product/getIncomeExpenseAssetAccount')
             .then(response => {
                 console.log(response);
@@ -609,9 +610,11 @@ export default function Product() {
                 }
             }).catch(e => {
                 console.log(e);
-                console.log(e.response.data.message);
+                errorMessage(e.response?.data.message);
             })
 
+
+        // Get all product master
         const getAllProductMaster = async () => {
             await ApiService.get('itemCategory/search?type=productMaster')
                 .then(response => {
@@ -620,7 +623,7 @@ export default function Product() {
                     }
                 }).catch(e => {
                     console.log(e);
-                    console.log(e.response.data.message);
+                    errorMessage(e.response?.data.message);
                 })
         }
         getAllProductMaster()
@@ -925,8 +928,8 @@ export default function Product() {
                                 label: "UNITS",
                                 fieldId: "uom",
                                 placeholder: "",
-                                // required: true,
-                                // validationMessage: "Please enter the department name!",
+                                required: true,
+                                validationMessage: "Please select the unit !",
                                 selectRecordType: "uom",
                                 multiple: false
                             }}
@@ -953,6 +956,24 @@ export default function Product() {
                                             // required: true,
                                             // validationMessage: "Please enter the department name!",
                                             selectRecordType: "location",
+                                            multiple: false
+                                        }}
+                                        changeHandler={null}
+                                        blurHandler={null}
+                                    />
+
+                                    {/* Here we consider department as categoty of a perticuler product */}
+                                    <SelectField
+                                        control={control}
+                                        errors={errors}
+                                        field={{
+                                            description: "Select category",
+                                            label: "Category",
+                                            fieldId: "category",
+                                            placeholder: "",
+                                            // required: true,
+                                            // validationMessage: "Please enter the department name!",
+                                            selectRecordType: "department",
                                             multiple: false
                                         }}
                                         changeHandler={null}
@@ -1162,7 +1183,7 @@ export default function Product() {
                             </Container>
                         </Tab>
                         <Tab eventKey="accounting" title="ACCOUNTINGS">
-                            <Row>
+                            <Row style={{ marginTop: 2 }}>
                                 <SelectField
                                     control={control}
                                     errors={errors}
@@ -1171,10 +1192,11 @@ export default function Product() {
                                         label: "INCOME ACCOUNT",
                                         fieldId: "incomeAccount",
                                         placeholder: "",
-                                        // required: true,
-                                        // validationMessage: "Please enter the department name!",
+                                        required: true,
+                                        validationMessage: "Please select income account !",
                                         selectRecordType: "account",
-                                        multiple: false
+                                        multiple: false,
+                                        default: accountObj?.incomeAcc
                                     }}
                                     changeHandler={null}
                                     blurHandler={null}
@@ -1187,10 +1209,11 @@ export default function Product() {
                                         label: "EXPENSE ACCOUNT",
                                         fieldId: "expenseAccount",
                                         placeholder: "",
-                                        // required: true,
-                                        // validationMessage: "Please enter the department name!",
+                                        required: true,
+                                        validationMessage: "Please select expence account !",
                                         selectRecordType: "account",
-                                        multiple: false
+                                        multiple: false,
+                                        default: accountObj?.expenseAcc
                                     }}
                                     changeHandler={null}
                                     blurHandler={null}
@@ -1204,10 +1227,11 @@ export default function Product() {
                                         label: "ASSET ACCOUNT",
                                         fieldId: "assetAccount",
                                         placeholder: "",
-                                        // required: true,
-                                        // validationMessage: "Please enter the department name!",
+                                        required: true,
+                                        validationMessage: "Please select asset account !",
                                         selectRecordType: "account",
-                                        multiple: false
+                                        multiple: false,
+                                        default: accountObj?.assetAcc
                                     }}
                                     changeHandler={null}
                                     blurHandler={null}

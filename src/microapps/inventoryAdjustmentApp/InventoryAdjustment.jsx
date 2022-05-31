@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { BsArrowLeft, BsArrowRight, BsFillCreditCardFill, BsFillBarChartFill } from 'react-icons/bs';
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage } from '../../helpers/Utils'
+import { errorMessage, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -75,15 +75,20 @@ export default function InventoryAdjustment() {
     }
 
     const createDocument = (data) => {
-        ApiService.setHeader();
-        return ApiService.post('/inventoryAdjustment', data).then(response => {
-            if (response.data.isSuccess) {
-                navigate(`/${rootPath}/inventoryadjustment/list`)
-            }
-        }).catch(e => {
-            console.log(e.response?.data.message);
-            errorMessage(e, null)
-        })
+
+        if (data.products.length) {
+            ApiService.setHeader();
+            return ApiService.post('/inventoryAdjustment', data).then(response => {
+                if (response.data.isSuccess) {
+                    navigate(`/${rootPath}/inventoryadjustment/list`)
+                }
+            }).catch(e => {
+                console.log(e.response?.data.message);
+                errorMessage(e, null)
+            })
+        } else {
+            infoNotification("Please add atleast one item for adjustment ❕")
+        }
     }
 
     const updateDocument = (id, data) => {
@@ -209,9 +214,9 @@ export default function InventoryAdjustment() {
                         <Col className='p-0 ps-1'>
                             {isAddMode && <Button type="submit" variant="primary" size="sm">SAVE</Button>}
                             <Button as={Link} to={`/${rootPath}/inventoryadjustment/list`} variant="secondary" size="sm">DISCARD</Button>
-                            {!isAddMode && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
+                            {/* {!isAddMode && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
-                            </DropdownButton>}
+                            </DropdownButton>} */}
                         </Col>
                     </Row>
                 </Container>

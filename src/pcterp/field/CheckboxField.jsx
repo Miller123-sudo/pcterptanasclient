@@ -12,6 +12,7 @@ export default function CheckboxField({ field, index, register, errors, lineMode
                 id={field?.fieldId}
                 name={field?.fieldId}
 
+                checked={field?.checked && field?.checked}
                 feedback={errors[field?.fieldId] && errors[field.fieldId]['message']}
                 feedbackType="invalid"
                 isInvalid={errors[field?.fieldId]}

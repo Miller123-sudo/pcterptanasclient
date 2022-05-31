@@ -1,35 +1,19 @@
-import { React, useContext, useState, useEffect } from 'react'
-import { Col, Row, Button, Breadcrumb, Container } from 'react-bootstrap'
-import { PropagateLoader } from "react-spinners";
-import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
+import { React, useState, useEffect } from 'react';
+import { Breadcrumb, Button, Col, Container, Row, Table } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { UserContext } from '../../components/states/contexts/UserContext'
-import { formatNumber } from '../../helpers/Utils';
-import ApiService from '../../helpers/ApiServices'
-import AppContentBody from '../../pcterp/builder/AppContentBody'
-import AppContentForm from '../../pcterp/builder/AppContentForm'
-import AppContentHeader from '../../pcterp/builder/AppContentHeader'
-import AppFormTitle from '../../pcterp/components/AppFormTitle';
-import AppLoader from '../../pcterp/components/AppLoader';
-import jsPDF from 'jspdf';
-const moment = require('moment');
+import jsPDF from "jspdf";
+import ApiService from '../../helpers/ApiServices';
 
 export default function InventoryStockReport() {
-    const [loderStatus, setLoderStatus] = useState("NOTHING");
     const [state, setState] = useState([]);
-    let { path, url } = useLocation();
-    const navigate = useNavigate();
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
-
     useEffect(async () => {
-        setLoderStatus("RUNNING");
         const response = await ApiService.get('product');
         console.log(response.data.documents)
         setState(response.data.documents)
-        setLoderStatus("SUCCESS");
 
     }, []);
 
@@ -37,12 +21,12 @@ export default function InventoryStockReport() {
     // const getDateValue = (params) => params.data?.receiptDate ? new Date(params.data?.receiptDate).toDateString() : "Not Available";
 
     const columns = [
-        { field: 'name', headerName: 'NAME', flex: 1, minWidth: 150 },
-        { field: 'description', headerName: 'DESCRIPTION', flex: 2, minWidth: 150 },
-        { field: 'salesPrice', headerName: 'SALES PRICE', flex: 1, minWidth: 150 },
-        { field: 'cost', headerName: 'COST PRICE', flex: 1, minWidth: 150 },
-        { field: 'onHand', headerName: 'ON HAND QUANTITY', flex: 1, minWidth: 150 },
-        { field: 'available', headerName: 'FORECASTED QUANTITY', flex: 1, minWidth: 150 }
+        { field: 'name', headerName: 'Product Name', flex: 1, minWidth: 150 },
+        { field: 'description', headerName: 'Description', flex: 2, minWidth: 150 },
+        { field: 'salesPrice', headerName: 'Sales Price', flex: 1, minWidth: 150 },
+        { field: 'cost', headerName: 'Cost Price', flex: 1, minWidth: 150 },
+        { field: 'onHand', headerName: 'Quantity On Hand', flex: 1, minWidth: 150 },
+        { field: 'available', headerName: 'Forecasted Quantity', flex: 1, minWidth: 150 }
     ]
 
     function onGridReady(params) {
@@ -61,6 +45,19 @@ export default function InventoryStockReport() {
     const handlePrintReport = async () => {
         let itemObjects = new Array();
         // console.log(state);
+
+        //Gte company information
+        let companyInfo;
+        await ApiService.get("setup").then(res => {
+            if (res.data.isSuccess) {
+                res.data.documents?.map(e => {
+                    if (e.setupType == "COMPANY_SETUP") {
+                        companyInfo = e
+                    }
+                })
+            }
+        })
+
         state.map(item => {
             let newObject = new Object();
             // let itemData = await ApiService.get(`product/${item.product}`);
@@ -86,28 +83,30 @@ export default function InventoryStockReport() {
         doc.setFontSize(10);
         doc.text("Company ", 40, 80);
         doc.setFont("times", "normal");
-        doc.text(": Paapri Business Technology India", 100, 80);
+        doc.text(`${companyInfo?.name}`, 100, 80);
 
         doc.setFont("helvetica", "bold");
         doc.text("Location", 40, 95);
         doc.setFont("times", "normal");
-        doc.text(": Kolkata", 100, 95);
+        doc.text(`${companyInfo?.address}`, 100, 95);
 
         doc.setFont("helvetica", "bold");
         doc.text("Phone", 40, 110);
         doc.setFont("times", "normal");
-        doc.text(": 9876543210 ", 100, 110);
+        doc.text(companyInfo?.phone, 100, 110);
 
         doc.setFont("helvetica", "bold");
         doc.text("Date", 450, 80);
         doc.setFont("times", "normal");
-        doc.text(": 7th Dec, 2021 ", 490, 80);
+        let d = new Date()
+        doc.text(`${d.getDate()}/${d.getMonth()}/${d.getFullYear()}`, 490, 80);
 
         doc.autoTable({
             margin: { top: 130 },
             styles: {
-                lineColor: [44, 62, 80],
+                lineColor: [153, 153, 153],
                 lineWidth: 1,
+                fillColor: [179, 179, 179],
             },
             columnStyles: {
                 europe: { halign: 'center' },
@@ -128,15 +127,8 @@ export default function InventoryStockReport() {
             // didDrawPage: (d) => height = d.cursor.y,// calculate height of the autotable dynamically
         })
 
-        doc.save(`Inventory Stocks Report - ${state.name}.pdf`);
+        doc.save(`Inventory Stocks Report - ${Date.now()}.pdf`);
     }
-
-    if (loderStatus === "RUNNING") {
-        return (
-            <AppLoader />
-        )
-    }
-
 
     return (
         <Container className="pct-app-content-container p-0 m-0" fluid>
@@ -144,7 +136,7 @@ export default function InventoryStockReport() {
                 <Container className="pct-app-content-header p-0 m-0 mt-2 pb-2" fluid>
                     <Row>
                         <Col>
-                            <h3>INVENTORY STOCKS REPORT</h3>
+                            <h3>INVENTORY STOCK REPORT</h3>
                             {/* <Breadcrumb style={{ fontSize: '24px' }}>
                                 <Breadcrumb.Item linkAs={Link} linkProps={{ to: '/purchase' }} active>Purchase Orders</Breadcrumb.Item>
                             </Breadcrumb> */}
@@ -155,8 +147,8 @@ export default function InventoryStockReport() {
                         <Col md="4" sm="6">
                             <Row>
                                 <Col md="4"></Col>
-                                <Col md="4"><Button onClick={handlePrintReport} variant="light" size="sm"><span>EXPORT PDF</span></Button></Col>
-                                <Col md="4"><Button onClick={handleExportAsCsv} variant="light" size="sm"><span>EXPORT CSV</span></Button></Col>
+                                <Col md="4"><Button onClick={handlePrintReport} variant="light" size="sm"><span>Export PDF</span></Button></Col>
+                                <Col md="4"><Button onClick={handleExportAsCsv} variant="light" size="sm"><span>Export CSV</span></Button></Col>
                             </Row>
                         </Col>
                     </Row>
@@ -190,33 +182,41 @@ export default function InventoryStockReport() {
 
 
 
+//OLD CODE
 
 
-// import { React, useState, useEffect } from 'react';
-// import { Breadcrumb, Button, Col, Container, Row, Table } from 'react-bootstrap';
-// import { Link, useRouteMatch, useHistory } from 'react-router-dom';
+// import { React, useContext, useState, useEffect } from 'react'
+// import { Col, Row, Button, Breadcrumb, Container } from 'react-bootstrap'
+// import { PropagateLoader } from "react-spinners";
+// import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
 // import { AgGridColumn, AgGridReact } from 'ag-grid-react';
-// import jsPDF from "jspdf";
-// import ApiService from '../../../helpers/ApiServices';
+// import { Link, useNavigate, useLocation } from 'react-router-dom'
+// import { UserContext } from '../../components/states/contexts/UserContext'
+// import { formatNumber } from '../../helpers/Utils';
+// import ApiService from '../../helpers/ApiServices'
+// import AppContentBody from '../../pcterp/builder/AppContentBody'
+// import AppContentForm from '../../pcterp/builder/AppContentForm'
+// import AppContentHeader from '../../pcterp/builder/AppContentHeader'
+// import AppFormTitle from '../../pcterp/components/AppFormTitle';
+// import AppLoader from '../../pcterp/components/AppLoader';
+// import jsPDF from 'jspdf';
+// const moment = require('moment');
 
-// export default function InventoryStocksReport() {
+// export default function InventoryStockReport() {
+//     const [loderStatus, setLoderStatus] = useState("NOTHING");
 //     const [state, setState] = useState([]);
-//     let { path, url } = useRouteMatch();
-//     const history = useHistory();
+//     let { path, url } = useLocation();
+//     const navigate = useNavigate();
 //     const [gridApi, setGridApi] = useState(null);
 //     const [gridColumnApi, setGridColumnApi] = useState(null);
 
-//     async function handleRowsData() {
-//         const response = await ApiService.get('product');
-//         console.log(response.data.documents)
-//         setState(response.data.documents)
-//     }
 
 //     useEffect(async () => {
-//         await handleRowsData();
+//         setLoderStatus("RUNNING");
 //         const response = await ApiService.get('product');
 //         console.log(response.data.documents)
 //         setState(response.data.documents)
+//         setLoderStatus("SUCCESS");
 
 //     }, []);
 
@@ -224,12 +224,12 @@ export default function InventoryStockReport() {
 //     // const getDateValue = (params) => params.data?.receiptDate ? new Date(params.data?.receiptDate).toDateString() : "Not Available";
 
 //     const columns = [
-//         { field: 'name', headerName: 'Product Name', flex: 1, minWidth: 150 },
-//         { field: 'description', headerName: 'Description', flex: 2, minWidth: 150 },
-//         { field: 'salesPrice', headerName: 'Sales Price', flex: 1, minWidth: 150 },
-//         { field: 'cost', headerName: 'Cost Price', flex: 1, minWidth: 150 },
-//         { field: 'onHand', headerName: 'Quantity On Hand', flex: 1, minWidth: 150 },
-//         { field: 'available', headerName: 'Forecasted Quantity', flex: 1, minWidth: 150 }
+//         { field: 'name', headerName: 'NAME', flex: 1, minWidth: 150 },
+//         { field: 'description', headerName: 'DESCRIPTION', flex: 2, minWidth: 150 },
+//         { field: 'salesPrice', headerName: 'SALES PRICE', flex: 1, minWidth: 150 },
+//         { field: 'cost', headerName: 'COST PRICE', flex: 1, minWidth: 150 },
+//         { field: 'onHand', headerName: 'ON HAND QUANTITY', flex: 1, minWidth: 150 },
+//         { field: 'available', headerName: 'FORECASTED QUANTITY', flex: 1, minWidth: 150 }
 //     ]
 
 //     function onGridReady(params) {
@@ -318,13 +318,20 @@ export default function InventoryStockReport() {
 //         doc.save(`Inventory Stocks Report - ${state.name}.pdf`);
 //     }
 
+//     if (loderStatus === "RUNNING") {
+//         return (
+//             <AppLoader />
+//         )
+//     }
+
+
 //     return (
 //         <Container className="pct-app-content-container p-0 m-0" fluid>
 //             <Container className="pct-app-content" fluid>
 //                 <Container className="pct-app-content-header p-0 m-0 mt-2 pb-2" fluid>
 //                     <Row>
 //                         <Col>
-//                             <h3>Inventory Stocks Report</h3>
+//                             <h3>INVENTORY STOCKS REPORT</h3>
 //                             {/* <Breadcrumb style={{ fontSize: '24px' }}>
 //                                 <Breadcrumb.Item linkAs={Link} linkProps={{ to: '/purchase' }} active>Purchase Orders</Breadcrumb.Item>
 //                             </Breadcrumb> */}
@@ -335,13 +342,13 @@ export default function InventoryStockReport() {
 //                         <Col md="4" sm="6">
 //                             <Row>
 //                                 <Col md="4"></Col>
-//                                 <Col md="4"><Button onClick={handlePrintReport} variant="light" size="sm"><span>Export PDF</span></Button></Col>
-//                                 <Col md="4"><Button onClick={handleExportAsCsv} variant="light" size="sm"><span>Export CSV</span></Button></Col>
+//                                 <Col md="4"><Button onClick={handlePrintReport} variant="light" size="sm"><span>EXPORT PDF</span></Button></Col>
+//                                 <Col md="4"><Button onClick={handleExportAsCsv} variant="light" size="sm"><span>EXPORT CSV</span></Button></Col>
 //                             </Row>
 //                         </Col>
 //                     </Row>
 //                 </Container>
-//                 <Container className="pct-app-content-body p-0 m-0" style={{ height: '700px' }} fluid>
+//                 <Container className="pct-app-content-body p-0 m-0" style={{ height: '100vh' }} fluid>
 //                     <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
 //                         <AgGridReact
 //                             onGridReady={onGridReady}
@@ -359,6 +366,7 @@ export default function InventoryStockReport() {
 //                             }}
 //                             pagination={true}
 //                             paginationPageSize={50}
+//                             overlayNoRowsTemplate='<span style="color: rgb(128, 128, 128); font-size: 2rem; font-weight: 100;">No Records Found!</span>'
 //                         />
 //                     </div>
 //                 </Container>
