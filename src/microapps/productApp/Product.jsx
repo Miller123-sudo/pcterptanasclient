@@ -600,6 +600,7 @@ export default function Product() {
 
 
     useEffect(async () => {
+        setLoderStatus("RUNNING");
         // Get Income, Expense, Asset Accounts
         await ApiService.get('/product/getIncomeExpenseAssetAccount')
             .then(response => {
@@ -633,7 +634,7 @@ export default function Product() {
         setMaxMinSizeList(res.data.documents)
 
         if (!isAddMode) {
-            setLoderStatus("RUNNING");
+
             findOneDocument()
         }
 

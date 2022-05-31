@@ -3,18 +3,23 @@ import { Breadcrumb, Button, Col, Container, Row, Table } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
 import jsPDF from "jspdf";
+import AppLoader from '../../pcterp/components/AppLoader';
 import ApiService from '../../helpers/ApiServices';
 
 export default function InventoryStockReport() {
     const [state, setState] = useState([]);
+    const [loderStatus, setLoderStatus] = useState(null);
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
     useEffect(async () => {
+        setLoderStatus("RUNNING");
         const response = await ApiService.get('product');
-        console.log(response.data.documents)
-        setState(response.data.documents)
-
+        if (response.data.isSuccess) {
+            console.log(response.data.documents)
+            setState(response.data.documents)
+            setLoderStatus("SUCCESS");
+        }
     }, []);
 
     // const getVendorValue = (params) => params.data?.vendor?.name ? params.data?.vendor?.name : "Not Available";
@@ -128,6 +133,13 @@ export default function InventoryStockReport() {
         })
 
         doc.save(`Inventory Stocks Report - ${Date.now()}.pdf`);
+    }
+
+
+    if (loderStatus === "RUNNING") {
+        return (
+            <AppLoader />
+        )
     }
 
     return (
