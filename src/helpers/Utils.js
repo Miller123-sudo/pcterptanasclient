@@ -501,4 +501,5 @@ export {
   checkBlank,
   isBillAmountEqualPurchaseAmount,
   infoNotification,
+  checkBlankProduct,
 };

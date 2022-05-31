@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { BsArrowLeft, BsArrowRight, BsFillCreditCardFill, BsFillBarChartFill } from 'react-icons/bs';
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage, infoNotification } from '../../helpers/Utils'
+import { checkBlankProduct, errorMessage, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -77,6 +77,7 @@ export default function InventoryAdjustment() {
     const createDocument = (data) => {
 
         if (data.products.length) {
+            // if (checkBlankProduct(data.products)) {
             ApiService.setHeader();
             return ApiService.post('/inventoryAdjustment', data).then(response => {
                 if (response.data.isSuccess) {
@@ -86,6 +87,9 @@ export default function InventoryAdjustment() {
                 console.log(e.response?.data.message);
                 errorMessage(e, null)
             })
+            // } else {
+            //     infoNotification("Please select product ❕")
+            // }
         } else {
             infoNotification("Please add atleast one item for adjustment ❕")
         }
@@ -337,7 +341,9 @@ export default function InventoryAdjustment() {
                                                             fieldId: "product",
                                                             placeholder: "",
                                                             selectRecordType: "product",
-                                                            multiple: false
+                                                            multiple: false,
+                                                            required: true,
+                                                            validationMessage: "Please enter the Product name!"
                                                         }}
                                                         index={index}
                                                         errors={errors}

@@ -48,8 +48,11 @@ export default function Product() {
             assetAccount: null,
             incomeAccount: null,
             expenseAccount: null,
-            vendorTaxes: ['5']
-
+            vendorTaxes: ['5'],
+            commited: 0,
+            available: 0,
+            onHand: 0,
+            averageCost: 0,
         }
     });
 
@@ -600,7 +603,12 @@ export default function Product() {
 
 
     useEffect(async () => {
-        setLoderStatus("RUNNING");
+
+        if (!isAddMode) {
+            setLoderStatus("RUNNING");
+            findOneDocument()
+        }
+
         // Get Income, Expense, Asset Accounts
         await ApiService.get('/product/getIncomeExpenseAssetAccount')
             .then(response => {
@@ -632,11 +640,6 @@ export default function Product() {
         const res = await ApiService.get('sizeList');
         console.log(res.data.documents)
         setMaxMinSizeList(res.data.documents)
-
-        if (!isAddMode) {
-
-            findOneDocument()
-        }
 
     }, []);
     console.log(accountObj);
