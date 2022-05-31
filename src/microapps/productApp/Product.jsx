@@ -59,9 +59,9 @@ export default function Product() {
 
     const onSubmit = (formData) => {
         console.log(formData);
-        // return isAddMode
-        //     ? createDocument(formData)
-        //     : updateDocument(id, formData);
+        return isAddMode
+            ? createDocument(formData)
+            : updateDocument(id, formData);
     }
 
     const createDocument = (data) => {
