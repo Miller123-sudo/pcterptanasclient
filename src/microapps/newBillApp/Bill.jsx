@@ -1,11 +1,11 @@
 
 import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card } from 'react-bootstrap'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form } from 'react-bootstrap'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage, formatNumber } from '../../helpers/Utils'
+import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -22,10 +22,13 @@ import LineTextField from '../../pcterp/field/LineTextField';
 import LineNumberField from '../../pcterp/field/LineNumberField';
 import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import { PurchaseOrderPDF } from '../../helpers/PDF';
+import CheckboxField from '../../pcterp/field/CheckboxField';
+import swal from "sweetalert2"
 
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
     const [isPOSelected, setIsPOSelected] = useState(false)
+    const [vendorObj, setvendorObj] = useState()
     const [state, setState] = useState({
         estimation: {
             untaxedAmount: 0,
@@ -58,12 +61,26 @@ export default function Invoice() {
     let totalBilled = 0;
 
     // Functions
-
-    const onSubmit = (formData) => {
+    console.log(rootPath);
+    const onSubmit = async (formData) => {
         console.log(formData);
-        return isAddMode
-            ? createDocument(formData)
-            : updateDocument(id, formData);
+
+        await ApiService.patch("newBill/findDuplicatereferenceNumber", { referenceNumber: getValues("referenceNumber") }).then(res => {
+            console.log(res);
+            if (res.data.isFindBill) {
+                infoNotification("There is another bill with same reference number ❕. Please enter different reference number")
+            } else {
+
+                return isAddMode
+                    ? createDocument(formData)
+                    : updateDocument(id, formData);
+            }
+        }).catch(e => {
+            console.log(e);
+        })
+        // return isAddMode
+        //     ? createDocument(formData)
+        //     : updateDocument(id, formData);
     }
 
     const createDocument = async (data) => {
@@ -224,7 +241,7 @@ export default function Invoice() {
         console.log(products);
         products?.map((val) => {
             cumulativeSum += parseFloat(val?.subTotal);
-            totalTax += (parseFloat(val?.taxes[0]) * parseFloat(val?.subTotal)) / 100
+            totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
         });
 
         setValue("estimation", {
@@ -239,6 +256,39 @@ export default function Invoice() {
                 untaxedAmount: cumulativeSum,
                 tax: totalTax,
                 total: parseFloat(cumulativeSum + totalTax)
+            }
+        }));
+    }
+
+    const updateOrderLinesWithDiscount = () => {
+        let cumulativeSum = 0, totalTax = 0;
+
+        let discount = parseFloat(getValues("discount")).toFixed(2)
+        console.log(discount);
+
+        let valueAfterDiscount = (parseFloat(state?.estimation.total * discount) / 100).toFixed(2)
+        console.log(valueAfterDiscount);
+        console.log(state?.estimation.total - valueAfterDiscount);
+
+        const products = getValues('invoiceLines')
+        console.log(products);
+        products?.map((val) => {
+            cumulativeSum += parseFloat(val?.subTotal);
+            totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
+        });
+
+        setValue("estimation", {
+            untaxedAmount: cumulativeSum,
+            tax: totalTax,
+            total: parseFloat(state?.estimation.total - valueAfterDiscount).toFixed(2)
+        });
+
+        setState(prevState => ({
+            ...prevState,    // keep all other key-value pairs
+            estimation: {
+                untaxedAmount: cumulativeSum,
+                tax: totalTax,
+                total: parseFloat(state?.estimation.total - valueAfterDiscount).toFixed(2)
             }
         }));
     }
@@ -347,41 +397,45 @@ export default function Invoice() {
                 <Container fluid>
                     <Row>
 
-                        <SelectField
-                            control={control}
-                            errors={errors}
-                            field={{
-                                disabled: true,
-                                description: "",
-                                label: "SOURCE DOCUMENT",
-                                fieldId: "sourceDocument",
-                                placeholder: "",
-                                // required: true,
-                                // validationMessage: "Please enter the department name!",
-                                // selectRecordType: "purchaseOrder/unbilled"
-                            }}
-                            changeHandler={async (event, data) => {
-                                if (!data) return
-                                setValue("sourceDocument", data?.value?.id)
-                            }}
-                            blurHandler={async (event, data) => {
-                                if (!event) return;
-                                if (!data) return;
+                        {
+                            rootPath !== "accounting" ?
+                                <SelectField
+                                    control={control}
+                                    errors={errors}
+                                    field={{
+                                        disabled: true,
+                                        description: "",
+                                        label: "SOURCE DOCUMENT",
+                                        fieldId: "sourceDocument",
+                                        placeholder: "",
+                                        // required: true,
+                                        // validationMessage: "Please enter the department name!",
+                                        // selectRecordType: "purchaseOrder/unbilled"
+                                    }}
+                                    changeHandler={async (event, data) => {
+                                        if (!data) return
+                                        setValue("sourceDocument", data?.value?.id)
+                                    }}
+                                    blurHandler={async (event, data) => {
+                                        if (!event) return;
+                                        if (!data) return;
 
-                                if (data?.value) {
-                                    if (!data?.value[0]?.id) return
-                                    setIsPOSelected(true)
-                                    // console.log(data.value[0].id)
-                                    const response = await ApiService.get('purchaseOrder/' + data?.value[0]?.id)
-                                    if (response.data.isSuccess) {
-                                        console.log(response.data.document);
-                                        createInvoiceItems(response.data.document)
-                                        updateOrderLines();
+                                        if (data?.value) {
+                                            if (!data?.value[0]?.id) return
+                                            setIsPOSelected(true)
+                                            // console.log(data.value[0].id)
+                                            const response = await ApiService.get('purchaseOrder/' + data?.value[0]?.id)
+                                            if (response.data.isSuccess) {
+                                                console.log(response.data.document);
+                                                createInvoiceItems(response.data.document)
+                                                updateOrderLines();
 
-                                    }
-                                }
-                            }}
-                        />
+                                            }
+                                        }
+                                    }}
+                                /> : ""
+                        }
+
                         <SelectField
                             control={control}
                             errors={errors}
@@ -398,6 +452,7 @@ export default function Invoice() {
                             changeHandler={async (event, data) => {
                                 if (!data) return
                                 setValue("vendor", data?.value?.id)
+                                setvendorObj(data.value)
                             }}
                             blurHandler={null}
                         />
@@ -415,8 +470,6 @@ export default function Invoice() {
                             }}
                             changeHandler={null}
                             blurHandler={null}
-
-
                         />
 
                         <SelectField
@@ -450,8 +503,171 @@ export default function Invoice() {
                                 // validationMessage: "Please enter the Account Number!"
                             }}
                             changeHandler={null}
+                            blurHandler={async (e) => {
+                                if (!e.target.value) return;
+                                if (e.target.value) {
+                                    await ApiService.patch("newBill/findDuplicatereferenceNumber", { referenceNumber: e.target.value }).then(res => {
+                                        if (res.data.isFindBill) {
+                                            infoNotification("There is another bill with same reference number ❕. Please enter different reference number")
+                                        }
+                                    }).catch(e => {
+                                        console.log(e);
+                                    })
+                                }
+                            }}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "DISCOUNT (%)",
+                                fieldId: "discount",
+                                placeholder: "",
+                                disabled: true
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
                             blurHandler={null}
                         />
+
+                        {
+                            isAddMode &&
+                            <CheckboxField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "DISCOUNTED % LESS",
+                                    fieldId: "discountPercentLess",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Account Number!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={async (e, data) => {
+                                    console.log(data);
+                                    if (!data.value) {
+                                        updateOrderLines();
+                                        setValue("discount", "")
+                                    }
+                                    if (data.value) {
+                                        console.log(vendorObj);
+                                        await ApiService.get("vendor/" + vendorObj._id).then(res => {
+                                            if (res.data.isSuccess) {
+                                                setValue("discount", res.data.document?.discountPercentLess)
+
+                                                updateOrderLinesWithDiscount()
+                                            }
+                                        })
+
+                                    }
+                                }}
+                            />}
+
+                        {
+                            isAddMode &&
+                            <CheckboxField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "BOX LESS",
+                                    fieldId: "boxLess",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Account Number!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={async (e, data) => {
+                                    console.log(data);
+                                    if (!data.value) {
+                                        updateOrderLines();
+                                        setValue("discount", "")
+                                    }
+                                    if (data.value) {
+                                        console.log(vendorObj);
+                                        await ApiService.get("vendor/" + vendorObj._id).then(res => {
+                                            if (res.data.isSuccess) {
+                                                setValue("discount", res.data.document?.boxLess)
+
+                                                updateOrderLinesWithDiscount()
+                                            }
+                                        })
+
+                                    }
+                                }}
+                            />}
+
+                        {
+                            isAddMode &&
+                            <CheckboxField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "PER PCS LESS",
+                                    fieldId: "perPcsLess",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Account Number!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={async (e, data) => {
+                                    console.log(data);
+                                    if (!data.value) {
+                                        updateOrderLines();
+                                        setValue("discount", "")
+                                    }
+                                    if (data.value) {
+                                        console.log(vendorObj);
+                                        await ApiService.get("vendor/" + vendorObj._id).then(res => {
+                                            if (res.data.isSuccess) {
+                                                setValue("discount", res.data.document?.perPcsLess)
+
+                                                updateOrderLinesWithDiscount()
+                                            }
+                                        })
+
+                                    }
+                                }}
+                            />}
+
+                        {
+                            isAddMode &&
+                            <CheckboxField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "PER METER LESS",
+                                    fieldId: "perMeterLess",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Account Number!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={async (e, data) => {
+                                    console.log(data);
+                                    if (!data.value) {
+                                        updateOrderLines();
+                                        setValue("discount", "")
+                                    }
+                                    if (data.value) {
+                                        console.log(vendorObj);
+                                        await ApiService.get("vendor/" + vendorObj._id).then(res => {
+                                            if (res.data.isSuccess) {
+                                                setValue("discount", res.data.document?.perMeterLess)
+
+                                                updateOrderLinesWithDiscount()
+                                            }
+                                        })
+
+                                    }
+                                }}
+                            />}
 
                         {/* <TextField
                             register={register}
@@ -488,6 +704,7 @@ export default function Invoice() {
                                             <th style={{ minWidth: "16rem" }}>ACCOUNT</th>
                                             <th style={{ minWidth: "16rem" }}>QUANTITY</th>
                                             <th style={{ minWidth: "16rem" }}>PRICE</th>
+                                            <th style={{ minWidth: "16rem" }}>MRP</th>
                                             <th style={{ minWidth: "16rem" }}>TAXES (%)</th>
                                             <th style={{ minWidth: "16rem" }}>SUB TOTAL</th>
 
@@ -499,8 +716,22 @@ export default function Invoice() {
                                                 {!isPOSelected && isAddMode && <td>
                                                     <Button size="sm" variant="secondary"
                                                         onClick={() => {
-                                                            invoiceLineRemove(index)
-                                                            updateOrderLines(index)
+                                                            // invoiceLineRemove(index)
+                                                            // updateOrderLines(index)
+
+                                                            swal.fire({
+                                                                title: `Delete warning`,
+                                                                text: "Do you really want to delete this line?",
+                                                                // input: 'number',
+                                                                showCancelButton: true
+                                                            }).then(async (result) => {
+                                                                if (result.value == undefined) {
+                                                                    // infoNotification("please enter something in popup..")
+                                                                } else {
+                                                                    invoiceLineRemove(index)
+                                                                    updateOrderLines(index)
+                                                                }
+                                                            })
                                                         }}
                                                     ><BsTrash /></Button>
                                                 </td>}
@@ -537,9 +768,10 @@ export default function Invoice() {
                                                                     setValue(`invoiceLines.${index}.label`, productObj.description);
                                                                     setValue(`invoiceLines.${index}.unitArray`, productObj.uom);
                                                                     setValue(`invoiceLines.${index}.quantity`, 1);
-                                                                    setValue(`invoiceLines.${index}.taxes`, productObj?.vendorTaxes);
-                                                                    setValue(`invoiceLines.${index}.unitPrice`, productObj.salesPrice);
-                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.salesPrice) * 1));
+                                                                    setValue(`invoiceLines.${index}.taxes`, productObj?.igstRate);
+                                                                    setValue(`invoiceLines.${index}.unitPrice`, productObj.cost);
+                                                                    setValue(`invoiceLines.${index}.mrp`, productObj.salesPrice);
+                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.cost) * 1));
                                                                     setValue(`invoiceLines.${index}.accountArray`, productObj.assetAccount);
                                                                     updateOrderLines(index)
                                                                 }
@@ -652,6 +884,24 @@ export default function Invoice() {
                                                     />
 
                                                 </td>
+
+                                                <td>
+                                                    <LineNumberField
+                                                        register={register}
+                                                        model={"invoiceLines"}
+                                                        field={{
+                                                            disabled: true,
+                                                            fieldId: "mrp",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+
+                                                </td>
+
                                                 <td>
                                                     <LineNumberField
                                                         register={register}

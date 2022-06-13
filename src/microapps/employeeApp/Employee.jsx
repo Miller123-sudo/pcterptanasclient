@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
 import { UserContext } from '../../components/states/contexts/UserContext';
-import { errorMessage } from '../../helpers/Utils'
+import { checkMaxDepartmentCount, errorMessage, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -39,9 +39,15 @@ export default function Employee() {
 
     const onSubmit = (formData) => {
         console.log(formData);
-        return isAddMode
-            ? createDocument(formData)
-            : updateDocument(id, formData);
+        console.log(checkMaxDepartmentCount(formData));
+
+        if (!checkMaxDepartmentCount(formData)) {
+            return isAddMode
+                ? createDocument(formData)
+                : updateDocument(id, formData);
+        } else {
+            infoNotification("Please select two or more value in department field ❕");
+        }
     }
 
     const createDocument = (data) => {
@@ -428,7 +434,7 @@ export default function Employee() {
                                             // required: true,
                                             // validationMessage: "Please enter the department name!",
                                             selectRecordType: "department",
-                                            multiple: false
+                                            multiple: true
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}

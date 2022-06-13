@@ -36,23 +36,23 @@ export default function ImportProduct() {
 
     const createDocument = async (data) => {
         console.log(xlfile);
-        // const wb = xlxs.read(xlfile, { type: "buffer" })
-        // const wbName = wb.SheetNames[0]
-        // const ws = wb.Sheets[wbName]
-        // const xlData = xlxs.utils.sheet_to_json(ws)
-        const xlData = getxlData()
-        console.log(xlData);
+        if (!xlfile) {
+            infoNotification("Please select a file to upload ❕")
+        } else {
 
-        try {
-            ApiService.setHeader();
-            const res = await ApiService.post('/product/import', xlData)
-            if (res.data.isSuccess) {
-                console.log(res.data.documents);
-                navigate(`/${rootPath}/product/list`);
+            const xlData = getxlData()
+            console.log(xlData);
+            try {
+                ApiService.setHeader();
+                const res = await ApiService.post('/product/import', xlData)
+                if (res.data.isSuccess) {
+                    console.log(res.data.documents);
+                    navigate(`/${rootPath}/product/list`);
+                }
+
+            } catch (e) {
+                errorMessage(e, null)
             }
-
-        } catch (e) {
-            errorMessage(e, null)
         }
     }
 

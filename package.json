@@ -33,6 +33,7 @@
     "react-scripts": "4.0.3",
     "react-select": "^5.2.1",
     "react-spinners": "^0.11.0",
+    "react-switch": "^7.0.0",
     "read-directory": "^3.0.2",
     "recharts": "^2.1.6",
     "sweetalert": "^2.1.2",

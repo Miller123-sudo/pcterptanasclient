@@ -42,6 +42,7 @@ export default function ProductList() {
     const findAllDocument = async () => {
         ApiService.setHeader();
         const response = await ApiService.get('product');
+        // const response = await ApiService.get('product/findBycategory');
         console.log(response.data.documents)
         setstate(response.data.documents)
         setLoderStatus("SUCCESS");
@@ -69,6 +70,9 @@ export default function ProductList() {
     useEffect(() => {
         setLoderStatus("RUNNING");
         findAllDocument();
+
+        console.log(user);
+
     }, []);
 
 

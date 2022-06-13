@@ -30,6 +30,8 @@ import SizeListApp from "../../microapps/sizeListApp";
 import PriceChartUploadApp from "../../microapps/priceChartUploadApp";
 import PriceChartListApp from "../../microapps/priceChartList";
 import ImportVendor from "../../microapps/vendorApp/VendorImport";
+import ProductGradeApp from "../../microapps/productGradeApp/Index";
+import UpdateGSTApp from "../../microapps/updateGSTApp/Index";
 
 export default function PurchaseModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -148,14 +150,21 @@ export default function PurchaseModule() {
         <Routes>
           <Route path="/" element={<PurchaseApp />} />
           <Route path="/vendors/*" element={<VendorApp />} />
+          <Route path={"/importvendors/*"} element={<ImportVendor />} />
+
           <Route path="/product/*" element={<ProductApp />} />
+          <Route path="/updateGST/*" element={<UpdateGSTApp />} />
+
           <Route path="/rfqs/*" element={<RFQApp />} />
+
           <Route path="/purchases/*" element={<PurchaseApp />} />
           <Route path="/receivedproducts/*" element={<ProductReceiveApp />} />
           <Route path={"/received/*"} element={<ProductReceivedApp />} />
           {/* <Route path={"/vendorbills/*"} element={<BillApp />} /> */}
+
           <Route path={"/bills/*"} element={<NewBillApp />} />
           <Route path={"/billpayment/*"} element={<BillPaymentApp />} />
+
           <Route path={"/brand/*"} element={<BrandApp />} />
           <Route path={"/groupmaster/*"} element={<GroupMasterApp />} />
           <Route path={"/productmaster/*"} element={<ProductMasterApp />} />
@@ -164,11 +173,12 @@ export default function PurchaseModule() {
           <Route path={"/size/*"} element={<SizeApp />} />
           <Route path={"/sizelist/*"} element={<SizeListApp />} />
           <Route path={"/pricechartlist/*"} element={<PriceChartListApp />} />
-          <Route path={"/importvendors/*"} element={<ImportVendor />} />
           <Route
             path={"/pricechartupload/*"}
             element={<PriceChartUploadApp />}
           />
+          <Route path={"/productGrade/*"} element={<ProductGradeApp />} />
+
           <Route
             path={"/purchasereportsdashboard/*"}
             element={<PurchaseAnalysisApp />}

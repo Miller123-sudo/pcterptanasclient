@@ -50,6 +50,10 @@
               {
                 "item_name": "Products",
                 "item_navigation": "product"
+              },
+              {
+                "item_name": "Update GST",
+                "item_navigation": "updateGST"
               }
             ]
           }
@@ -96,6 +100,10 @@
               {
                 "item_name": "Size List",
                 "item_navigation": "sizelist"
+              },
+              {
+                "item_name": "Product Grade",
+                "item_navigation": "productGrade"
               },
               {
                 "item_name": "Price Chart Upload",

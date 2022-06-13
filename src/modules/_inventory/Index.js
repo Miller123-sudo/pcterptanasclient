@@ -22,6 +22,15 @@ import RFQApp from "../../microapps/RFQApp/Index";
 import InventoryAdjustmentApp from "../../microapps/inventoryAdjustmentApp/Index";
 import InventoryStockReportApp from "../../microapps/InventoryStockReportApp/Index";
 import CategoryApp from "../../microapps/categoryApp/Index";
+import BrandApp from "../../microapps/brandApp";
+import GroupMasterApp from "../../microapps/groupMasterApp";
+import ProductMasterApp from "../../microapps/productMasterApp";
+import Category1App from "../../microapps/category1App";
+import Category2App from "../../microapps/category2App";
+import SizeApp from "../../microapps/sizeApp";
+import SizeListApp from "../../microapps/sizeListApp";
+import ImportProduct from "../../microapps/productApp/ImportProduct";
+import ProductGradeApp from "../../microapps/productGradeApp/Index";
 
 export default function InventoryModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -143,11 +152,24 @@ export default function InventoryModule() {
             path="/inventoryadjustment/*"
             element={<InventoryAdjustmentApp />}
           />
+
           <Route path="/product/*" element={<ProductApp />} />
+          <Route path="/importproduct/*" element={<ImportProduct />} />
+
           <Route
             path="/inventorystocksreport/*"
             element={<InventoryStockReportApp />}
           />
+
+          <Route path={"/brand/*"} element={<BrandApp />} />
+          <Route path={"/groupmaster/*"} element={<GroupMasterApp />} />
+          <Route path={"/productmaster/*"} element={<ProductMasterApp />} />
+          <Route path={"/category1/*"} element={<Category1App />} />
+          <Route path={"/category2/*"} element={<Category2App />} />
+          <Route path={"/size/*"} element={<SizeApp />} />
+          <Route path={"/sizelist/*"} element={<SizeListApp />} />
+          <Route path={"/productGrade/*"} element={<ProductGradeApp />} />
+
           <Route path="/category/*" element={<CategoryApp />} />
         </Routes>
       </AppContentContainer>

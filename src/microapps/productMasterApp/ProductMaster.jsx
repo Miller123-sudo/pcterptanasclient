@@ -103,12 +103,12 @@ export default function ProductMaster() {
             <Container className="pct-app-content" fluid>
                 <Container className="pct-app-content-header p-0 m-0 pb-2" fluid>
                     <Row>
-                        <Col><h3>Product Masters</h3></Col>
+                        <Col><h3>PRODUCT MASTER</h3></Col>
                     </Row>
                     <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content" >
                         <Row className="p-2">
                             <Form.Group as={Col} md="4">
-                                <Form.Label className="m-0">Name</Form.Label>
+                                <Form.Label className="m-0">NAME</Form.Label>
                                 <Form.Control
                                     type="text"
                                     id="name"

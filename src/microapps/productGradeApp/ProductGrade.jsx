@@ -2,15 +2,14 @@ import { React, useEffect, useState } from 'react';
 import { Button, ButtonGroup, Tabs, Tab, Col, Container, Form, Row, Card, Table, DropdownButton, Dropdown, Breadcrumb } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { BsTrash, BsEyeFill } from 'react-icons/bs';
+import { BsTrash, BsEyeFill, BsPencil } from 'react-icons/bs';
 import { PropagateLoader } from "react-spinners";
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
 import { useHistory, useParams } from 'react-router';
 import ApiService from '../../helpers/ApiServices';
-import AppLoader from '../../pcterp/components/AppLoader';
 const moment = require('moment');
 
-export default function SizeList() {
+export default function ProductGrade() {
     const [loderStatus, setLoderStatus] = useState("");
     const [value, setvalue] = useState();
     const [state, setstate] = useState([]);
@@ -18,6 +17,7 @@ export default function SizeList() {
     const [gridColumnApi, setGridColumnApi] = useState(null);
     // let { path, url } = useRouteMatch();
     const { id } = useParams();
+    const isAddMode = !id;
 
     const { register, handleSubmit, setValue, getValues, control, reset, setError, formState: { errors } } = useForm({
         defaultValues: {
@@ -40,9 +40,10 @@ export default function SizeList() {
 
     const columns = [
         {
-            headerName: 'Delete', field: '_id', sortable: false, filter: false, cellRendererFramework: (params) =>
+            headerName: 'Delete', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
                 <>
                     <Button style={{ minWidth: "4rem" }} size="sm" onClick={() => handleDeleteList(params)} ><BsTrash /></Button>
+                    {/* <Button style={{ minWidth: "4rem" }} size="sm" onClick={() => handleEditList(params)} ><BsPencil /></Button> */}
                 </>
         },
         { headerName: 'Name', field: 'name' },
@@ -51,26 +52,32 @@ export default function SizeList() {
     ]
 
     const onSubmit = (formData) => {
-        createRecord(formData)
+        // let newData = { ...formData }
+        // newData['schemaId'] = 'productMaster';
+        // createRecord(newData)
+
+        return isAddMode
+            && createDocument(formData)
+
     }
 
-    const createRecord = (data) => {
+    const createDocument = (data) => {
         console.log(data)
-        ApiService.post('sizelist', data).then(res => {
-            ApiService.get('sizelist').then(res => {
+        return ApiService.post('productGrade', data).then(res => {
+            setValue("name", "")
+            ApiService.get('productGrade').then(res => {
                 console.log(res.data.documents)
                 setstate(res.data.documents)
-                setValue("name", "")
             });
         }).catch(err => console.log(err))
     }
 
     const deleteDocument = (id) => {
         ApiService.setHeader();
-        return ApiService.delete(`sizelist/${id}`).then(response => {
+        return ApiService.delete(`/productGrade/${id}`).then(response => {
             console.log(response)
             if (response.status == 204) {
-                ApiService.get('sizelist').then(res => {
+                ApiService.get('productGrade').then(res => {
                     console.log(res.data.documents)
                     setstate(res.data.documents)
                 });
@@ -82,24 +89,16 @@ export default function SizeList() {
 
     const handleDeleteList = (params) => {
         deleteDocument(params.value)
-
     }
 
 
     useEffect(async () => {
         setLoderStatus("RUNNING");
-        const response = await ApiService.get('sizelist');
+        const response = await ApiService.get('productGrade');
         console.log(response.data.documents)
         setstate(response.data.documents)
         setLoderStatus("SUCCESS");
     }, [])
-
-    if (loderStatus === "RUNNING") {
-        return (
-            <AppLoader />
-        )
-    }
-
 
 
 
@@ -108,13 +107,13 @@ export default function SizeList() {
             <Container className="pct-app-content" fluid>
                 <Container className="pct-app-content-header p-0 m-0 pb-2" fluid>
                     <Row>
-                        <Col><h3>Size Lists</h3></Col>
+                        <Col><h3>PRODUCT GRADE</h3></Col>
                     </Row>
-                    <Form onSubmit={handleSubmit(onSubmit)} >
+                    <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content" >
                         <Row className="p-2">
-                            <Form.Group as={Col} md="4">
-                                <Form.Label className="m-0">Name</Form.Label>
-                                <Form.Control
+                            <Form.Group as={Col} md="4" >
+                                <Form.Label className="m-0">NAME</Form.Label>
+                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                     type="text"
                                     id="name"
                                     name="name"
@@ -123,7 +122,7 @@ export default function SizeList() {
                             </Form.Group>
                             <Form.Group as={Col} md="4" className="mb-2">
                                 <Form.Label className="m-0">{" "}</Form.Label> <br />
-                                <Button variant="primary" size="md" type='submit'>Add</Button>
+                                <Button variant="primary" size="sm" type='submit'>Add</Button>
                             </Form.Group>
                         </Row>
                     </Form>

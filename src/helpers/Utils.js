@@ -482,12 +482,23 @@ const validationOnVendorForm = (data) => {
   return isBlank;
 };
 
-const isBillAmountEqualPurchaseAmount = (billObj, POData) => {
-  if (billObj.estimation.total == POData.estimation.total) {
+const isBillAmountEqualPurchaseAmount = (POData) => {
+  // if (billObj.estimation.total == POData.estimation.total) {
+  if (POData.bill[0].estimation.total == POData.estimation.total) {
     return true;
   } else {
     return false;
   }
+};
+
+const checkMaxDepartmentCount = (data) => {
+  let isMin = false;
+
+  if (data.department.length < 2) {
+    // infoNotification("Please select two or more value in department field ❕");
+    return (isMin = true);
+  }
+  return isMin;
 };
 
 export {
@@ -502,4 +513,5 @@ export {
   isBillAmountEqualPurchaseAmount,
   infoNotification,
   checkBlankProduct,
+  checkMaxDepartmentCount,
 };

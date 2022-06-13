@@ -4,6 +4,7 @@ import "jspdf-autotable";
 import "jspdf-barcode";
 import listReactFiles from "list-react-files";
 import { getAllFiles, getAllFilesSync } from "get-all-files";
+import { infoNotification } from "./Utils";
 var read = require("read-directory");
 const fs = require("fs");
 
@@ -1500,7 +1501,9 @@ const SalesOrderPDF = {
 };
 
 const BarcodePDF = {
-  generateDefaultPurchaseOrderBarcodePDF(qty, data) {
+  generateDefaultPurchaseOrderBarcodePDF(qty, data, company, product) {
+    // if (data?.barcode) {
+    let size;
     var doc = new jsPDF("p", "pt", "a4");
     let c = 0;
     let y = 0;
@@ -1522,6 +1525,8 @@ const BarcodePDF = {
       doc.addPage();
     }
 
+    console.log(company);
+
     // Set each page and print barcode in each pages of the PDF
     for (var k = 0; k < requirePages; k++) {
       doc.setPage(k);
@@ -1532,14 +1537,58 @@ const BarcodePDF = {
             doc.rect(20 + j * 300, 20 + i * 110, 250, 100);
             doc.setFontSize(12);
             doc.setFont("helvetica", "bold");
-            doc.text("TANAS CREATION", 90 + j * 300, 35 + i * 110);
+            doc.text(`${company?.name}`, 90 + j * 300, 35 + i * 110);
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
-            doc.text(
-              `Size: ${data?.incomeAccount ? "" : data?.size}`,
-              95 + j * 300,
-              50 + i * 110
-            );
+            if (data?.size) {
+              if (data.size >= 14 && data.size <= 16) {
+                size = "";
+              }
+              switch (parseInt(data.size)) {
+                case 18:
+                  size = "18, Age: 1 to 2";
+                  break;
+                case 20:
+                  size = "20, Age: 2 to 3";
+                  break;
+                case 22:
+                  size = "22, Age: 3 to 4";
+                  break;
+                case 24:
+                  size = "24, Age: 5 to 6";
+                  break;
+                case 26:
+                  size = "26, Age: 7 to 8";
+                  break;
+                case 28:
+                  size = "28, Age: 9 to 10";
+                  break;
+                case 30:
+                  size = "30, Age: 11 to 12";
+                  break;
+                case 32:
+                  size = "32, Age: 13 to 14";
+                  break;
+                case 34:
+                  size = "34, Age: 15 to 16";
+                  break;
+                case 36:
+                  size = "36, Age: 17 to 18";
+                  break;
+                case 38:
+                  size = "38, Age: 19 to 20";
+                  break;
+                case 40:
+                  size = "40, Age: 21 to 22";
+                  break;
+              }
+
+              doc.text(
+                `Size: ${data?.incomeAccount ? "" : size}`,
+                95 + j * 300,
+                50 + i * 110
+              );
+            }
             doc.text(
               `Price: Rs. ${
                 data?.incomeAccount ? data?.salesPrice : data?.subTotal
@@ -1547,16 +1596,21 @@ const BarcodePDF = {
               95 + j * 300,
               65 + i * 110
             );
+            doc.text(
+              `MFG Date: ${product.mfgDate}`,
+              95 + j * 300,
+              80 + i * 110
+            );
 
-            doc.barcode(`${data?.name}-${data?.salesPrice}`, {
+            doc.barcode(`${data?.barcode}`, {
               // barcodeValue: "123456789101",
               // barcodeText: "123456789101",
               format: "EAN13",
               displayValue: true,
               fontSize: 30,
               textColor: "#000000",
-              x: 90 + j * 300,
-              y: 100 + i * 110,
+              x: 88 + j * 300,
+              y: 110 + i * 110,
             });
             c += 1;
           }
@@ -1571,6 +1625,9 @@ const BarcodePDF = {
     }
 
     doc.save(`Barcode-${new Date()}.pdf`);
+    // } else {
+    //   infoNotification("Item does not have a barcode");
+    // }
   },
 };
 

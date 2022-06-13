@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { BsArrowLeft, BsArrowRight, BsPauseBtnFill, BsFillCreditCardFill, BsFillBarChartFill, BsSaveFill } from 'react-icons/bs';
+import { DiGhostSmall } from "react-icons/di";
 import ApiService from '../../helpers/ApiServices'
 import { errorMessage } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
@@ -19,6 +20,7 @@ import CheckboxField from '../../pcterp/field/CheckboxField';
 import PCTTax from '../../components/form/searchAndSelect/PCTTax';
 import AppLoader from '../../pcterp/components/AppLoader';
 import swal from "sweetalert2"
+import { BarcodePDF } from '../../helpers/PDF';
 
 export default function Product() {
     const [state, setState] = useState(null)
@@ -45,6 +47,11 @@ export default function Product() {
     const isAddMode = !id;
     const [searchParams] = useSearchParams();
 
+    let productTypeArray = [
+        { id: "Readyment Garment", name: "Readyment Garment" },
+        { id: "Other", name: "Other" },
+    ]
+
     const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
         defaultValues: {
             assetAccount: null,
@@ -57,7 +64,6 @@ export default function Product() {
             averageCost: 0,
         }
     });
-
 
 
     // Functions
@@ -400,21 +406,31 @@ export default function Product() {
 
         let itemName = createItemName(categoryObjArr);
 
-        if (formData.minimunSize && formData.mazimumSize) {
+        // if (formData.minimunSize || formData.mazimumSize) {
+        if (formData.costPrice) {
             // Get product name by range
-            const tanasUtil = new TanasUtils();
-            const rangeArray = tanasUtil.calculatePrice(parseInt(formData.minimunSize), parseInt(formData.mazimumSize), parseInt(formData.costPrice), 15, 8, 40, 5)
-            console.log(rangeArray);
+            // const tanasUtil = new TanasUtils();
+            // const rangeArray = tanasUtil.calculatePrice(parseInt(formData.minimunSize), parseInt(formData.minimunSize), parseInt(formData.costPrice), 15, 8, 40, 5)
+            // console.log(rangeArray);
 
-            let array = new Array()
-            rangeArray?.map(e => {
-                let obj = new Object()
-                obj.name = `${itemName}_${e?.size}`
-                obj.price = e?.price
-                array.push(obj)
-            })
-            setrangeList(array)
-            setValue('name', "")
+            // let array = new Array()
+            // rangeArray?.map(e => {
+            //     let obj = new Object()
+            //     obj.name = `${itemName}_${e?.size}`
+            //     obj.price = e?.price
+            //     array.push(obj)
+            // })
+            // setrangeList(array)
+            // setValue('name', "")
+
+            const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+            if (res.data.isSuccess) {
+                console.log(res.data.document);
+                setValue('name', itemName)
+                setValue('salesPrice', res.data.document.MRP)
+                setValue('cost', formData.costPrice)
+                setValue('costPrice', "")
+            }
         } else {
             // Set item name in product name field for single product creation
             setValue('name', itemName)
@@ -606,8 +622,40 @@ export default function Product() {
         setcolleapse(!colleapse)
     }
 
+    const printBarcode = () => {
+        swal.fire({
+            title: `Enter quantity`,
+            text: "Enter quantity...",
+            input: 'number',
+            showCancelButton: true
+        }).then(async (result) => {
+
+            console.log("value: ", result.value);
+            if (result.value == undefined) {
+                swal.fire("please enter something in popup..")
+
+                console.log("please enter something");
+            } else {
+                BarcodePDF.generateDefaultPurchaseOrderBarcodePDF(result.value, state)
+            }
+        })
+    }
+
 
     useEffect(async () => {
+        console.log(new Date().getFullYear());
+        if (new Date().getMonth() >= 0 && new Date().getMonth() <= 4) {
+            console.log("A");
+            setValue("mfgDate", `${new Date().getFullYear()}_A`)
+        }
+        if (new Date().getMonth() >= 5 && new Date().getMonth() <= 8) {
+            console.log("B");
+            setValue("mfgDate", `${new Date().getFullYear()}_B`)
+        }
+        if (new Date().getMonth() >= 9 && new Date().getMonth() <= 12) {
+            console.log("C");
+            setValue("mfgDate", `${new Date().getFullYear()}_C`)
+        }
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
@@ -684,13 +732,17 @@ export default function Product() {
                         </Col>
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
-                        <Col className='p-0 ps-1'>
+                        <Col md="4" className='p-0 ps-1'>
                             <Button type="submit" variant="primary" size="sm">SAVE</Button>{" "}
                             <Button as={Link} to={`/${rootPath}/product/list`} variant="secondary" size="sm">DISCARD</Button>
                             {!isAddMode && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
                             </DropdownButton>}
 
+                        </Col>
+                        <Col md="4"> </Col>
+                        <Col md="4" style={{ display: "flex", justifyContent: "flex-end" }}>
+                            {!isAddMode ? <Button variant="primary" size="sm" onClick={printBarcode}>Print barcode</Button> : ""}
                         </Col>
                     </Row>
                 </Container>
@@ -730,7 +782,7 @@ export default function Product() {
                         {
                             isAddMode ?
                                 <Card className="card" style={{ marginTop: 1 }}>
-                                    <Card.Header className="title" onClick={collapseCard} style={{ cursor: "pointer" }}>  ITEM CATEGORY</Card.Header>
+                                    <Card.Header className="title" onClick={collapseCard} style={{ cursor: "pointer" }}><DiGhostSmall style={{ width: '24px', height: '24px' }} /><span > ITEM CATEGORY</span></Card.Header>
                                     {
                                         colleapse && (
                                             <Card.Body>
@@ -826,19 +878,18 @@ export default function Product() {
                                                             <Form.Control type="number" min="0" id="age" name="age" {...register("age")} />
                                                         </Form.Group> */}
                                                 </Row>
-                                                {/* {
-                                                !colleapseRange && (
-                                                    <Row>
-                                                        <Form.Group className="mb-2" as={Col} md="4">
-                                                            <Form.Label>Minimum Size</Form.Label>
-                                                            <FormSelect id="minimunSize" name="minimunSize" {...register("minimunSize")} >
-                                                                <option value={null} selected>Choose..</option>
-                                                                {MaxMinSizeList && MaxMinSizeList.map((value, index) => {
-                                                                    return <option key={index} value={value.name}>{value.name}</option>
-                                                                })}
-                                                            </FormSelect>
-                                                        </Form.Group>
-                                                        <Form.Group className="mb-2" as={Col} md="4">
+
+                                                <Row>
+                                                    {/* <Form.Group className="mb-2" as={Col} md="4">
+                                                                <Form.Label className="m-0">MINIMUM SIZE</Form.Label>
+                                                                <FormSelect size='sm' style={{ maxWidth: '400px' }} id="minimunSize" name="minimunSize" {...register("minimunSize")} >
+                                                                    <option value={null} selected>Choose..</option>
+                                                                    {MaxMinSizeList && MaxMinSizeList.map((value, index) => {
+                                                                        return <option key={index} value={value.name}>{value.name}</option>
+                                                                    })}
+                                                                </FormSelect>
+                                                            </Form.Group> */}
+                                                    {/* <Form.Group className="mb-2" as={Col} md="4">
                                                             <Form.Label>Mazimum Size</Form.Label>
                                                             <FormSelect id="mazimumSize" name="mazimumSize" {...register("mazimumSize")} >
                                                                 <option value={null} selected>Choose..</option>
@@ -846,14 +897,13 @@ export default function Product() {
                                                                     return <option key={index} value={value.name}>{value.name}</option>
                                                                 })}
                                                             </FormSelect>
-                                                        </Form.Group>
-                                                        <Form.Group className="mb-2" as={Col} md="4">
-                                                            <Form.Label>Cost Price</Form.Label>
-                                                            <Form.Control type="number" min="0" id="costPrice" name="costPrice" {...register("costPrice")} />
-                                                        </Form.Group>
-                                                    </Row>
-                                                )
-                                            } */}
+                                                        </Form.Group>*/}
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">COST PRICE</Form.Label>
+                                                        <Form.Control size='sm' style={{ maxWidth: '400px' }} type="number" min="0" id="costPrice" name="costPrice" {...register("costPrice")} />
+                                                    </Form.Group>
+                                                </Row>
+
 
                                             </Card.Body>
                                         )
@@ -885,12 +935,43 @@ export default function Product() {
                             blurHandler={null}
                         />
 
+                        <Form.Group as={Col} md="4" className="mb-2" >
+                            <Form.Label className="m-0">PRODUCT TYPE</Form.Label>
+                            <FormSelect size='sm' style={{ maxWidth: '400px' }} id="productType" name="productType" {...register("productType")}
+                                onBlur={(e) => {
+                                    console.log(getValues());
+                                    let values = getValues()
+                                    console.log(values.productType);
+                                    if (values.productType) {
+                                        if (values.productType !== "Other" && parseInt(values.salesPrice) >= 1000) {
+                                            setValue("igstRate", 12.00)
+                                            setValue("sgstRate", parseFloat(12 / 2).toFixed(2))
+                                            setValue("utgstRate", parseFloat(12 / 2).toFixed(2))
+                                        } else if (values.productType !== "Other" && parseInt(values.salesPrice) < 1000) {
+                                            setValue("igstRate", 5.00)
+                                            setValue("sgstRate", parseFloat(5 / 2).toFixed(2))
+                                            setValue("utgstRate", parseFloat(5 / 2).toFixed(2))
+                                        } else if (values.productType == "Other") {
+                                            setValue("igstRate", "")
+                                            setValue("sgstRate", "")
+                                            setValue("utgstRate", "")
+                                        }
+                                    }
+                                }}
+                            >
+                                <option value={productTypeArray[0]} selected>Choose..</option>
+                                {productTypeArray && productTypeArray.map((value, index) => {
+                                    return <option key={index} value={value.id}>{value.name}</option>
+                                })}
+                            </FormSelect>
+                        </Form.Group>
+
                         <Decimal128Field
                             register={register}
                             errors={errors}
                             field={{
                                 description: "Selling Price of this Product.",
-                                label: "SALES PRICE",
+                                label: "SALES PRICE (MRP)",
                                 fieldId: "salesPrice",
                                 placeholder: "",
 
@@ -910,6 +991,23 @@ export default function Product() {
                                 placeholder: "",
                                 // required: true,
                                 // validationMessage: "Please enter the department name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <SelectField
+                            control={control}
+                            errors={errors}
+                            field={{
+                                description: "Units of Measure",
+                                label: "UNITS",
+                                fieldId: "uom",
+                                placeholder: "",
+                                required: true,
+                                validationMessage: "Please select the unit !",
+                                selectRecordType: "uom",
+                                multiple: false
                             }}
                             changeHandler={null}
                             blurHandler={null}
@@ -944,18 +1042,150 @@ export default function Product() {
                             blurHandler={null}
                         />
 
-                        <SelectField
-                            control={control}
+                        <TextField
+                            register={register}
                             errors={errors}
                             field={{
-                                description: "Units of Measure",
-                                label: "UNITS",
-                                fieldId: "uom",
+                                description: "Manufacturing date",
+                                label: "MFG DATE",
+                                fieldId: "mfgDate",
+                                placeholder: "",
+                                disabled: true
+                                // required: true,
+                                // validationMessage: "Please enter the Product name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+
+                    </Row>
+                    {
+                        !isAddMode && (
+                            <Row style={{ marginTop: 2 }}>
+                                <SelectField
+                                    control={control}
+                                    errors={errors}
+                                    field={{
+                                        description: "income Account",
+                                        label: "INCOME ACCOUNT",
+                                        fieldId: "incomeAccount",
+                                        placeholder: "",
+                                        required: true,
+                                        validationMessage: "Please select income account !",
+                                        selectRecordType: "account",
+                                        multiple: false,
+                                        disabled: true
+                                    }}
+                                    changeHandler={null}
+                                    blurHandler={null}
+                                />
+                                <SelectField
+                                    control={control}
+                                    errors={errors}
+                                    field={{
+                                        description: "Expense Account",
+                                        label: "EXPENSE ACCOUNT",
+                                        fieldId: "expenseAccount",
+                                        placeholder: "",
+                                        required: true,
+                                        validationMessage: "Please select expence account !",
+                                        selectRecordType: "account",
+                                        multiple: false,
+                                        disabled: true
+
+                                    }}
+                                    changeHandler={null}
+                                    blurHandler={null}
+                                />
+
+                                <SelectField
+                                    control={control}
+                                    errors={errors}
+                                    field={{
+                                        description: "Asset Account",
+                                        label: "ASSET ACCOUNT",
+                                        fieldId: "assetAccount",
+                                        placeholder: "",
+                                        required: true,
+                                        validationMessage: "Please select asset account !",
+                                        selectRecordType: "account",
+                                        multiple: false,
+                                        disabled: true
+
+                                    }}
+                                    changeHandler={null}
+                                    blurHandler={null}
+                                />
+
+                            </Row>
+                        )
+                    }
+
+                    <Row>
+                        <Decimal128Field
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "HSN/SAC",
+                                label: "HSN/SACS CODE",
+                                fieldId: "HSNSACS",
                                 placeholder: "",
                                 required: true,
-                                validationMessage: "Please select the unit !",
-                                selectRecordType: "uom",
-                                multiple: false
+                                validationMessage: "Please enter the HSN code !"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <Decimal128Field
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "Purchase Cost",
+                                label: "GST RATE (%)",
+                                fieldId: "igstRate",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the department name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={(e) => {
+                                if (e.target.value && !isNaN(e.target.value)) {
+                                    setValue("igstRate", parseFloat(e.target.value).toFixed(2))
+                                    setValue("sgstRate", (parseFloat(e.target.value) / 2).toFixed(2))
+                                    setValue("utgstRate", (parseFloat(e.target.value) / 2).toFixed(2))
+                                } else {
+                                    console.log("not number");
+                                }
+                            }}
+                        />
+
+                        <Decimal128Field
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "SGST RATE (%)",
+                                fieldId: "sgstRate",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the department name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <Decimal128Field
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "UTGST RATE (%)",
+                                fieldId: "utgstRate",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the department name!"
                             }}
                             changeHandler={null}
                             blurHandler={null}
@@ -980,7 +1210,8 @@ export default function Product() {
                                             // required: true,
                                             // validationMessage: "Please enter the department name!",
                                             selectRecordType: "location",
-                                            multiple: false
+                                            multiple: false,
+                                            default: true
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
@@ -992,7 +1223,7 @@ export default function Product() {
                                         errors={errors}
                                         field={{
                                             description: "Select category",
-                                            label: "Category",
+                                            label: "CATEGORY",
                                             fieldId: "category",
                                             placeholder: "",
                                             // required: true,
@@ -1030,7 +1261,8 @@ export default function Product() {
                                             fieldId: "barcode",
                                             placeholder: "",
                                             // required: true,
-                                            // validationMessage: "Please enter the Product name!"
+                                            // validationMessage: "Please enter the Product name!",
+                                            disabled: true
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
@@ -1086,10 +1318,10 @@ export default function Product() {
                                 </Row>
                             </Container>
                         </Tab>
-                        <Tab eventKey="tax" title="TAX INFORMATION">
+                        {/* <Tab eventKey="tax" title="TAX INFORMATION">
                             <Container className="mt-2" fluid>
                                 <Row>
-                                    {/* <SelectField
+                                     <SelectField
                                         control={control}
                                         errors={errors}
                                         field={{
@@ -1112,22 +1344,10 @@ export default function Product() {
 
                                         }}
                                         blurHandler={null}
-                                    /> */}
-                                    <Decimal128Field
-                                        register={register}
-                                        errors={errors}
-                                        field={{
-                                            description: "HSN/SAC",
-                                            label: "HSN/SACS CODE",
-                                            fieldId: "HSNSACS",
-                                            placeholder: "",
-                                            required: true,
-                                            validationMessage: "Please enter the HSN code !"
-                                        }}
-                                        changeHandler={null}
-                                        blurHandler={null}
-                                    />
-                                    <Decimal128Field
+                                    /> 
+
+
+                                     <Decimal128Field
                                         register={register}
                                         errors={errors}
                                         field={{
@@ -1140,51 +1360,10 @@ export default function Product() {
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
-                                    />
-                                    <Decimal128Field
-                                        register={register}
-                                        errors={errors}
-                                        field={{
-                                            description: "",
-                                            label: "SGST RATE(%)",
-                                            fieldId: "sgstRate",
-                                            placeholder: "",
-                                            // required: true,
-                                            // validationMessage: "Please enter the department name!"
-                                        }}
-                                        changeHandler={null}
-                                        blurHandler={null}
-                                    />
-                                    <Decimal128Field
-                                        register={register}
-                                        errors={errors}
-                                        field={{
-                                            description: "Purchase Cost",
-                                            label: "IGST RATE (%)",
-                                            fieldId: "igstRate",
-                                            placeholder: "",
-                                            // required: true,
-                                            // validationMessage: "Please enter the department name!"
-                                        }}
-                                        changeHandler={null}
-                                        blurHandler={null}
-                                    />
-                                    <Decimal128Field
-                                        register={register}
-                                        errors={errors}
-                                        field={{
-                                            description: "",
-                                            label: "UTGST RATE (%)",
-                                            fieldId: "utgstRate",
-                                            placeholder: "",
-                                            // required: true,
-                                            // validationMessage: "Please enter the department name!"
-                                        }}
-                                        changeHandler={null}
-                                        blurHandler={null}
-                                    />
+                                    /> 
 
-                                    {/* <PCTTax control={control}
+
+                                     <PCTTax control={control}
                                         errors={errors}
                                         field={{
                                             description: "",
@@ -1198,9 +1377,9 @@ export default function Product() {
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
-                                    /> */}
+                                    /> 
 
-                                    {/* <SelectField
+                                     <SelectField
                                         control={control}
                                         errors={errors}
                                         field={{
@@ -1215,12 +1394,12 @@ export default function Product() {
                                         }}
                                         changeHandler={null}
                                         blurHandler={null}
-                                    /> */}
+                                    /> 
 
                                 </Row>
                             </Container>
-                        </Tab>
-                        {
+                        </Tab> */}
+                        {/* {
                             !isAddMode && (
 
                                 <Tab eventKey="accounting" title="ACCOUNTINGS">
@@ -1283,7 +1462,7 @@ export default function Product() {
                                     </Row>
                                 </Tab>
                             )
-                        }
+                        } */}
                         {!isAddMode && <Tab eventKey="auditTrail" title="ADUIT TRAIL">
                             <Container className="mt-2" fluid>
                                 {!isAddMode && <LogHistories documentPath={"product"} documentId={id} />}

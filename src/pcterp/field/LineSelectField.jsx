@@ -44,7 +44,7 @@ export default function LineSelectField({ model, control, field, index, blurHand
                 selected={value}
                 positionFixed={true}
                 flip={true}
-
+                clearButton
             />)}
     />);
 }

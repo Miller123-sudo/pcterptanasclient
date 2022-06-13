@@ -1,9 +1,13 @@
 import { React, useState, useEffect, useContext } from 'react'
 import { BsTrash } from 'react-icons/bs';
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Card, Form, Breadcrumb } from 'react-bootstrap'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Card, Form, Breadcrumb, FormSelect } from 'react-bootstrap'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { BsArrowLeft, BsArrowRight, BsFillCreditCardFill, BsFillBarChartFill } from 'react-icons/bs';
+import { DiGhostSmall } from "react-icons/di";
+import { FiAlignJustify } from "react-icons/fi"
+import { RiToggleFill, RiToggleLine } from "react-icons/ri";
+import Switch from "react-switch";
 import ApiService from '../../helpers/ApiServices'
 import { errorMessage, infoNotification, isBillAmountEqualPurchaseAmount } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
@@ -18,7 +22,7 @@ import Decimal128Field from '../../pcterp/field/Decimal128Field';
 import LogHistories from '../../pcterp/components/LogHistories';
 import CheckboxField from '../../pcterp/field/CheckboxField';
 import { UserContext } from '../../components/states/contexts/UserContext';
-import { PurchaseOrderPDF } from '../../helpers/PDF';
+import { PurchaseOrderPDF, BarcodePDF } from '../../helpers/PDF';
 import AppContentLine from '../../pcterp/builder/AppContentLine';
 import LineSelectField from '../../pcterp/field/LineSelectField';
 import LineTextField from '../../pcterp/field/LineTextField';
@@ -27,6 +31,7 @@ import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import AppLoader from '../../pcterp/components/AppLoader';
 import AppContentHeaderPanel from '../../pcterp/builder/AppContentHeaderPanel';
 import AppContentStatusPanel from '../../pcterp/builder/AppContentStatusPanel';
+import swal from "sweetalert2"
 
 export default function Purchase() {
     const [loderStatus, setLoderStatus] = useState("NOTHING");
@@ -42,6 +47,21 @@ export default function Purchase() {
             total: 0
         }
     })
+    const [productMasterList, setProductMasterList] = useState([])
+    const [groupMasterList, setGroupMasterList] = useState([])
+    const [brandList, setBrandList] = useState([])
+    const [firstCategoryList, setFirstCategoryList] = useState([])
+    const [sizeList, setSizeList] = useState([])
+    const [secondCategoryList, setSecondCategoryList] = useState([])
+    const [productGrade, setproductGrade] = useState([])
+    const [productList, setProductList] = useState([])
+    const [MaxMinSizeList, setMaxMinSizeList] = useState([])
+    const [productGradeList, setproductGradeList] = useState([])
+    const [vendors, setvendors] = useState([])
+    const [colleapseRange, setcolleapseRange] = useState(false);
+    const [toggle, settoggle] = useState(false);
+    const [colleapse, setcolleapse] = useState(false);
+
     const navigate = useNavigate();
     const location = useLocation();
     const rootPath = location?.pathname?.split('/')[1];
@@ -76,13 +96,13 @@ export default function Purchase() {
     const onSubmit = (formData) => {
         console.log(formData);
         formData.billId = billObj?._id
-        if (isBillAmountEqualPurchaseAmount(billObj, formData)) {
-            return isAddMode
-                ? createDocument(formData)
-                : updateDocument(id, formData);
-        } else {
-            infoNotification("Selected bill's total amount is must equal to purchase order's total amount")
-        }
+        // if (isBillAmountEqualPurchaseAmount(formData)) {
+        return isAddMode
+            ? createDocument(formData)
+            : updateDocument(id, formData);
+        // } else {
+        //     infoNotification("Selected bill's total amount is must equal to purchase order's total amount")
+        // }
     }
 
     const createDocument = (data) => {
@@ -107,7 +127,7 @@ export default function Purchase() {
             }
         }).catch(e => {
             console.log(e.response?.data.message);
-            //errorMessage(e, dispatch)
+            errorMessage(e, null)
         })
 
     }
@@ -133,6 +153,7 @@ export default function Purchase() {
             reset(document);
             setValue('date', document?.date?.split("T")[0]);
             setValue('receiptDate', document?.receiptDate?.split("T")[0]);
+            setValue('vendor', document?.vendor);
 
             // const res = await ApiService.post(`/newBill/getBillByName/`, { name: document?.bill.split(" ")[0] })
             // if (res.data.isSuccess) {
@@ -268,21 +289,23 @@ export default function Purchase() {
         console.log(products);
         products?.map((val) => {
             cumulativeSum += parseFloat(val?.subTotal);
-            totalTax += (parseFloat(val?.taxes[0]) * parseFloat(val?.subTotal)) / 100
+            // totalTax += (parseFloat(val?.taxes[0]) * parseFloat(val?.subTotal)) / 100
+            totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
         });
 
+
         setValue("estimation", {
-            untaxedAmount: cumulativeSum,
-            tax: totalTax,
-            total: parseFloat(cumulativeSum + totalTax)
+            untaxedAmount: parseFloat(cumulativeSum).toFixed(2),
+            tax: parseFloat(totalTax).toFixed(2),
+            total: parseFloat(cumulativeSum + totalTax).toFixed(2)
         });
 
         setState(prevState => ({
             ...prevState,    // keep all other key-value pairs
             estimation: {
-                untaxedAmount: cumulativeSum,
-                tax: totalTax,
-                total: parseFloat(cumulativeSum + totalTax)
+                untaxedAmount: parseFloat(cumulativeSum).toFixed(2),
+                tax: parseFloat(totalTax).toFixed(2),
+                total: parseFloat(cumulativeSum + totalTax).toFixed(2)
             }
         }));
     }
@@ -313,10 +336,477 @@ export default function Purchase() {
         }
     }
 
+    // Code for item category
+    const filterCategory = async (event) => {
+        let responseData;
+        try {
+            if (event.target.value != "productGrade")
+                responseData = await ApiService.get(`itemCategory/search?parent=${event.target.value}`)
 
 
+            switch (event.target.id) {
+                case 'productMaster':
+                    setGroupMasterList(responseData?.data.document)
+                    break;
+                case 'groupMaster':
+                    setBrandList(responseData?.data.document)
+                    break;
+                case 'brand':
+                    setFirstCategoryList(responseData?.data.document)
+                    break;
+                case 'firstCategory':
+                    setSecondCategoryList(responseData?.data.document)
+                    break;
+                case 'secondCategory':
+                    setSizeList(responseData?.data.document)
+                    break;
+                default:
+                    break;
+            }
+        } catch (e) {
+            console.log(e.response.data.message);
+            errorMessage(e, null)
+        }
+    }
 
-    useEffect(() => {
+    const roundOff = 5;
+    class TanasUtils {
+
+        /**
+         * This method is use to find the Price of each size in a pack.
+         * 
+         * @param {Number} min Minimum size in the pack
+         * @param {*} max Maximum size in the pack.
+         * @param {Number} basePrice Base Price
+         * @param {Number} expense Expense
+         * @param {Number} transportChargePer Transportation charge in number. eg. 8% is 8, 40% is 40
+         * @param {Number} profitPer Profit Percentage in number. eg. 45% is 45, 75% is 75.
+         * @param {Number} gst GST Percentage in number
+         * @returns Object
+         */
+        calculatePrice(min, max, basePrice, expense, transportChargePer, profitPer, gst) {
+            let arrayOfSize = new Array();
+
+            const priceFactor = this.findPriceFactor(basePrice);
+            const result = this.findMedian(min, max);
+
+            if (result.median) {
+                for (var i = min; i <= max; i += 2) {
+
+                    let totalPrice = ((basePrice + (i - result.median) * (priceFactor) / 2) + expense);
+                    //console.log(i, (Math.ceil(totalPrice * (1 + transportChargePer / 100) * (1 + profitPer / 100) * (1 + gst / 100) / 5)) * 5)
+                    const eachSize = {
+                        size: i,
+                        price: (Math.ceil(totalPrice * (1 + transportChargePer / 100) * (1 + profitPer / 100) * (1 + gst / 100) / roundOff)) * roundOff
+                    }
+
+                    arrayOfSize.push(eachSize);
+                }
+                return arrayOfSize;
+            } else {
+                return "Something went wrong, please check the size you have provided!"
+            }
+        }
+
+
+        /**
+         * This method is use to find the median(the middle value) in a list ordered from smallest to largest.
+         * 
+         * @param {Number} min - Minimun size in the pack.
+         * @param {Number} max - Maximum size in the pack.
+         * @returns Object
+         */
+        findMedian(min, max) {
+            let sumOfSize = (min + max) / 2;
+            return { median: sumOfSize }
+        }
+
+        isOddNumberOfSize(min, max) {
+            let sumOfSize = (min + max) / 2;
+            if (sumOfSize % 2 == 0)
+                return { isOdd: true, median: sumOfSize };
+            else return { isOdd: false, median: sumOfSize };
+        }
+
+
+        /**
+         * This method is use to find the price factor
+         * Rules
+         * price: 1 - 25 return 1
+         * price: 26 - 50 return 2
+         * price: 51 - 75 return 3
+         * ..
+         * ..
+         * price: 501 - 525 return 21
+         * @param {Number} price - Base price of the product.
+         * @returns Number
+         */
+        findPriceFactor(price) {
+            let result = price / 25;
+            return Math.ceil(result);
+        }
+    }
+
+    const generateItemName = async () => {
+        if (getValues("costPrice")) {
+
+            const formData = getValues();
+            console.log(formData);
+
+            const categoryObjArr = [
+                {
+                    categoryValue: formData.productMaster,
+                    listName: productMasterList
+                },
+                {
+                    categoryValue: formData.groupMaster,
+                    listName: groupMasterList
+                },
+                {
+                    categoryValue: formData.brand,
+                    listName: brandList
+                },
+                {
+                    categoryValue: formData.firstCategory,
+                    listName: firstCategoryList
+                },
+                {
+                    categoryValue: formData.secondCategory,
+                    listName: secondCategoryList
+                },
+                {
+                    categoryValue: formData.size,
+                    listName: sizeList
+                }
+            ]
+
+            let itemName = createItemName(categoryObjArr);
+            // setValue("name", itemName)
+            let itemId;
+            if (itemName !== '') {
+                await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
+                    .then(async response => {
+                        if (response.data.isSuccess && response.data.document.length > 0) {
+                            itemId = response.data.document[0].id
+                            await updateProductList();
+                            if (itemId) {
+                                console.log("Item already present in database");
+                                // swal.fire({
+                                //     title: "Item already present in database",
+                                //     buttons: false
+                                // })
+
+                                swal.fire({
+                                    title: response.data.isCostSame ? `Item already present in database and its cost(${response.data.document[0].cost}) is same` : `Item already present in database and its cost(${response.data.document[0].cost}) is not same`,
+                                    text: "Do you want to change the cost price of this product ? (If yes then click 'OK' otherwise 'Cancel')",
+                                    input: 'number',
+                                    showCancelButton: true
+                                }).then(async (result) => {
+                                    console.log(result.value);
+                                    if (result.value == undefined || result.value == '') {
+                                        infoNotification("please enter something on the popup");
+                                        setInLine(response.data.document[0]);
+                                    } else {
+                                        // Upadte cost and MRP of that product 
+                                        await ApiService.patch(`priceChartUpload/findMRP?search=${result.value}`).then(async r => {
+                                            if (r.data.isSuccess) {
+                                                let cost = parseFloat(result.value).toFixed(2)
+                                                let salesPrice = parseFloat(r.data.document.MRP).toFixed(2)
+                                                let igstRate = r.data.document.MRP >= 1000 ? 12.00 : 5.00
+                                                let sgstRate = r.data.document.MRP >= 1000 ? 6.00 : 2.50
+
+                                                await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(res => {
+                                                    if (res.data.isSuccess) {
+                                                        infoNotification("Cost update successfull")
+                                                        setValue("costPrice", result.value)
+                                                        setInLine(res.data.document);
+
+                                                    } else {
+                                                        infoNotification("Can't update cost")
+                                                    }
+                                                })
+                                            }
+                                        })
+                                        // await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: parseFloat(result.value).toFixed(2) }).then(res => {
+                                        //     if (res.data.isSuccess) {
+                                        //         infoNotification("Cost update successfull")
+                                        //         setValue("costPrice", result.value)
+                                        //     } else {
+                                        //         infoNotification("Can't update cost")
+                                        //     }
+                                        // })
+                                    }
+                                })
+
+                            }
+                        }
+                        else {
+
+                        }
+                    })
+                    .catch(e => {
+                        console.log(e.response?.data.message);
+                        // errorMessage(e, dispatch)
+                    })
+
+                let productListLength = formData.products?.length
+                let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
+                let categoryQty = formData.itemQty
+                if (itemAlreadyPresent === -1) {
+                    // itemAppend({})
+                    // setValue(`products.${productListLength}.product`, itemId)
+
+                    // Generate items according to sizes and set in line
+                    if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize) && parseInt(formData.size)) {
+                        infoNotification("Either select only size or select max and min size")
+                    } else if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize)) {
+                        console.log("min and max size present");
+                        const itmName = createItemNameForRange(categoryObjArr)
+                        console.log(itmName);
+                        createAndSetItems(formData, itmName)
+                    } else {
+                        // Create single product if max min size ia not present
+                        let sizeResponse;
+                        console.log("min and max size not present");
+                        console.log(formData);
+                        console.log(formData.itemQty);
+                        // if (formData.size != "Choose..") {
+                        try {
+                            const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+                            if (res.data.isSuccess) {
+
+                                //find size
+                                if (formData.size != "Choose..") {
+                                    sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
+                                }
+                                // if (sizeResponse?.data.isSuccess) {
+                                const r = await ApiService.post(`product/procedure`, {
+                                    name: itemName,
+                                    description: `${itemName}`,
+                                    cost: formData.costPrice,
+                                    salesPrice: res.data.document.MRP,
+                                    igstRate: res.data.document.MRP >= 1000 ? 12.00 : 5.00,
+                                    sgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                                    utgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                                })
+                                if (r.data.isSuccess) {
+                                    itemId = await r.data.document.id;
+                                    await updateProductList();
+
+                                    let products = getValues('products')
+                                    let obj = new Object()
+                                    obj.product = [r.data.document]
+                                    obj.quantity = 1
+                                    obj.description = r.data.document?.description
+                                    obj.unit = r.data.document?.uom
+                                    obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
+                                    obj.unitPrice = r.data?.document.cost
+                                    obj.mrp = r.data?.document.salesPrice
+                                    obj.taxes = r.data?.document.igstRate
+                                    obj.subTotal = r.data?.document.cost
+                                    obj.received = 0
+                                    obj.billed = 0
+                                    products.push(obj)
+                                    console.log(obj);
+                                    setValue(`products`, products)
+
+                                    resetItemCategory()
+                                }
+                                // } else {
+                                //     console.log("can not get size data")
+                                // }
+                            }
+
+                        } catch (e) {
+                            console.log(e.response);
+                            // errorMessage(e, dispatch)
+                        }
+                        // } else {
+                        //     infoNotification("Please select size")
+                        // }
+                    }
+                    updateOrderLines();
+                } else {
+                    swal.fire({
+                        title: "Item already present in line",
+                        text: "Quantity will be added by 1. Do you want to proceed?",
+                        buttons: true
+                    }).then(data => {
+                        if (data) {
+                            let lineData = getValues(`products.${itemAlreadyPresent}`)
+                            console.log(parseFloat(formData));
+                            console.log(parseFloat(formData.itemQty) + parseFloat(lineData.quantity));
+                            setValue(`products.${itemAlreadyPresent}.quantity`, 1 + parseFloat(lineData.quantity))
+                            setValue(`products.${itemAlreadyPresent}.subTotal`, (getValues(`products.${itemAlreadyPresent}.quantity`)) * parseInt(getValues(`products.${itemAlreadyPresent}.unitPrice`)));
+                            updateOrderLines();
+                        }
+                    })
+                }
+            }
+            updateOrderLines()
+            // resetItemCategory()
+        } else {
+            infoNotification("Please enter cost price ❕")
+        }
+    }
+
+    const createAndSetItems = async (formData, itemName) => {
+        const products = getValues("products")
+        let array = new Array();
+
+
+        const tanasUtil = new TanasUtils();
+        const rangeArray = tanasUtil.calculatePrice(parseInt(formData.minimunSize), parseInt(formData.mazimumSize), parseInt(formData.costPrice), 15, 8, 40, 5)
+        console.log(rangeArray);
+
+        rangeArray?.map(async e => {
+            let obj = new Object()
+            console.log(itemName + e.size + productGrade);
+
+            try {
+                const response = await ApiService.get(`product/search/${itemName}_${e.size}_${productGrade}`)
+                if (response.data.document.length > 0) {
+                    infoNotification("Item already present in database for max min")
+                } else {
+                    const res = await ApiService.post(`product/procedure`, {
+                        name: `${itemName}_${e.size}_${productGrade}`,
+                        description: `${itemName}_${e.size}_${productGrade}`,
+                        cost: formData.costPrice,
+                        salesPrice: e.price,
+                        igstRate: e.price >= 1000 ? 12.00 : 5.00,
+                        sgstRate: e.price >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                        utgstRate: e.price >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                    })
+
+                    if (res.data.isSuccess) {
+                        obj.product = [res.data.document]
+                        obj.quantity = 1
+                        obj.description = res.data.document?.description
+                        obj.unit = res.data.document?.uom
+                        obj.size = parseInt(e.size)
+                        obj.unitPrice = parseInt(formData.costPrice)
+                        obj.mrp = parseInt(e.price)
+                        obj.taxes = res?.data.document?.igstRate
+                        // obj.salesPrice = parseInt(e.price)
+                        obj.subTotal = parseInt(formData.costPrice)
+                        obj.received = 0
+                        obj.billed = 0
+                        products.push(obj)
+
+                        await updateProductList();
+                        updateOrderLines()
+                        resetItemCategory()
+                    }
+
+                    // if (products.length == rangeArray.length + 1) {
+                    console.log("final array: ", products);
+                    setValue("products", products)
+                    // categoryQty ? setValue(`products.${productListLength}.quantity`, formData.itemQty) : setValue(`products.${productListLength}.quantity`, 0)
+                    // }
+                }
+            } catch (e) {
+                console.log(e.response.data.message);
+                // errorMessage(e, dispatch)
+            }
+        })
+    }
+
+    const setInLine = (productData) => {
+        let products = getValues('products')
+        let obj = new Object()
+        obj.product = [productData]
+        obj.quantity = 1
+        obj.size = ""
+        obj.unitPrice = productData.cost
+        obj.mrp = productData.salesPrice
+        obj.taxes = productData.igstRate
+        obj.subTotal = productData.cost
+        obj.received = 0
+        obj.billed = 0
+        products.push(obj)
+        console.log(obj);
+        setValue(`products`, products)
+        return updateOrderLines();
+    }
+
+    const updateProductList = async () => {
+        try {
+            const productResponse = await ApiService.get('product');
+            console.log(productResponse.data.documents)
+
+            if (productResponse.data.isSuccess) {
+                setProductList(productResponse.data.documents)
+            }
+        } catch (e) {
+            console.log(e.response.data.message);
+            // errorMessage(e, dispatch)
+        }
+    }
+
+    const createItemName = (data) => {
+        let itemName = '';
+        data && data.map((value) => {
+            let propertyName = value.listName.filter(element => element.id === value.categoryValue)
+            if (propertyName.length > 0) {
+                itemName += propertyName[0].name + '_';
+            }
+        })
+
+        itemName = itemName.substring(0, itemName.length - 1)
+        console.log(productGrade);
+        console.log("itemName: ", `${itemName}_${productGrade}`);
+        itemName = `${itemName}_${productGrade}`
+        return itemName
+    }
+
+    const createItemNameForRange = (data) => {
+        let itemName = '';
+        data && data.map((value) => {
+            let propertyName = value.listName.filter(element => element.id === value.categoryValue)
+            if (propertyName.length > 0) {
+                itemName += propertyName[0].name + '_';
+            }
+        })
+
+        itemName = itemName.substring(0, itemName.length - 1)
+        // console.log(productGrade);
+        // console.log("itemName: ", `${itemName}_${productGrade}`);
+        // itemName = `${itemName}_${productGrade}`
+        return itemName
+    }
+
+    const resetItemCategory = () => {
+        // reset({
+        //     ...getValues(), "productMaster": {}, "groupMaster": {}, "brand": {}, "firstCategory": {}, "secondCategory": {}, "size": {}, "itemQty": 0, "costPrice": "", "productGrade": ""
+        // })
+        // setProductMasterList([])
+        setGroupMasterList([])
+        setBrandList([])
+        setFirstCategoryList([])
+        setSecondCategoryList([])
+        setSizeList([])
+        setValue("productMaster", "")
+        setValue("productGrade", "")
+        setValue("costPrice", "")
+
+    }
+
+    const collapseCard = () => {
+        setcolleapse(!colleapse)
+        settoggle(false)
+    }
+
+    const toggleMaxMinSize = () => {
+        settoggle(!toggle)
+        setValue("size", "")
+        setValue("mazimumSize", "")
+        setValue("minimunSize", "")
+    }
+
+    //
+
+
+    useEffect(async () => {
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
@@ -326,6 +816,33 @@ export default function Purchase() {
             calculateAllPRCount();
             calculateBilledCount();
         }
+
+        // Get all product master
+        const getAllProductMaster = async () => {
+            await ApiService.get('itemCategory/search?type=productMaster')
+                .then(response => {
+                    if (response.data.isSuccess) {
+                        setProductMasterList(response.data.document)
+                    }
+                }).catch(e => {
+                    console.log(e);
+                    errorMessage(e.response?.data.message);
+                })
+        }
+        getAllProductMaster()
+
+        const res = await ApiService.get('sizeList');
+        console.log(res.data.documents)
+        setMaxMinSizeList(res.data.documents)
+
+        // Get all productGrade
+        const productGrades = await ApiService.get('productGrade');
+        console.log(productGrades.data.documents)
+        setproductGradeList(productGrades.data.documents)
+
+        const vendorResponse = await ApiService.get('vendor');
+        console.log(vendorResponse.data.documents)
+        setvendors(vendorResponse.data.documents)
 
     }, []);
 
@@ -422,21 +939,30 @@ export default function Purchase() {
                                 multiple: false
                             }}
                             changeHandler={async (e, data) => {
+                                console.log(data);
+                                if (!data.value) return
+
+                                if (!data.value.length) {
+                                    setValue("vendor", "")
+                                    setValue("billStatus", "")
+                                    console.log("empty");
+                                }
+
                                 if (data.value) {
-                                    const res = await ApiService.post(`/newBill/getBillByName/`, { name: data.value.name })
-                                    if (res.data.isSuccess) {
-                                        console.log(res?.data.document);
-                                        setbillObj(res?.data.document)
-                                        // setshow(true)
-                                        setValue("vendor", res?.data.document.vendorArray)
-                                    }
+                                    setValue("vendor", data.value?.vendor)
+                                    setbillObj(data.value)
+                                }
+                                if (data.value?.paymentStatus == "Paid") {
+                                    // infoNotification("Selected bill's amount is paid")
+                                    setValue("billStatus", "Paid")
+                                } else if (data.value?.paymentStatus == "Not Paid") {
+                                    setValue("billStatus", "Not Paid")
                                 }
                             }}
-                            onC
                             blurHandler={null}
                         />
 
-                        <SelectField
+                        {/* <SelectField
                             control={control}
                             errors={errors}
                             field={{
@@ -448,6 +974,31 @@ export default function Purchase() {
                                 validationMessage: "Please enter the vendor name!",
                                 selectRecordType: "vendor",
                                 multiple: false
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        /> */}
+                        <Form.Group as={Col} md="4" className="mb-2" >
+                            <Form.Label className="m-0">VENDOR</Form.Label>
+                            <FormSelect size='sm' style={{ maxWidth: '400px' }} id="vendor" name="vendor" disabled {...register("vendor")} onChange={event => filterCategory(event)}  >
+                                <option value={null} selected>Choose..</option>
+                                {vendors && vendors.map((value, index) => {
+                                    return <option key={index} value={value.id}>{value.name}</option>
+                                })}
+                            </FormSelect>
+                        </Form.Group>
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                disabled: true,
+                                description: "",
+                                label: "BILL STATUS",
+                                fieldId: "billStatus",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Product name!"
                             }}
                             changeHandler={null}
                             blurHandler={null}
@@ -502,10 +1053,6 @@ export default function Purchase() {
                             blurHandler={null}
                         />
 
-
-
-
-
                         <TextArea
                             register={register}
                             errors={errors}
@@ -521,9 +1068,231 @@ export default function Purchase() {
                             blurHandler={null}
                         />
 
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                disabled: false,
+                                description: "LR number",
+                                label: "LR NUMBER",
+                                fieldId: "lrNumber",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Product name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
 
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                disabled: false,
+                                description: "Transporter name",
+                                label: "TRANSPORTER NAME",
+                                fieldId: "transporterName",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Product name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
 
                     </Row>
+                </Container>
+
+                <Container className='mt-2' fluid>
+                    <Row style={{ display: "flex", justifyContent: "center", paddingBottom: 7 }}>
+                        {
+                            isAddMode ?
+                                <Card className="card" style={{ marginTop: 1 }}>
+                                    <Card.Header className="title" onClick={collapseCard} style={{ cursor: "pointer" }}><DiGhostSmall style={{ width: '24px', height: '24px' }} /><span > ITEM CATEGORY</span></Card.Header>
+                                    {
+                                        colleapse && (
+                                            <Card.Body>
+                                                <Row>
+                                                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                                        {/* <Switch onChange={toggleMaxMinSize} checked={toggle}
+                                                            height={24}
+                                                        /> */}
+                                                        <Form>
+                                                            <Form.Check
+                                                                checked={toggle}
+                                                                onChange={toggleMaxMinSize}
+                                                                size="sm"
+                                                                type="switch"
+                                                                id="custom-switch"
+                                                            />
+
+                                                        </Form>
+                                                    </div>
+                                                </Row>
+                                                <Row>
+                                                    {/* <Form.Group as={Col} md="4" className="mb-2">
+                                                        <Form.Label>Name</Form.Label>
+                                                        <Form.Control type="text" id="itemName" name="itemName" {...register("itemName")} disabled />
+                                                    </Form.Group> */}
+                                                    <Form.Group as={Col} md="4" className="mb-2" >
+                                                        <Form.Label className="m-0">PRODUCT MASTER</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="productMaster" name="productMaster" {...register("productMaster")} onChange={event => filterCategory(event)}  >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {productMasterList && productMasterList.map((value, index) => {
+                                                                return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+                                                    <Form.Group as={Col} md="4" className="mb-2">
+                                                        <Form.Label className="m-0">GROUP MASTER</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="groupMaster" name="groupMaster" {...register("groupMaster")} onChange={event => filterCategory(event)} >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {groupMasterList && groupMasterList.map((value, index) => {
+                                                                return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+
+                                                    <Form.Group as={Col} md="4" className="mb-2">
+                                                        <Form.Label className="m-0">BRAND</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="brand" name="brand" {...register("brand")} onChange={event => filterCategory(event)} >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {brandList && brandList.map((value, index) => {
+                                                                return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+                                                </Row>
+                                                <Row>
+
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">FIRST CATEGORY</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="firstCategory" name="firstCategory" {...register("firstCategory")} onChange={event => filterCategory(event)} >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {firstCategoryList && firstCategoryList.map((value, index) => {
+                                                                return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">SECOND CATEGORY</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="secondCategory" name="secondCategory" {...register("secondCategory")} onChange={event => filterCategory(event)} >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {secondCategoryList && secondCategoryList.map((value, index) => {
+                                                                return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+
+                                                    {!toggle &&
+                                                        <Form.Group className="mb-2" as={Col} md="4">
+                                                            <Form.Label className="m-0">SIZE</Form.Label>
+                                                            <FormSelect size='sm' style={{ maxWidth: '400px' }} id="size" name="size" {...register("size")}
+                                                                onChange={(e) => {
+                                                                    console.log(e.target.value);
+                                                                    if (e.target.value) {
+                                                                        setcolleapseRange(true)
+                                                                        setValue("minimunSize", "")
+                                                                        setValue("mazimumSize", "")
+                                                                        setValue("costPrice", "")
+                                                                    } else {
+                                                                        setcolleapseRange(false)
+                                                                    }
+                                                                    if (e.target.value !== "Choose..") {
+                                                                        setcolleapseRange(true)
+                                                                    } else {
+                                                                        setcolleapseRange(false)
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value={null} selected>Choose..</option>
+                                                                {sizeList && sizeList.map((value, index) => {
+                                                                    return <option key={index} value={value.id}>{value.name}</option>
+                                                                })}
+                                                            </FormSelect>
+                                                        </Form.Group>
+                                                    }
+
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">PRODUCT GRADE</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="productGrade" name="productGrade" {...register("productGrade")}
+                                                            onChange={(e) => {
+                                                                console.log(e.target.value);
+                                                                setproductGrade(e.target.value)
+                                                            }}
+                                                        >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {productGradeList && productGradeList.map((value, index) => {
+                                                                return <option key={index} value={value.name}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+                                                </Row>
+                                                <Row>
+
+                                                    {/*<Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label>Quantity</Form.Label>
+                                                        <Form.Control type="number" defaultValue={0} min="0" id="itemQty" name="itemQty" {...register("itemQty")} />
+                                                    </Form.Group>
+                                                     <Form.Group className="mb-2" as={Col} md="4">
+                                                            <Form.Label>Age</Form.Label>
+                                                            <Form.Control type="number" min="0" id="age" name="age" {...register("age")} />
+                                                        </Form.Group> */}
+                                                </Row>
+
+                                                <Row>
+                                                    {
+                                                        // !colleapseRange &&
+                                                        toggle &&
+                                                        <Form.Group className="mb-2" as={Col} md="4">
+                                                            <Form.Label className="m-0">MINIMUM SIZE</Form.Label>
+                                                            <FormSelect size='sm' style={{ maxWidth: '400px' }} id="minimunSize" name="minimunSize" {...register("minimunSize")} >
+                                                                <option value={null} selected>Choose..</option>
+                                                                {MaxMinSizeList && MaxMinSizeList.map((value, index) => {
+                                                                    return <option key={index} value={value.name}>{value.name}</option>
+                                                                })}
+                                                            </FormSelect>
+                                                        </Form.Group>
+
+                                                    }
+
+                                                    {
+                                                        // !colleapseRange &&
+                                                        toggle &&
+                                                        <Form.Group className="mb-2" as={Col} md="4">
+                                                            <Form.Label className="m-0">MAXIMUM SIZE</Form.Label>
+                                                            <FormSelect size='sm' style={{ maxWidth: '400px' }} id="mazimumSize" name="mazimumSize" {...register("mazimumSize")} >
+                                                                <option value={null} selected>Choose..</option>
+                                                                {MaxMinSizeList && MaxMinSizeList.map((value, index) => {
+                                                                    return <option key={index} value={value.name}>{value.name}</option>
+                                                                })}
+                                                            </FormSelect>
+                                                        </Form.Group>
+
+                                                    }
+
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">COST PRICE</Form.Label>
+                                                        <Form.Control size='sm' style={{ maxWidth: '400px' }} type="number" min="0" id="costPrice" name="costPrice" {...register("costPrice")} required />
+                                                    </Form.Group>
+                                                </Row>
+
+
+                                            </Card.Body>
+                                        )
+                                    }
+                                    {
+                                        colleapse && (
+                                            <Card.Footer>
+                                                <Button type="button" size="sm" onClick={generateItemName}>Add</Button>
+                                                <Button type="button" size="sm" onClick={resetItemCategory}>Reset</Button>
+                                            </Card.Footer>
+                                        )
+                                    }
+                                </Card> : ""
+                        }
+                    </Row>
+
                 </Container>
 
                 {/* SUBTABS */}
@@ -536,15 +1305,19 @@ export default function Purchase() {
                                         <tr>
                                             <th style={{ minWidth: "2rem" }}>#</th>
                                             <th style={{ minWidth: "2rem" }}></th>
+                                            <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "20rem" }}>PRODUCT</th>
                                             <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
                                             <th style={{ minWidth: "16rem" }}>UOM</th>
                                             <th style={{ minWidth: "16rem" }}>QUANTITY</th>
+                                            <th style={{ minWidth: "16rem" }}>SIZE</th>
                                             {!isAddMode && <th style={{ minWidth: "16rem" }}>RECEIVED</th>}
                                             {!isAddMode && <th style={{ minWidth: "16rem" }}>BILLED</th>}
                                             <th style={{ minWidth: "16rem" }}>UNIT RATE</th>
+                                            <th style={{ minWidth: "16rem" }}>MRP</th>
                                             <th style={{ minWidth: "16rem" }}>TAXES (%)</th>
                                             <th style={{ minWidth: "16rem" }}>SUB TOTAL</th>
+                                            {/* <th></th> */}
 
                                         </tr>
                                     </thead>
@@ -554,11 +1327,70 @@ export default function Purchase() {
                                                 <td>
                                                     <Button size="sm" variant="secondary"
                                                         onClick={() => {
-                                                            productRemove(index)
-                                                            updateOrderLines(index)
+                                                            swal.fire({
+                                                                title: `Delete warning`,
+                                                                text: "Do you really want to delete this line?",
+                                                                // input: 'number',
+                                                                showCancelButton: true
+                                                            }).then(async (result) => {
+                                                                if (result.value == undefined) {
+                                                                    // infoNotification("please enter something in popup..")
+                                                                } else {
+                                                                    productRemove(index)
+                                                                    updateOrderLines(index)
+                                                                }
+                                                            })
+
                                                         }}
                                                     ><BsTrash /></Button>
                                                 </td>
+
+                                                <td>
+                                                    <Button size="sm" variant="light"
+                                                        onClick={(ele) => {
+                                                            const v = getValues("products")
+                                                            console.log(v);
+
+                                                            v?.map(async e => {
+                                                                if (e.product == null) {
+                                                                    infoNotification("please select an item for the selected line")
+                                                                } else {
+                                                                    if (e.index == index) {
+                                                                        swal.fire({
+                                                                            title: `Enter quantity`,
+                                                                            text: "Enter quantity...",
+                                                                            input: 'number',
+                                                                            showCancelButton: true
+                                                                        }).then(async (result) => {
+                                                                            if (result.value == undefined) {
+                                                                                console.log("please enter something");
+                                                                                console.log("please enter something in popup..")
+                                                                            } else {
+                                                                                await ApiService.get("setup").then(async (res) => {
+                                                                                    if (res.data.isSuccess) {
+                                                                                        res.data.documents?.map(async (com) => {
+                                                                                            if (com.setupType == "COMPANY_SETUP") {
+                                                                                                await ApiService.get("product/" + e.product[0]._id).then(r => {
+                                                                                                    if (r.data.isSuccess) {
+                                                                                                        BarcodePDF.generateDefaultPurchaseOrderBarcodePDF(result.value, e, com, r?.data.document)
+                                                                                                    }
+                                                                                                })
+                                                                                            }
+                                                                                        });
+                                                                                    } else {
+                                                                                        infoNotification("Can not get company details")
+                                                                                    }
+                                                                                });
+
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                }
+                                                            })
+                                                        }}
+                                                    ><FiAlignJustify /></Button>
+                                                </td>
+
                                                 <td style={{ textAlign: 'center', paddingTop: '8px' }}>{index + 1}</td>
                                                 <td>
                                                     <LineSelectField
@@ -580,15 +1412,18 @@ export default function Purchase() {
                                                             ApiService.setHeader();
                                                             ApiService.get('product/' + productId).then(response => {
                                                                 const productObj = response.data.document;
+                                                                console.log(productObj);
                                                                 if (productObj) {
                                                                     setValue(`products.${index}.name`, productObj.name);
                                                                     setValue(`products.${index}.description`, productObj.description);
                                                                     setValue(`products.${index}.unit`, productObj.uom);
                                                                     setValue(`products.${index}.quantity`, 1);
-                                                                    setValue(`products.${index}.taxes`, productObj?.vendorTaxes);
-                                                                    setValue(`products.${index}.unitPrice`, productObj.salesPrice);
-                                                                    setValue(`products.${index}.subTotal`, (parseFloat(productObj.salesPrice) * 1));
+                                                                    setValue(`products.${index}.taxes`, productObj?.igstRate);
+                                                                    setValue(`products.${index}.unitPrice`, productObj.cost);
+                                                                    setValue(`products.${index}.mrp`, productObj.salesPrice);
+                                                                    setValue(`products.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
                                                                     setValue(`products.${index}.account`, productObj.assetAccount);
+                                                                    setValue(`products.${index}.index`, index);
                                                                     updateOrderLines(index)
                                                                 }
                                                             }).catch(err => {
@@ -596,38 +1431,7 @@ export default function Purchase() {
                                                             })
                                                         }}
                                                     />
-                                                    {/* <Form.Group>
-                                                        <PCTProduct control={control} name={`products.${index}.product`}
-                                                            onBlur={(value) => {
-                                                                if (!value || !value[0]?._id) return;
-                                                                ApiService.get('product/' + value[0]?._id).then(response => {
-                                                                    const productObj = response.data.document;
-                                                                    if (productObj) {
-                                                                        setValue(`products.${index}.brandName`, productObj.brandName);
-                                                                        setValue(`products.${index}.category`, productObj.category);
-                                                                        setValue(`products.${index}.kindOfLiquor`, productObj.kindOfLiquor);
-                                                                        setValue(`products.${index}.kindOfLiquorCode`, productObj.kindOfLiquorCode);
-                                                                        setValue(`products.${index}.name`, productObj.name);
-                                                                        setValue(`products.${index}.name`, productObj.name);
-                                                                        setValue(`products.${index}.label`, productObj.description);
-                                                                        setValue(`products.${index}.purchaseUoM`, productObj.purchaseUoM);
-                                                                        setValue(`products.${index}.bottleSize`, productObj.bottleSize);
-                                                                        setValue(`products.${index}.caseQuantity`, 1);
-                                                                        setValue(`products.${index}.quantity`, productObj.purchaseUoM?.slice(0, 2));
-                                                                        setValue(`products.${index}.taxes`, productObj.vendorTaxes[0]);
-                                                                        setValue(`products.${index}.unitPrice`, productObj.salesPrice);
-                                                                        setValue(`products.${index}.netAmount`, (parseFloat(productObj.salesPrice) * parseFloat(productObj.purchaseUoM?.slice(0, 2))));
-                                                                        setValue(`products.${index}.grossAmount`, (parseFloat(productObj.salesPrice) * parseFloat(productObj.purchaseUoM?.slice(0, 2))));
-                                                                        updateOrderLines(index)
-                                                                    }
 
-
-                                                                }).catch(err => {
-                                                                    console.log("ERROR", err)
-                                                                })
-
-                                                            }} />
-                                                    </Form.Group> */}
                                                 </td>
 
                                                 <td>
@@ -643,14 +1447,8 @@ export default function Purchase() {
                                                         changeHandler={null}
                                                         blurHandler={null}
                                                     />
-                                                    {/* <Form.Group >
-                                                        <Form.Control size='sm'
-                                                            type="text"
-                                                            id="label"
-                                                            name="label"
-                                                            {...register(`products.${index}.label`)} />
-                                                    </Form.Group> */}
                                                 </td>
+
                                                 <td>
                                                     <LineSelectField
                                                         control={control}
@@ -691,7 +1489,7 @@ export default function Purchase() {
                                                             let unitPrice = getValues(`products.${index}.unitPrice`);
                                                             let taxes = getValues(`products.${index}.taxes`);
                                                             let netAmount = (parseFloat(quantity) * parseFloat(unitPrice));
-                                                            setValue(`products.${index}.subTotal`, parseFloat(netAmount));
+                                                            setValue(`products.${index}.subTotal`, parseFloat(netAmount).toFixed(2));
                                                             updateOrderLines(index)
 
                                                         }}
@@ -724,6 +1522,22 @@ export default function Purchase() {
                                                         </Form.Select>
                                                     </Form.Group> */}
                                                 </td>
+
+                                                <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            fieldId: "size",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+                                                </td>
+
                                                 {!isAddMode && <td>
                                                     <LineNumberField
                                                         register={register}
@@ -738,13 +1552,6 @@ export default function Purchase() {
                                                         changeHandler={null}
                                                         blurHandler={null}
                                                     />
-                                                    {/* <Form.Group >
-                                                        <Form.Control disabled size='sm'
-                                                            type="number"
-                                                            id="received"
-                                                            name="received"
-                                                            {...register(`products.${index}.received`)} />
-                                                    </Form.Group> */}
                                                 </td>}
                                                 {!isAddMode && <td>
                                                     <LineNumberField
@@ -760,13 +1567,6 @@ export default function Purchase() {
                                                         changeHandler={null}
                                                         blurHandler={null}
                                                     />
-                                                    {/* <Form.Group >
-                                                        <Form.Control disabled size='sm'
-                                                            type="text"
-                                                            id="billed"
-                                                            name="billed"
-                                                            {...register(`products.${index}.billed`)} />
-                                                    </Form.Group> */}
                                                 </td>}
                                                 <td>
                                                     <LineDecimal128Field
@@ -784,21 +1584,45 @@ export default function Purchase() {
                                                             let quantity = getValues(`products.${index}.quantity`);
                                                             let taxes = getValues(`products.${index}.taxes`);
                                                             //let taxAmount = ((parseFloat(unitPrice) * parseFloat(quantity)) * parseFloat(taxes[0])) / 100;
-                                                            setValue(`products.${index}.subTotal`, (parseFloat(quantity) * parseFloat(unitPrice)))
+                                                            setValue(`products.${index}.subTotal`, (parseFloat(quantity) * parseFloat(unitPrice)).toFixed(2))
                                                             updateOrderLines(index)
                                                         }}
                                                         blurHandler={null}
                                                     />
-                                                    {/* <Form.Group >
-                                                        <Form.Control disabled size='sm'
-                                                            type="number"
-                                                            id="bottleSize"
-                                                            name="bottleSize"
-                                                            {...register(`products.${index}.bottleSize`)} />
-                                                    </Form.Group> */}
                                                 </td>
+
                                                 <td>
-                                                    <LineSelectField
+                                                    <LineDecimal128Field
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            fieldId: "mrp",
+                                                            placeholder: "",
+                                                            disabled: true
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+                                                </td>
+
+                                                <td>
+                                                    <LineNumberField
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            disabled: true,
+                                                            fieldId: "taxes",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+
+                                                    {/* <LineSelectField
                                                         control={control}
                                                         model={"products"}
                                                         field={{
@@ -812,34 +1636,15 @@ export default function Purchase() {
                                                         errors={errors}
                                                         changeHandler={null}
                                                         blurHandler={null}
-                                                    />
-                                                    {/* <Form.Group>
-                                                        <Form.Control
-                                                            size='sm'
-                                                            type="number"
-                                                            id="caseQuantity"
-                                                            name="caseQuantity"
-                                                            {...register(`products.${index}.caseQuantity`)} onChange={(e) => {
-                                                                const unitRate = getValues(`products.${index}.unitPrice`);
-                                                                const purchaseUoMQuantity = getValues(`products.${index}.purchaseUoM`)?.slice(0, 2);
-                                                                const actualQuantity = parseInt(e.target.value) * parseInt(purchaseUoMQuantity);
-                                                                if (actualQuantity) {
-                                                                    console.log(actualQuantity)
-                                                                    setValue(`products.${index}.quantity`, actualQuantity);
-                                                                    setValue(`products.${index}.netAmount`, parseFloat(actualQuantity) * parseFloat(unitRate));
-                                                                    setValue(`products.${index}.grossAmount`, parseFloat(actualQuantity) * parseFloat(unitRate));
-                                                                    updateOrderLines(index)
+                                                    /> */}
 
-                                                                }
-                                                            }} />
-
-                                                    </Form.Group> */}
                                                 </td>
                                                 <td>
                                                     <LineDecimal128Field
                                                         register={register}
                                                         model={"products"}
                                                         field={{
+                                                            disabled: true,
                                                             fieldId: "subTotal",
                                                             placeholder: ""
                                                         }}
@@ -868,6 +1673,7 @@ export default function Purchase() {
                                                         {errors?.['products']?.[index]?.['quantity']?.['message'] && <p style={{ color: "red" }}>{errors?.['products']?.[index]?.['quantity']?.['message']}</p>}
                                                     </Form.Group> */}
                                                 </td>
+
 
 
 

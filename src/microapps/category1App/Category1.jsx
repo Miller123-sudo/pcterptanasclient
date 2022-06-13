@@ -9,6 +9,7 @@ import { useHistory, useParams } from 'react-router';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import ApiService from '../../helpers/ApiServices';
+import AppLoader from '../../pcterp/components/AppLoader';
 const moment = require('moment');
 
 
@@ -154,28 +155,25 @@ export default function Category1() {
 
     if (loderStatus === "RUNNING") {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20%', }}><PropagateLoader color="#009999" style={{ height: 15 }} /></div>
+            <AppLoader />
         )
     }
-
-
-
 
     return (
         <Container className="pct-app-content-container p-0 m-0" fluid>
             <Container className="pct-app-content" fluid>
                 <Container className="pct-app-content-header p-0 m-0 pb-2" fluid>
                     <Row>
-                        <Col><h3>Category 1</h3></Col>
+                        <Col><h3>CATEGORY 1</h3></Col>
                     </Row>
-                    <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content" >
+                    <Form onSubmit={handleSubmit(onSubmit)} >
                         <Row>
                             <Form.Group className="mb-0" md="4" as={Col}>
-                                <Form.Label className="mb-0">Name</Form.Label>
+                                <Form.Label className="mb-0">NAME</Form.Label>
                                 <Form.Control type="text" id="name" name="name" {...register("name")} required />
                             </Form.Group>
                             {brandList && selectOptions && <Form.Group md="4" className="mb-0" as={Col}>
-                                <Form.Label className="mb-0">Brand</Form.Label>
+                                <Form.Label className="mb-0">BRAND</Form.Label>
                                 <Select id="parent" name="parent"
                                     options={selectOptions}
                                     value={editModeData.parent && editModeData.parent.map((value) => (

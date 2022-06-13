@@ -10,11 +10,17 @@ import ApiService from '../../helpers/ApiServices';
 export default function SelectField({ control, field, errors, queryPath, index, multiple, changeHandler, blurHandler }) {
     const [state, setState] = useState([]);
 
+
+
     const getList = async () => {
         ApiService.setHeader();
+        // if (field?.selectRecordType == "productType") {
+        //     setState(productTypeArray)
+        // } else {
         const response = await ApiService.get(`/${field?.selectRecordType}/list`);
         console.log(response.data.documents);
         setState(response.data.documents)
+        // }
     }
 
     useEffect(() => {
@@ -39,7 +45,10 @@ export default function SelectField({ control, field, errors, queryPath, index, 
             control={control}
             rules={{ required: field?.required ? field?.validationMessage : false }}
             render={({ field: { onChange, value }, fieldState: { error } }) => {
-
+                if (field?.default) {
+                    console.log([state[1]]);
+                }
+                console.log(error);
                 return (
                     <Typeahead key={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
                         isInvalid={errors[field?.fieldId]}
@@ -55,8 +64,11 @@ export default function SelectField({ control, field, errors, queryPath, index, 
                         }
                         options={state}
                         placeholder={field.placeholder}
+                        // selected={field?.default ? [state[1]] : value}
                         selected={value}
                         flip={true}
+                        clearButton
+
 
                     />
                 )

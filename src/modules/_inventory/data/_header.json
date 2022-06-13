@@ -23,6 +23,10 @@
               {
                 "item_name": "Products",
                 "item_navigation": "product"
+              },
+              {
+                "item_name": "Import Product",
+                "item_navigation": "importproduct"
               }
             ]
           }
@@ -34,6 +38,41 @@
               {
                 "item_name": "Inventory Stocks Report",
                 "item_navigation": "inventorystocksreport"
+              }
+            ]
+          }
+        },
+        {
+          "nav_dropdown": {
+            "nav_dropdown_name": "Item Category",
+            "nav_dropdown_items": [
+              {
+                "item_name": "Product Master",
+                "item_navigation": "productmaster"
+              },
+              {
+                "item_name": "Group Master",
+                "item_navigation": "groupmaster"
+              },
+              {
+                "item_name": "Brand",
+                "item_navigation": "brand"
+              },
+              {
+                "item_name": "Category1",
+                "item_navigation": "category1"
+              },
+              {
+                "item_name": "Category2",
+                "item_navigation": "category2"
+              },
+              {
+                "item_name": "Size",
+                "item_navigation": "size"
+              },
+              {
+                "item_name": "Product Grade",
+                "item_navigation": "productGrade"
               }
             ]
           }

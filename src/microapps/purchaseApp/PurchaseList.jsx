@@ -57,7 +57,7 @@ export default function PurchaseList() {
         },
         { headerName: 'PURCHASE ORDER', field: 'name' },
         { headerName: 'CONFIRMATION DATE', field: 'date', valueGetter: (params) => params.data?.date ? moment(params.data?.date).format("MM/DD/YYYY ") : "Not Available" },
-        { headerName: 'VENDOR', field: `vendor`, valueGetter: (params) => params.data?.vendor ? params.data?.vendor[0]?.name : "Not Available" },
+        { headerName: 'VENDOR', field: `vendor`, valueGetter: (params) => params.data?.vendor ? params.data?.vendor?.name : "Not Available" },
         { headerName: 'RECEIPT DATE', field: 'receiptDate', valueGetter: (params) => params.data?.receiptDate ? moment(params.data?.receiptDate).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'TOTAL', field: 'estimation.total', valueGetter: (params) => formatNumber(params.data.estimation?.total) },
         {

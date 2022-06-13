@@ -223,6 +223,187 @@ export default function Vendor() {
                             changeHandler={null}
                             blurHandler={null}
                         />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "GSTIN",
+                                fieldId: "gstin",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "MARKET",
+                                fieldId: "market",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "AGENT",
+                                fieldId: "agent",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "DISCOUNT % LESS",
+                                fieldId: "discountPercentLess",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "BOX LESS",
+                                fieldId: "boxLess",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "PER PCS LESS",
+                                fieldId: "perPcsLess",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "PER METER LESS",
+                                fieldId: "perMeterLess",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "BANK NAME",
+                                fieldId: "bankName",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "BANK BRANCH",
+                                fieldId: "bankBranch",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "BANK ACCOUNT NUMBER",
+                                fieldId: "bankAccountNumber",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "IFCI",
+                                fieldId: "ifci",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "CITY",
+                                fieldId: "city",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
                         <TextArea
                             register={register}
                             errors={errors}
@@ -381,6 +562,7 @@ export default function Vendor() {
                                                                 id="address"
                                                                 name="address"
                                                                 disabled
+                                                                defaultValue={addressValueLineLevel[index]}
                                                                 value={addressValueLineLevel[index]}
                                                                 {...register(`addresses.${index}.address`)}
                                                                 onBlur={() => {
