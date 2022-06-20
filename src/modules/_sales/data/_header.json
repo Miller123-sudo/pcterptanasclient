@@ -13,10 +13,7 @@
                 "item_name": "Sales Orders",
                 "item_navigation": "salesorders"
               },
-              {
-                "item_name": "Cash Sales",
-                "item_navigation": "purchases"
-              },
+
               {
                 "item_name": "Delivered Products",
                 "item_navigation": "productdeliveries"
@@ -42,7 +39,7 @@
               },
               {
                 "item_name": "Customer Invoice Payments",
-                "item_navigation": "invoicepayment"
+                "item_navigation": "customerpayments"
               }
             ]
           }

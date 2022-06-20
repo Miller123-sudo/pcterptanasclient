@@ -58,7 +58,7 @@ export default function SalesOrderList() {
         { headerName: 'SALES ORDER ID#', field: 'name' },
         { headerName: 'DATE', field: 'date', valueGetter: (params) => params.data?.date ? moment(params.data?.date).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'CUSTOMER', field: `customer`, valueGetter: (params) => params.data?.customer ? params.data?.customer[0]?.name : "Not Available" },
-        { headerName: 'DELIVERY DATE', field: 'deliveryDate', valueGetter: (params) => params.data?.receiptDate ? moment(params.data?.receiptDate).format("MM/DD/YYYY ") : "Not Available" },
+        { headerName: 'DELIVERY DATE', field: 'deliveryDate', valueGetter: (params) => params.data?.deliveryDate ? moment(params.data?.deliveryDate).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'TOTAL', field: 'estimation.total', valueGetter: (params) => formatNumber(params.data.estimation?.total) },
         {
             headerName: 'INVOICING STATUS', field: 'invoiceStatus', minWidth: 300, cellRendererFramework: (params) => (renderStatus(params.value)),
@@ -67,7 +67,7 @@ export default function SalesOrderList() {
 
     const renderStatus = (value) => {
         switch (value) {
-            case 'Nothing to Bill': {
+            case 'Nothing to Invoice': {
                 return <div style={{ backgroundColor: '#B2BABB', borderRadius: '20px', color: 'white', width: '100%', height: '60%', maxHeight: '2rem', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
@@ -77,7 +77,7 @@ export default function SalesOrderList() {
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
             }
-            case 'Fully Billed': {
+            case 'Fully Invoiced': {
                 return <div style={{ backgroundColor: '#2ECC71', borderRadius: '20px', color: 'white', width: '100%', height: '60%', maxHeight: '2rem', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>

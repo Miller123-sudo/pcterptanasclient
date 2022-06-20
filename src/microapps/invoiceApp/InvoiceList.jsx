@@ -87,7 +87,7 @@ export default function InvoiceList() {
         {
             headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
                 <>
-                    <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/customerinvoices/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
+                    <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/invoices/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
                     {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
                 </>
         },

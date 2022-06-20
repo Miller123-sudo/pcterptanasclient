@@ -1,6 +1,7 @@
 
 import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
+import { BiEditAlt } from "react-icons/bi";
 import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form } from 'react-bootstrap'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
@@ -28,12 +29,15 @@ import swal from "sweetalert2"
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
     const [isPOSelected, setIsPOSelected] = useState(false)
+    const [addDiscount, setaddDiscount] = useState(false)
     const [vendorObj, setvendorObj] = useState()
+    const [vendorData, setvendorData] = useState()
     const [state, setState] = useState({
         estimation: {
-            untaxedAmount: 0,
-            tax: 0,
-            total: 0
+            fredgeCost: 0.00,
+            untaxedAmount: 0.00,
+            tax: 0.00,
+            total: 0.00
         }
     })
     const navigate = useNavigate();
@@ -47,7 +51,12 @@ export default function Invoice() {
     const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
         defaultValues: {
             recepientAccountArray: null,
-            sourceDocumentArray: null
+            sourceDocumentArray: null,
+            fredgeCost: 0.00,
+            boxLess: 0.00,
+            perMeterLess: 0.00,
+            perPcsLess: 0.00,
+            discountPercentLess: 0.00,
         }
     });
 
@@ -63,6 +72,11 @@ export default function Invoice() {
     // Functions
     console.log(rootPath);
     const onSubmit = async (formData) => {
+        formData.estimation = state.estimation
+        formData.discountPercentLess = vendorData.discountPercentLess
+        formData.boxLess = vendorData.boxLess
+        formData.perPcsLess = vendorData.perPcsLess
+        formData.perMeterLess = vendorData.perMeterLess
         console.log(formData);
 
         await ApiService.patch("newBill/findDuplicatereferenceNumber", { referenceNumber: getValues("referenceNumber") }).then(res => {
@@ -324,6 +338,34 @@ export default function Invoice() {
         setValue("invoiceLines", documentArray)
     }
 
+    const fredgeCostCalculation = (e) => {
+
+        console.log(getValues("fredgeCost"));
+        console.log(typeof parseFloat((getValues("fredgeCost"))));
+
+        let total;
+        if (getValues("fredgeCost") !== "") {
+            console.log("in");
+            setValue("estimation", {
+                untaxedAmount: state.estimation.untaxedAmount,
+                tax: state.estimation.tax,
+                total: parseFloat(state.estimation.untaxedAmount) + parseFloat(state.estimation.tax) + parseFloat((getValues("fredgeCost")))
+            });
+
+            setState(prevState => ({
+                ...prevState,    // keep all other key-value pairs
+                estimation: {
+                    fredgeCost: parseFloat((getValues("fredgeCost"))),
+                    untaxedAmount: state.estimation.untaxedAmount,
+                    tax: state.estimation.tax,
+                    total: parseFloat(state.estimation.untaxedAmount) + parseFloat(state.estimation.tax) + parseFloat((getValues("fredgeCost")))
+                }
+            }));
+        } else {
+            updateOrderLines()
+        }
+    }
+
     useEffect(() => {
 
         if (!isAddMode) {
@@ -396,6 +438,20 @@ export default function Invoice() {
                 {/* BODY FIELDS */}
                 <Container fluid>
                     <Row>
+                        <Col><BiEditAlt onClick={() => {
+                            navigate("/accounting/vendor/add")
+                        }} /></Col>
+                        {
+                            (!isAddMode || addDiscount) &&
+                            <>
+                                <Col><b>DISCOUNT % LESS : </b>{addDiscount ? vendorData?.discountPercentLess : state?.discountPercentLess} %</Col>
+                                <Col><b>BOX LESS : </b>{addDiscount ? formatNumber(vendorData?.boxLess) : formatNumber(state?.boxLess)}</Col>
+                                <Col><b>PER METER LESS : </b>{addDiscount ? formatNumber(vendorData?.perMeterLess) : formatNumber(state?.perMeterLess)}</Col>
+                                <Col><b>PER PCS LESS : </b>{addDiscount ? formatNumber(vendorData?.perPcsLess) : formatNumber(state?.perPcsLess)}</Col>
+                            </>
+                        }
+                    </Row>
+                    <Row style={{ marginTop: "15px" }}>
 
                         {
                             rootPath !== "accounting" ?
@@ -450,12 +506,34 @@ export default function Invoice() {
 
                             }}
                             changeHandler={async (event, data) => {
-                                if (!data) return
-                                setValue("vendor", data?.value?.id)
-                                setvendorObj(data.value)
+                                console.log(data.value);
+                                if (!data.value) return
+
+                                if (!data.value.length) setaddDiscount(false)
+
+                                if (data.value) {
+                                    setValue("vendor", data?.value?.id)
+                                    setvendorObj(data.value)
+
+                                    const vendor = await ApiService.get("vendor/" + data.value._id)
+                                    if (vendor.data.isSuccess) {
+                                        console.log(vendor.data.document);
+                                        setvendorData(vendor.data.document)
+                                        if (vendor.data.document.boxLess == 0 && vendor.data.document.perMeterLess == 0 && vendor.data.document.perPcsLess == 0 && vendor.data.document.discountPercentLess == 0) {
+                                            setaddDiscount(false)
+                                        } else {
+                                            setaddDiscount(true)
+                                        }
+                                    } else {
+                                        return
+                                    }
+                                } else {
+                                    setaddDiscount(false)
+                                }
                             }}
                             blurHandler={null}
                         />
+
 
                         <DateField
                             register={register}
@@ -517,7 +595,51 @@ export default function Invoice() {
                             }}
                         />
 
-                        <TextField
+                        {
+                            (!isAddMode || addDiscount) &&
+                            <CheckboxField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "ADD DISCOUNT",
+                                    fieldId: "addDiscount",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Account Number!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={async (e, data) => {
+                                    let totalLess = 0;
+                                    let total = 0;
+                                    console.log(data);
+                                    if (data.value) {
+                                        totalLess = vendorData.boxLess + vendorData.perMeterLess + vendorData.perPcsLess
+                                        if (vendorData.discountPercentLess != 0) {
+                                            total = (parseFloat(state.estimation?.untaxedAmount) - ((parseFloat(state.estimation?.untaxedAmount - totalLess) * vendorData.discountPercentLess) / 100))
+                                        } else {
+                                            total = parseFloat(state.estimation?.untaxedAmount - totalLess)
+                                        }
+
+
+                                        setState(prevState => ({
+                                            ...prevState,    // keep all other key-value pairs
+                                            estimation: {
+                                                untaxedAmount: total,
+                                                tax: state.estimation.tax,
+                                                total: state.estimation.tax + total
+                                            }
+                                        }));
+                                        console.log(state);
+                                    } else {
+                                        updateOrderLines()
+                                    }
+
+                                }}
+                            />
+                        }
+
+                        {/* <TextField
                             register={register}
                             errors={errors}
                             field={{
@@ -667,7 +789,7 @@ export default function Invoice() {
 
                                     }
                                 }}
-                            />}
+                            />} */}
 
                         {/* <TextField
                             register={register}
@@ -1067,19 +1189,45 @@ export default function Invoice() {
                                 {/* <Card.Header as="h5">Featured</Card.Header> */}
                                 <Card.Body>
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>Sub Total:</Col>
+                                        <Col>UNTAXED TOTAL:</Col>
                                         <Col>{formatNumber(state?.estimation?.untaxedAmount)}</Col>
                                     </Row>
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>CGST:</Col>
-                                        <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                        <Col>FREDGE COST:</Col>
+                                        <Col>
+                                            {
+                                                !isAddMode ? <Col>{formatNumber(state?.estimation?.fredgeCost)}</Col> :
+                                                    <input step="0.001" type="number" id='fredgeCost' name="fredgeCost" {...register(`fredgeCost`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
+                                                        onBlur={fredgeCostCalculation}
+                                                    />
+                                            }
+                                        </Col>
                                     </Row>
+                                    {
+                                        vendorData?.isLocal ?
+                                            <div>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>UTGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                                </Row>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>SGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                                </Row>
+                                            </div>
+                                            : <div>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>IGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax)}</Col>
+                                                </Row>
+                                            </div>
+
+
+
+                                    }
+
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>SGST:</Col>
-                                        <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
-                                    </Row>
-                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>Total:</Col>
+                                        <Col>TOTAL:</Col>
                                         <Col style={{ borderTop: '1px solid black' }}>{formatNumber(state?.estimation?.total)}</Col>
                                     </Row>
 

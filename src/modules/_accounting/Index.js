@@ -17,6 +17,11 @@ import InvoiceApp from "../../microapps/invoiceApp/Index";
 import InvoicePaymentApp from "../../microapps/invoicePaymentApp/Index";
 import BillPaymentApp from "../../microapps/billPaymentApp/Index";
 import InventoryStockReportApp from "../../microapps/InventoryStockReportApp/Index";
+import VendorApp from "../../microapps/vendorApp/Index";
+import BillList from "../../microapps/newBillApp/BillList";
+import RtgsApp from "../../microapps/rtgsAPP/Index";
+import ChequeApp from "../../microapps/chequeApp/Index";
+import AcknoledgeApp from "../../microapps/acknoledgeApp/Index";
 
 export default function AccountingModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -136,8 +141,16 @@ export default function AccountingModule() {
           <Route path="/bills/*" element={<BillApp />} />
           <Route path="/billpayment/*" element={<BillPaymentApp />} />
           <Route path="/customerinvoices/*" element={<InvoiceApp />} />
-          <Route path="/customerpayments/*" element={<InvoicePaymentApp />} />
+          <Route
+            path="/customerinvoicepayments/*"
+            element={<InvoicePaymentApp />}
+          />
           <Route path="/generalledgers/*" element={<GeneralLedgerApp />} />
+          <Route path="/vendor/*" element={<VendorApp />} />
+          <Route path="/printrtgs/*" element={<RtgsApp />} />
+          <Route path="/printcheque/*" element={<ChequeApp />} />
+          <Route path="/printacknoledge/*" element={<AcknoledgeApp />} />
+
           <Route
             path="/inventoryanalysis/*"
             element={<InventoryStockReportApp />}

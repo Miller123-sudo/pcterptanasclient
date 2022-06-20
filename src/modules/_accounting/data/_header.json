@@ -7,21 +7,6 @@
       "nav_dropdowns": [
         {
           "nav_dropdown": {
-            "nav_dropdown_name": "Customs",
-            "nav_dropdown_items": [
-              {
-                "item_name": "Invoices",
-                "item_navigation": "customerinvoices"
-              },
-              {
-                "item_name": "Payments",
-                "item_navigation": "customerpayments"
-              }
-            ]
-          }
-        },
-        {
-          "nav_dropdown": {
             "nav_dropdown_name": "Vendors",
             "nav_dropdown_items": [
               {
@@ -53,10 +38,6 @@
               {
                 "item_name": "Inventory Analysis",
                 "item_navigation": "inventoryanalysis"
-              },
-              {
-                "item_name": "Standard Inventory Reports",
-                "item_navigation": "standardinventoryreports"
               }
             ]
           }
@@ -68,6 +49,18 @@
               {
                 "item_name": "Charts of Account",
                 "item_navigation": "accounts"
+              },
+              {
+                "item_name": "Print RTGS",
+                "item_navigation": "printrtgs"
+              },
+              {
+                "item_name": "Print Cheque",
+                "item_navigation": "printcheque"
+              },
+              {
+                "item_name": "Print Acknoledge",
+                "item_navigation": "printacknoledge"
               }
             ]
           }

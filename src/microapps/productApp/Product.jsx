@@ -32,6 +32,8 @@ export default function Product() {
     const [colleapseRange, setcolleapseRange] = useState(false);
     const [productList, setProductList] = useState([])
     const [MaxMinSizeList, setMaxMinSizeList] = useState([])
+    const [productGradeList, setproductGradeList] = useState([])
+    const [productGrade, setproductGrade] = useState([])
     const [groupMasterList, setGroupMasterList] = useState([])
     const [brandList, setBrandList] = useState([])
     const [firstCategoryList, setFirstCategoryList] = useState([])
@@ -574,7 +576,9 @@ export default function Product() {
 
         itemName = itemName.substring(0, itemName.length - 1)
         console.log("itemName: ", itemName);
-        return itemName
+        let itmname = `${itemName}_${productGrade}`
+        // return itemName
+        return itmname
     }
 
     const resetItemCategory = () => {
@@ -702,6 +706,11 @@ export default function Product() {
                 })
         }
         getAllProductMaster()
+
+        // Get all productGrade
+        const productGrades = await ApiService.get('productGrade');
+        console.log(productGrades.data.documents)
+        setproductGradeList(productGrades.data.documents)
 
         const res = await ApiService.get('sizeList');
         console.log(res.data.documents)
@@ -863,6 +872,20 @@ export default function Product() {
                                                             <option value={null} selected>Choose..</option>
                                                             {sizeList && sizeList.map((value, index) => {
                                                                 return <option key={index} value={value.id}>{value.name}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">PRODUCT GRADE</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="productGrade" name="productGrade" {...register("productGrade")}
+                                                            onChange={(e) => {
+                                                                console.log(e.target.value);
+                                                                setproductGrade(e.target.value)
+                                                            }}
+                                                        >
+                                                            <option value={null} selected>Choose..</option>
+                                                            {productGradeList && productGradeList.map((value, index) => {
+                                                                return <option key={index} value={value.name}>{value.name}</option>
                                                             })}
                                                         </FormSelect>
                                                     </Form.Group>

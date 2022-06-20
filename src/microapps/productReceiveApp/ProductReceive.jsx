@@ -341,7 +341,7 @@ export default function Purchase() {
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
                             {state?.status == "Ready" && <Button type="submit" variant="primary" size="sm">SAVE</Button>}
-                            <Button as={Link} to={`/${rootPath}/purchases/list`} variant="secondary" size="sm">DISCARD</Button>
+                            <Button as={Link} to={`/${rootPath}/receivedproducts/list`} variant="secondary" size="sm">DISCARD</Button>
                             {!isAddMode && state?.status == "Ready" && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
                             </DropdownButton>}

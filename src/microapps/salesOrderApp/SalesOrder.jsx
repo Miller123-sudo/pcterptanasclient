@@ -1,11 +1,11 @@
 import { React, useState, useEffect, useContext } from 'react'
 import { BsTrash } from 'react-icons/bs';
 import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Card, Form, Breadcrumb } from 'react-bootstrap'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { BsArrowLeft, BsArrowRight, BsFillCreditCardFill, BsFillBarChartFill } from 'react-icons/bs';
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage } from '../../helpers/Utils'
+import { errorMessage, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -25,6 +25,7 @@ import LineTextField from '../../pcterp/field/LineTextField';
 import LineNumberField from '../../pcterp/field/LineNumberField';
 import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import AppLoader from '../../pcterp/components/AppLoader';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 export default function SalesOrder() {
     const [loderStatus, setLoderStatus] = useState("NOTHING");
@@ -32,6 +33,7 @@ export default function SalesOrder() {
     const [invoicedCount, setInvoicedCount] = useState(0);
     const { user } = useContext(UserContext)
     const [allProductReceiptCount, setAllProductReceiptCount] = useState([])
+    const [products, setproducts] = useState([])
     const [state, setState] = useState(null)
     const navigate = useNavigate();
     const location = useLocation();
@@ -196,15 +198,17 @@ export default function SalesOrder() {
 
 
     const handleCreateInvoice = async () => {
+        console.log("into inv create");
         state?.products?.map(e => {
             totalDelivered += parseInt(e.delivered)
             totalInvoiced += parseInt(e.invoiced)
         })
         if (totalDelivered === totalInvoiced) {
-            console.log("Please Delivered product first!!!")
+            // console.log("Please Delivered product first!!!")
+            infoNotification("Please Delivered product first!!!")
         } else {
             try {
-                const response = await ApiService.post('invoice', { sourceDocument: state.id })
+                const response = await ApiService.post('invoice', { sourceDocument: state._id })
                 if (response.data.isSuccess) {
                     //
                     const res = await ApiService.patch('salesOrder/decreseProductOnhandAndAvailabel/' + response.data.document._id, response.data.document)
@@ -226,7 +230,7 @@ export default function SalesOrder() {
                                 if (res.data.isSuccess) {
                                     // await ApiService.patch('salesOrder/decreseProductOnhandAndAvailabel/' + res.data.document._id, res.data.document).then(r => {
                                     //     if (r.data.isSuccess) {
-                                    navigate(`/${rootPath}/invoices/edit/` + response.data.document.id);
+                                    navigate(`/${rootPath}/invoices/edit/` + response.data.document._id);
                                     //     }
                                     // })
                                 }
@@ -240,7 +244,7 @@ export default function SalesOrder() {
                             await ApiService.patch('salesOrder/' + state.id, { invoiceStatus: 'Partially Delivered / Invoiced' })
                         }
                         // await ApiService.patch('purchaseorder/' + state.id, { billingStatus: 'Fully Billed' })
-                        navigate(`/${rootPath}/invoices/edit/` + response.data.document.id);
+                        navigate(`/${rootPath}/invoices/edit/` + response.data.document._id);
                     } else {
                         console.log("something wrong in calculating product onhand qty!!!")
                     }
@@ -295,7 +299,7 @@ export default function SalesOrder() {
         console.log(products);
         products?.map((val) => {
             cumulativeSum += parseFloat(val.subTotal);
-            totalTax += (parseFloat(val.taxes[0]) * parseFloat(val.subTotal)) / 100
+            totalTax += (parseFloat(val.taxes) * parseFloat(val.subTotal)) / 100
         });
 
         console.log("totalTax: ", totalTax);
@@ -344,7 +348,12 @@ export default function SalesOrder() {
     console.log(state?.estimation);
 
 
-    useEffect(() => {
+    useEffect(async () => {
+
+        const res = await ApiService.get("product")
+        if (res.data.isSuccess) {
+            setproducts(res.data.documents)
+        }
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
@@ -600,7 +609,6 @@ export default function SalesOrder() {
                                                         control={control}
                                                         model={"products"}
                                                         field={{
-
                                                             fieldId: "product",
                                                             placeholder: "",
                                                             selectRecordType: "product",
@@ -616,12 +624,14 @@ export default function SalesOrder() {
                                                             ApiService.setHeader();
                                                             ApiService.get('product/' + productId).then(response => {
                                                                 const productObj = response.data.document;
+                                                                console.log(productObj);
+
                                                                 if (productObj) {
                                                                     setValue(`products.${index}.name`, productObj.name);
                                                                     setValue(`products.${index}.description`, productObj.description);
                                                                     setValue(`products.${index}.unit`, productObj.uom);
                                                                     setValue(`products.${index}.quantity`, 1);
-                                                                    setValue(`products.${index}.taxes`, productObj?.vendorTaxes);
+                                                                    setValue(`products.${index}.taxes`, productObj?.igstRate);
                                                                     setValue(`products.${index}.unitPrice`, productObj.salesPrice);
                                                                     setValue(`products.${index}.subTotal`, (parseFloat(productObj.salesPrice) * 1));
                                                                     setValue(`products.${index}.account`, productObj.assetAccount);
@@ -631,11 +641,11 @@ export default function SalesOrder() {
                                                             }).catch(err => {
                                                                 console.log("ERROR", err)
                                                             })
-
-
                                                         }
                                                         }
                                                     />
+
+
                                                 </td>
 
                                                 <td>
@@ -745,7 +755,20 @@ export default function SalesOrder() {
                                                     />
                                                 </td>
                                                 <td>
-                                                    <LineSelectField
+                                                    <LineNumberField
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            disabled: true,
+                                                            fieldId: "taxes",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+                                                    {/* <LineSelectField
                                                         control={control}
                                                         model={"products"}
                                                         field={{
@@ -759,7 +782,7 @@ export default function SalesOrder() {
                                                         errors={errors}
                                                         changeHandler={null}
                                                         blurHandler={null}
-                                                    />
+                                                    /> */}
                                                 </td>
                                                 <td>
                                                     <LineDecimal128Field

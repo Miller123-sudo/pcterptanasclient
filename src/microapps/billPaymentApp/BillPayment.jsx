@@ -76,12 +76,6 @@ export default function BillPayment() {
                 setValue('billDate', document.billDate.split("T")[0])
             }
 
-            // setValue('bill', document.id);
-            // setValue('journalType', document.journalType);
-            // setValue('amount', document.amount);
-            // setValue('memo', document.name);
-            // setValue('bankAccount', document.bankAccount);
-            // setValue('referenceNumber', document.referenceNumber);
             setValue('paymentDate', document.paymentDate.split("T")[0]);
             setLoderStatus("SUCCESS");
         }).catch(e => {
@@ -126,6 +120,23 @@ export default function BillPayment() {
         return;
     }
 
+    /** Print cheque function for single cheque payment. After printing cheque, bill's status will be set to "Paid" and payment 
+    * record will be created.
+    */
+    const printCheque = () => {
+
+    }
+
+    // Print RTGS function for single cheque payment
+    const printRTGS = () => {
+
+    }
+
+    // Print Acknoledgement function for single cheque payment
+    const printAcknoledgement = () => {
+
+    }
+
     useEffect(() => {
 
         if (!isAddMode) {
@@ -147,11 +158,7 @@ export default function BillPayment() {
             <AppContentHeader>
                 <Row>
                     <Breadcrumb style={{ fontSize: '24px' }}>
-                        {/* <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: '/purchase/purchases' }} ><h3 className="breadcrum-label">Purchase Orders</h3></Breadcrumb.Item>
-                        <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/purchase/purchases/edit/${state?.sourceDocument?.id}` }} ><span className="breadcrum-label">{state?.sourceDocument?.name}</span></Breadcrumb.Item>
-                        <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/purchase/vendorbills/edit/${state?.bill?.id}` }} ><span className="breadcrum-label">{state?.memo}</span></Breadcrumb.Item>
-                        {isAddMode ? <Breadcrumb.Item active><span >New</span></Breadcrumb.Item> : <Breadcrumb.Item active><span>Register Payment</span></Breadcrumb.Item>} */}
-                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}` }} ><h3 className="breadcrum-label">BILLS</h3></Breadcrumb.Item>
+                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}` }} ><span className="breadcrum-label">BILLS</span></Breadcrumb.Item>
                         <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/${rootPath}/bills/edit/${state?.bill?.id}` }} ><span className="breadcrum-label">{state?.memo}</span></Breadcrumb.Item>
                         {isAddMode ? <Breadcrumb.Item active><span >New</span></Breadcrumb.Item> : <Breadcrumb.Item active><span>Register Payment</span></Breadcrumb.Item>}
                     </Breadcrumb>
@@ -162,6 +169,12 @@ export default function BillPayment() {
                             state?.bill?.paymentStatus !== "Paid" && <Button type="submit" variant="primary" size="sm">CREATE PAYMENT</Button>
                         }
                         <Button as={Link} to={`/${rootPath}/billpayment/list`} variant="light" size="sm">DISCARD</Button>{" "}
+                        <Button variant="primary" size="sm" onClick={printCheque}>RTGS PAYMENT</Button>{" "}
+                        <Button variant="primary" size="sm" onClick={printRTGS} >CHEQUE PAYMENT</Button>{" "}
+                        <Button variant="primary" size="sm" onClick={printAcknoledgement} >CHEQUE PAYMENT</Button>{" "}
+
+                    </Col>
+                    <Col>
 
                     </Col>
                 </Row>

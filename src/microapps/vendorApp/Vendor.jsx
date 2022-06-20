@@ -16,6 +16,7 @@ import TextField from '../../pcterp/field/TextField'
 import AppLoader from '../../pcterp/components/AppLoader'
 import Address from '../../pcterp/components/Address'
 import { BsBoxArrowInUpRight, BsTrash } from 'react-icons/bs'
+import CheckboxField from '../../pcterp/field/CheckboxField'
 
 export default function Vendor() {
     const [loderStatus, setLoderStatus] = useState(null);
@@ -39,7 +40,13 @@ export default function Vendor() {
     const isAddMode = !id;
     const [searchParams] = useSearchParams();
 
-    const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm();
+    const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
+        defaultValues: {
+            perPcsLess: 0,
+            perMeterLess: 0,
+            boxLess: 0
+        }
+    });
     const { append: addressAppend, remove: addressRemove, fields: addressFields, update: addressUpdate, insert: addressInsert } = useFieldArray({ control, name: "addresses" });
 
 
@@ -48,16 +55,20 @@ export default function Vendor() {
 
     const onSubmit = (formData) => {
         console.log(formData);
-        // return isAddMode
-        //     ? createDocument(formData)
-        //     : updateDocument(id, formData);
+        return isAddMode
+            ? createDocument(formData)
+            : updateDocument(id, formData);
     }
 
     const createDocument = (data) => {
         ApiService.setHeader();
         return ApiService.post('/vendor', data).then(response => {
             if (response.data.isSuccess) {
-                navigate(`/${rootPath}/vendors/list`)
+                if (rootPath == "accounting") {
+                    navigate(`/${rootPath}/bills/add`)
+                } else {
+                    navigate(`/${rootPath}/vendors/list`)
+                }
             }
         }).catch(e => {
             console.log(e.response?.data.message);
@@ -399,6 +410,21 @@ export default function Vendor() {
                                 placeholder: "",
                                 // required: true,
                                 // validationMessage: "Please enter the vendor name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <CheckboxField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "IS LOCAL",
+                                fieldId: "isLocal",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
                             }}
                             changeHandler={null}
                             blurHandler={null}

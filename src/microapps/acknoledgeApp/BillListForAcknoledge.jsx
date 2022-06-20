@@ -1,5 +1,6 @@
-import { React, useContext, useState, useEffect } from 'react'
-import { Col, Row, Button, Container, Breadcrumb } from 'react-bootstrap'
+import { React, useContext, useState, useEffect, useRef } from 'react'
+import { Col, Row, Button, Container, Breadcrumb, Table } from 'react-bootstrap'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { PropagateLoader } from "react-spinners";
 import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
@@ -10,19 +11,30 @@ import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
 import AppLoader from '../../pcterp/components/AppLoader';
-import { errorMessage, formatNumber } from '../../helpers/Utils';
+import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils';
+import { render } from '@testing-library/react';
+import { PurchaseOrderPDF } from '../../helpers/PDF';
 const moment = require('moment')
 
-export default function BillList() {
+export default function BillListForAcknoledge() {
     const navigate = useNavigate();
     const location = useLocation();
+    const ref = useRef();
     const rootPath = location?.pathname?.split('/')[1];
     const { dispatch, user } = useContext(UserContext)
     const [loderStatus, setLoderStatus] = useState(null);
     const [state, setstate] = useState(null);
-
+    const [selectedBill, setselectedBill] = useState([]);
+    const [show, setshow] = useState(false);
+    const [array, setarray] = useState([]);
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
+    let set = new Set()
+    let arr = new Array()
+
+    const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
+        defaultValues: {}
+    });
 
 
     function onGridReady(params) {
@@ -85,12 +97,65 @@ export default function BillList() {
         }
     }
 
+    const searchHandler = () => {
+        if (ref.current.value != "") {
+            console.log(ref.current.value);
+
+            state?.map(e => {
+                if (e.name == ref.current.value) {
+                    set.add(e)
+                }
+            })
+        }
+        ref.current.value = ''
+        console.log(set);
+    }
+
+    const toggleHandler = () => {
+        if (show) {
+            infoNotification("Selected bills are shown. If you not selected any bill then refresh the page.")
+        } else {
+            for (const element of set) {
+                arr.push(element)
+            }
+
+            if (set.size == arr.length) {
+                console.log(arr);
+                setselectedBill(arr)
+                setshow(true)
+            }
+        }
+
+    }
+
+    // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
+    const printCHEQUE = () => {
+        // if (selectedBill.length > 0) {
+        PurchaseOrderPDF.generateAcknowledgment()
+
+        setselectedBill([])
+        setshow(false)
+        while (arr.length > 0) {
+            arr.pop();
+        }
+        // } else {
+        //     infoNotification("Please add some bill for print RTGS")
+        // }
+
+        // setselectedBill([])
+        // setshow(false)
+        // while (arr.length > 0) {
+        //     arr.pop();
+        // }
+    }
+
+
     const columns = [
         {
             headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
                 <>
-                    <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/bills/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
-                    {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
+                    <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
+                    {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
                 </>
         },
         { headerName: 'Bill#', field: 'name' },
@@ -119,7 +184,6 @@ export default function BillList() {
         )
     }
 
-
     return (
         <AppContentForm>
             <AppContentHeader>
@@ -127,7 +191,8 @@ export default function BillList() {
                     <Row>
                         <Col className='p-0 ps-2'>
                             <Breadcrumb style={{ fontSize: '24px', marginBottom: '0 !important' }}>
-                                <Breadcrumb.Item active> <div className='breadcrum-label-active'>BILLS</div></Breadcrumb.Item>
+
+                                <Breadcrumb.Item active> <div className='breadcrum-label-active'>PRINT ACKNOLEDGE</div></Breadcrumb.Item>
 
                             </Breadcrumb>
                         </Col>
@@ -137,39 +202,77 @@ export default function BillList() {
                             {(rootPath == "accounting" && location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>}
 
                         </Col>
-                        <Col md="4" sm="6">
+                        {/* <Col md="4" sm="6"> */}
+                        <Col md="7" sm="8">
                             <Row>
-                                <Col md="8"><input type="text" className="openning-cash-control__amount--input" placeholder="Search..." onChange={handleSearch}></input></Col>
-                                <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>EXPORT CSV</span></Button></Col>
+                                {/* <Col md="8"><input type="text" className="openning-cash-control__amount--input" placeholder="Search..." onChange={handleSearch}></input></Col>
+                                <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>EXPORT CSV</span></Button></Col> */}
+                                <Col md="4"><input type="text" className="openning-cash-control__amount--input" name="search" ref={ref} placeholder="Search..." /></Col>{""}
+                                <Col md="1"><Button variant="primary" size="sm" onClick={searchHandler}><span>ADD</span></Button></Col>{""}
+                                <Col md="1"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>RESET</span></Button></Col>{""}
+                                <Col md="2"><Button variant="primary" size="sm" onClick={toggleHandler}><span>SELECTED BILL'S</span></Button></Col>{""}
+                                <Col md="2"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>PRINT ACKNOLEDGE</span></Button></Col>{""}
                             </Row>
                         </Col>
                     </Row>
                 </Container>
 
-            </AppContentHeader>
-            <AppContentBody>
-                <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
-                    <AgGridReact
-                        onGridReady={onGridReady}
-                        rowData={state}
-                        columnDefs={columns}
-                        defaultColDef={{
-                            editable: true,
-                            sortable: true,
-                            flex: 1,
-                            minWidth: 100,
-                            filter: true,
-                            resizable: true,
-                            minWidth: 200
-                        }}
-                        pagination={true}
-                        paginationPageSize={50}
-                        // overlayNoRowsTemplate="No Purchase Order found. Let's create one!"
-                        overlayNoRowsTemplate='<span style="color: rgb(128, 128, 128); font-size: 2rem; font-weight: 100;">No Records Found!</span>'
-                    />
-                </div>
+            </AppContentHeader >
+            {/* <AppContentBody> */}
+            < div className="ag-theme-alpine" style={{ height: '50%', width: '100%' }}>
+                <AgGridReact
+                    onGridReady={onGridReady}
+                    rowData={state}
+                    columnDefs={columns}
+                    defaultColDef={{
+                        editable: true,
+                        sortable: true,
+                        flex: 1,
+                        minWidth: 100,
+                        filter: true,
+                        resizable: true,
+                        minWidth: 200
+                    }}
+                    pagination={true}
+                    paginationPageSize={50}
+                    // overlayNoRowsTemplate="No Purchase Order found. Let's create one!"
+                    overlayNoRowsTemplate='<span style="color: rgb(128, 128, 128); font-size: 2rem; font-weight: 100;">No Records Found!</span>'
+                />
+            </div >
 
-            </AppContentBody>
-        </AppContentForm>
+            {
+                show &&
+                < div className="ag-theme-alpine" style={{ height: '50%', width: '100%' }}>
+                    <Table striped bordered hover size="sm">
+                        <thead>
+                            <tr>
+                                <th>Bill#</th>
+                                <th>REFERENCE NO.</th>
+                                <th>VENDOR</th>
+                                <th>PAYMENT STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                selectedBill?.map(e => {
+                                    return (<tr>
+                                        <td>{e.name}</td>
+                                        <td>{e.referenceNumber}</td>
+                                        <td>{e.vendorArray[0].name}</td>
+                                        <td>{e.paymentStatus}</td>
+                                    </tr>
+                                    )
+                                })
+                            }
+                        </tbody>
+                    </Table>
+                </div>
+            }
+
+            {/* </AppContentBody> */}
+
+
+        </AppContentForm >
     )
+
 }

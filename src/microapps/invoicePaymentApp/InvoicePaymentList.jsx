@@ -1,5 +1,5 @@
 import { React, useContext, useState, useEffect } from 'react'
-import { Col, Row, Button } from 'react-bootstrap'
+import { Col, Row, Button, Breadcrumb, BreadcrumbItem, Container } from 'react-bootstrap'
 import { PropagateLoader } from "react-spinners";
 import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
@@ -50,7 +50,7 @@ export default function BillPaymentList() {
 
             }
         } catch (error) {
-            errorMessage(error, dispatch)
+            errorMessage(error, null)
         }
     }
 
@@ -116,21 +116,27 @@ export default function BillPaymentList() {
     return (
         <AppContentForm>
             <AppContentHeader>
-                <Row>
-                    <Col><h3>Customer Payments</h3></Col>
-                </Row>
-                <Row>
+                <Container fluid>
+                    <Row>
+                        <Col className='p-0 ps-2'>
+                            <Breadcrumb style={{ fontSize: '24px', marginBottom: '0 !important' }}>
+                                <Breadcrumb.Item active> <div className='breadcrum-label-active'>CUSTOMER PAYMENTS</div></Breadcrumb.Item>
+                            </Breadcrumb>
+                        </Col>
+                    </Row>
+                    <Row>
 
-                    <Col>
-                        {/* <Button size="sm" as={Link} to={`/${rootPath}/vendorbills/add`}>Create</Button> */}
-                    </Col>
-                    <Col md="4" sm="6">
-                        <Row>
-                            <Col md="8"><input type="text" className="openning-cash-control__amount--input" placeholder="Search here..." onChange={handleSearch}></input></Col>
-                            <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>Export CSV</span></Button></Col>
-                        </Row>
-                    </Col>
-                </Row>
+                        <Col>
+                            {/* <Button size="sm" as={Link} to={`/${rootPath}/vendorbills/add`}>Create</Button> */}
+                        </Col>
+                        <Col md="4" sm="6">
+                            <Row>
+                                <Col md="8"><input type="text" className="openning-cash-control__amount--input" placeholder="Search here..." onChange={handleSearch}></input></Col>
+                                <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>Export CSV</span></Button></Col>
+                            </Row>
+                        </Col>
+                    </Row>
+                </Container>
             </AppContentHeader>
             <AppContentBody>
                 <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>

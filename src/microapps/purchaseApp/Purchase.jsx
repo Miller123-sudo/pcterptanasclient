@@ -448,203 +448,208 @@ export default function Purchase() {
     }
 
     const generateItemName = async () => {
+        console.log(getValues("productGrade"));
         if (getValues("costPrice")) {
+            if (getValues("productGrade") != "Choose.." || getValues("productGrade") == "") {
 
-            const formData = getValues();
-            console.log(formData);
+                const formData = getValues();
+                console.log(formData);
 
-            const categoryObjArr = [
-                {
-                    categoryValue: formData.productMaster,
-                    listName: productMasterList
-                },
-                {
-                    categoryValue: formData.groupMaster,
-                    listName: groupMasterList
-                },
-                {
-                    categoryValue: formData.brand,
-                    listName: brandList
-                },
-                {
-                    categoryValue: formData.firstCategory,
-                    listName: firstCategoryList
-                },
-                {
-                    categoryValue: formData.secondCategory,
-                    listName: secondCategoryList
-                },
-                {
-                    categoryValue: formData.size,
-                    listName: sizeList
-                }
-            ]
-
-            let itemName = createItemName(categoryObjArr);
-            // setValue("name", itemName)
-            let itemId;
-            if (itemName !== '') {
-                await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
-                    .then(async response => {
-                        if (response.data.isSuccess && response.data.document.length > 0) {
-                            itemId = response.data.document[0].id
-                            await updateProductList();
-                            if (itemId) {
-                                console.log("Item already present in database");
-                                // swal.fire({
-                                //     title: "Item already present in database",
-                                //     buttons: false
-                                // })
-
-                                swal.fire({
-                                    title: response.data.isCostSame ? `Item already present in database and its cost(${response.data.document[0].cost}) is same` : `Item already present in database and its cost(${response.data.document[0].cost}) is not same`,
-                                    text: "Do you want to change the cost price of this product ? (If yes then click 'OK' otherwise 'Cancel')",
-                                    input: 'number',
-                                    showCancelButton: true
-                                }).then(async (result) => {
-                                    console.log(result.value);
-                                    if (result.value == undefined || result.value == '') {
-                                        infoNotification("please enter something on the popup");
-                                        setInLine(response.data.document[0]);
-                                    } else {
-                                        // Upadte cost and MRP of that product 
-                                        await ApiService.patch(`priceChartUpload/findMRP?search=${result.value}`).then(async r => {
-                                            if (r.data.isSuccess) {
-                                                let cost = parseFloat(result.value).toFixed(2)
-                                                let salesPrice = parseFloat(r.data.document.MRP).toFixed(2)
-                                                let igstRate = r.data.document.MRP >= 1000 ? 12.00 : 5.00
-                                                let sgstRate = r.data.document.MRP >= 1000 ? 6.00 : 2.50
-
-                                                await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(res => {
-                                                    if (res.data.isSuccess) {
-                                                        infoNotification("Cost update successfull")
-                                                        setValue("costPrice", result.value)
-                                                        setInLine(res.data.document);
-
-                                                    } else {
-                                                        infoNotification("Can't update cost")
-                                                    }
-                                                })
-                                            }
-                                        })
-                                        // await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: parseFloat(result.value).toFixed(2) }).then(res => {
-                                        //     if (res.data.isSuccess) {
-                                        //         infoNotification("Cost update successfull")
-                                        //         setValue("costPrice", result.value)
-                                        //     } else {
-                                        //         infoNotification("Can't update cost")
-                                        //     }
-                                        // })
-                                    }
-                                })
-
-                            }
-                        }
-                        else {
-
-                        }
-                    })
-                    .catch(e => {
-                        console.log(e.response?.data.message);
-                        // errorMessage(e, dispatch)
-                    })
-
-                let productListLength = formData.products?.length
-                let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
-                let categoryQty = formData.itemQty
-                if (itemAlreadyPresent === -1) {
-                    // itemAppend({})
-                    // setValue(`products.${productListLength}.product`, itemId)
-
-                    // Generate items according to sizes and set in line
-                    if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize) && parseInt(formData.size)) {
-                        infoNotification("Either select only size or select max and min size")
-                    } else if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize)) {
-                        console.log("min and max size present");
-                        const itmName = createItemNameForRange(categoryObjArr)
-                        console.log(itmName);
-                        createAndSetItems(formData, itmName)
-                    } else {
-                        // Create single product if max min size ia not present
-                        let sizeResponse;
-                        console.log("min and max size not present");
-                        console.log(formData);
-                        console.log(formData.itemQty);
-                        // if (formData.size != "Choose..") {
-                        try {
-                            const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
-                            if (res.data.isSuccess) {
-
-                                //find size
-                                if (formData.size != "Choose..") {
-                                    sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
-                                }
-                                // if (sizeResponse?.data.isSuccess) {
-                                const r = await ApiService.post(`product/procedure`, {
-                                    name: itemName,
-                                    description: `${itemName}`,
-                                    cost: formData.costPrice,
-                                    salesPrice: res.data.document.MRP,
-                                    igstRate: res.data.document.MRP >= 1000 ? 12.00 : 5.00,
-                                    sgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
-                                    utgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
-                                })
-                                if (r.data.isSuccess) {
-                                    itemId = await r.data.document.id;
-                                    await updateProductList();
-
-                                    let products = getValues('products')
-                                    let obj = new Object()
-                                    obj.product = [r.data.document]
-                                    obj.quantity = 1
-                                    obj.description = r.data.document?.description
-                                    obj.unit = r.data.document?.uom
-                                    obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
-                                    obj.unitPrice = r.data?.document.cost
-                                    obj.mrp = r.data?.document.salesPrice
-                                    obj.taxes = r.data?.document.igstRate
-                                    obj.subTotal = r.data?.document.cost
-                                    obj.received = 0
-                                    obj.billed = 0
-                                    products.push(obj)
-                                    console.log(obj);
-                                    setValue(`products`, products)
-
-                                    resetItemCategory()
-                                }
-                                // } else {
-                                //     console.log("can not get size data")
-                                // }
-                            }
-
-                        } catch (e) {
-                            console.log(e.response);
-                            // errorMessage(e, dispatch)
-                        }
-                        // } else {
-                        //     infoNotification("Please select size")
-                        // }
+                const categoryObjArr = [
+                    {
+                        categoryValue: formData.productMaster,
+                        listName: productMasterList
+                    },
+                    {
+                        categoryValue: formData.groupMaster,
+                        listName: groupMasterList
+                    },
+                    {
+                        categoryValue: formData.brand,
+                        listName: brandList
+                    },
+                    {
+                        categoryValue: formData.firstCategory,
+                        listName: firstCategoryList
+                    },
+                    {
+                        categoryValue: formData.secondCategory,
+                        listName: secondCategoryList
+                    },
+                    {
+                        categoryValue: formData.size,
+                        listName: sizeList
                     }
-                    updateOrderLines();
-                } else {
-                    swal.fire({
-                        title: "Item already present in line",
-                        text: "Quantity will be added by 1. Do you want to proceed?",
-                        buttons: true
-                    }).then(data => {
-                        if (data) {
-                            let lineData = getValues(`products.${itemAlreadyPresent}`)
-                            console.log(parseFloat(formData));
-                            console.log(parseFloat(formData.itemQty) + parseFloat(lineData.quantity));
-                            setValue(`products.${itemAlreadyPresent}.quantity`, 1 + parseFloat(lineData.quantity))
-                            setValue(`products.${itemAlreadyPresent}.subTotal`, (getValues(`products.${itemAlreadyPresent}.quantity`)) * parseInt(getValues(`products.${itemAlreadyPresent}.unitPrice`)));
-                            updateOrderLines();
+                ]
+
+                let itemName = createItemName(categoryObjArr);
+                // setValue("name", itemName)
+                let itemId;
+                if (itemName !== '') {
+                    await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
+                        .then(async response => {
+                            if (response.data.isSuccess && response.data.document.length > 0) {
+                                itemId = response.data.document[0].id
+                                await updateProductList();
+                                if (itemId) {
+                                    console.log("Item already present in database");
+                                    // swal.fire({
+                                    //     title: "Item already present in database",
+                                    //     buttons: false
+                                    // })
+
+                                    swal.fire({
+                                        title: response.data.isCostSame ? `Item already present in database and its cost(${response.data.document[0].cost}) is same` : `Item already present in database and its cost(${response.data.document[0].cost}) is not same`,
+                                        text: "Do you want to change the cost price of this product ? (If yes then give new price and click 'OK' otherwise 'Cancel')",
+                                        input: 'number',
+                                        showCancelButton: true
+                                    }).then(async (result) => {
+                                        console.log(result.value);
+                                        if (result.value == undefined || result.value == '') {
+                                            infoNotification("please enter something on the popup");
+                                            setInLine(response.data.document[0]);
+                                        } else {
+                                            // Upadte cost and MRP of that product 
+                                            await ApiService.patch(`priceChartUpload/findMRP?search=${result.value}`).then(async r => {
+                                                if (r.data.isSuccess) {
+                                                    let cost = parseFloat(result.value).toFixed(2)
+                                                    let salesPrice = parseFloat(r.data.document.MRP).toFixed(2)
+                                                    let igstRate = r.data.document.MRP >= 1000 ? 12.00 : 5.00
+                                                    let sgstRate = r.data.document.MRP >= 1000 ? 6.00 : 2.50
+
+                                                    await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(res => {
+                                                        if (res.data.isSuccess) {
+                                                            infoNotification("Cost update successfull")
+                                                            setValue("costPrice", result.value)
+                                                            setInLine(res.data.document);
+
+                                                        } else {
+                                                            infoNotification("Can't update cost")
+                                                        }
+                                                    })
+                                                }
+                                            })
+                                            // await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: parseFloat(result.value).toFixed(2) }).then(res => {
+                                            //     if (res.data.isSuccess) {
+                                            //         infoNotification("Cost update successfull")
+                                            //         setValue("costPrice", result.value)
+                                            //     } else {
+                                            //         infoNotification("Can't update cost")
+                                            //     }
+                                            // })
+                                        }
+                                    })
+
+                                }
+                            }
+                            else {
+
+                            }
+                        })
+                        .catch(e => {
+                            console.log(e.response?.data.message);
+                            // errorMessage(e, dispatch)
+                        })
+
+                    let productListLength = formData.products?.length
+                    let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
+                    let categoryQty = formData.itemQty
+                    if (itemAlreadyPresent === -1) {
+                        // itemAppend({})
+                        // setValue(`products.${productListLength}.product`, itemId)
+
+                        // Generate items according to sizes and set in line
+                        if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize) && parseInt(formData.size)) {
+                            infoNotification("Either select only size or select max and min size")
+                        } else if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize)) {
+                            console.log("min and max size present");
+                            const itmName = createItemNameForRange(categoryObjArr)
+                            console.log(itmName);
+                            createAndSetItems(formData, itmName)
+                        } else {
+                            // Create single product if max min size ia not present
+                            let sizeResponse;
+                            console.log("min and max size not present");
+                            console.log(formData);
+                            console.log(formData.itemQty);
+                            // if (formData.size != "Choose..") {
+                            try {
+                                const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+                                if (res.data.isSuccess) {
+
+                                    //find size
+                                    if (formData.size != "Choose..") {
+                                        sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
+                                    }
+                                    // if (sizeResponse?.data.isSuccess) {
+                                    const r = await ApiService.post(`product/procedure`, {
+                                        name: itemName,
+                                        description: `${itemName}`,
+                                        cost: formData.costPrice,
+                                        salesPrice: res.data.document.MRP,
+                                        igstRate: res.data.document.MRP >= 1000 ? 12.00 : 5.00,
+                                        sgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                                        utgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                                    })
+                                    if (r.data.isSuccess) {
+                                        itemId = await r.data.document.id;
+                                        await updateProductList();
+
+                                        let products = getValues('products')
+                                        let obj = new Object()
+                                        obj.product = [r.data.document]
+                                        obj.quantity = 1
+                                        obj.description = r.data.document?.description
+                                        obj.unit = r.data.document?.uom
+                                        obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
+                                        obj.unitPrice = r.data?.document.cost
+                                        obj.mrp = r.data?.document.salesPrice
+                                        obj.taxes = r.data?.document.igstRate
+                                        obj.subTotal = r.data?.document.cost
+                                        obj.received = 0
+                                        obj.billed = 0
+                                        products.push(obj)
+                                        console.log(obj);
+                                        setValue(`products`, products)
+
+                                        resetItemCategory()
+                                    }
+                                    // } else {
+                                    //     console.log("can not get size data")
+                                    // }
+                                }
+
+                            } catch (e) {
+                                console.log(e.response);
+                                // errorMessage(e, dispatch)
+                            }
+                            // } else {
+                            //     infoNotification("Please select size")
+                            // }
                         }
-                    })
+                        updateOrderLines();
+                    } else {
+                        swal.fire({
+                            title: "Item already present in line",
+                            text: "Quantity will be added by 1. Do you want to proceed?",
+                            buttons: true
+                        }).then(data => {
+                            if (data) {
+                                let lineData = getValues(`products.${itemAlreadyPresent}`)
+                                console.log(parseFloat(formData));
+                                console.log(parseFloat(formData.itemQty) + parseFloat(lineData.quantity));
+                                setValue(`products.${itemAlreadyPresent}.quantity`, 1 + parseFloat(lineData.quantity))
+                                setValue(`products.${itemAlreadyPresent}.subTotal`, (getValues(`products.${itemAlreadyPresent}.quantity`)) * parseInt(getValues(`products.${itemAlreadyPresent}.unitPrice`)));
+                                updateOrderLines();
+                            }
+                        })
+                    }
                 }
+                updateOrderLines()
+                // resetItemCategory()
+            } else {
+                infoNotification("Please enter product grade ❕")
             }
-            updateOrderLines()
-            // resetItemCategory()
         } else {
             infoNotification("Please enter cost price ❕")
         }
@@ -785,8 +790,8 @@ export default function Purchase() {
         setFirstCategoryList([])
         setSecondCategoryList([])
         setSizeList([])
-        setValue("productMaster", "")
-        setValue("productGrade", "")
+        setValue("productMaster", "Choose..")
+        setValue("productGrade", "Choose..")
         setValue("costPrice", "")
 
     }
@@ -804,6 +809,16 @@ export default function Purchase() {
     }
 
     //
+    const formatLineProductField = (data) => {
+        let array = new Array()
+        let obj = new Object()
+
+        obj._id = data._id
+        obj.name = data.name
+        array.push(obj)
+
+        return array
+    }
 
 
     useEffect(async () => {
@@ -1306,6 +1321,7 @@ export default function Purchase() {
                                             <th style={{ minWidth: "2rem" }}>#</th>
                                             <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "2rem" }}></th>
+                                            <th style={{ minWidth: "20rem" }}>BARCODE</th>
                                             <th style={{ minWidth: "20rem" }}>PRODUCT</th>
                                             <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
                                             <th style={{ minWidth: "16rem" }}>UOM</th>
@@ -1392,6 +1408,70 @@ export default function Purchase() {
                                                 </td>
 
                                                 <td style={{ textAlign: 'center', paddingTop: '8px' }}>{index + 1}</td>
+
+                                                <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            fieldId: "barcode",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={(e, data) => {
+                                                            setValue(`products.${index}.name`, "");
+                                                            setValue(`products.${index}.product`, [{ _id: "", name: "" }]);
+                                                            setValue(`products.${index}.description`, "");
+                                                            setValue(`products.${index}.unit`, [{ _id: "", name: "" }]);
+                                                            setValue(`products.${index}.quantity`, 0);
+                                                            setValue(`products.${index}.taxes`, "");
+                                                            setValue(`products.${index}.unitPrice`, 0.00);
+                                                            setValue(`products.${index}.mrp`, "");
+                                                            setValue(`products.${index}.subTotal`, "");
+                                                            setValue(`products.${index}.account`, "");
+                                                            setValue(`products.${index}.index`, "");
+                                                            updateOrderLines(index)
+                                                        }}
+                                                        blurHandler={async (e, data) => {
+                                                            if (!e.target.value) return
+
+                                                            ApiService.setHeader();
+                                                            ApiService.get('product/barcode/' + e.target.value).then(response => {
+                                                                const productObj = response.data.document;
+                                                                console.log(productObj);
+
+                                                                // format value for line product field
+                                                                const prod = formatLineProductField(productObj)
+
+                                                                if (productObj) {
+                                                                    setValue(`products.${index}.name`, productObj.name);
+                                                                    setValue(`products.${index}.product`, prod);
+                                                                    setValue(`products.${index}.description`, productObj.description);
+                                                                    setValue(`products.${index}.unit`, productObj.uom);
+                                                                    setValue(`products.${index}.quantity`, 1);
+                                                                    setValue(`products.${index}.taxes`, productObj?.igstRate);
+                                                                    setValue(`products.${index}.unitPrice`, productObj.cost);
+                                                                    setValue(`products.${index}.mrp`, productObj.salesPrice);
+                                                                    setValue(`products.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
+                                                                    setValue(`products.${index}.account`, productObj.assetAccount);
+                                                                    setValue(`products.${index}.index`, index);
+                                                                    updateOrderLines(index)
+                                                                } else {
+                                                                }
+                                                            }).catch(err => {
+                                                                /** If there is no product with that barcode show notification and set barcode and product field to blank */
+
+                                                                infoNotification("No product with that barcode")
+                                                                setValue(`products.${index}.barcode`, "")
+                                                                setValue(`products.${index}.product`, [{ name: "" }])
+                                                                console.log("ERROR", err)
+                                                            })
+                                                        }}
+                                                    />
+
+                                                </td>
+
                                                 <td>
                                                     <LineSelectField
                                                         control={control}
@@ -1405,7 +1485,24 @@ export default function Purchase() {
                                                         }}
                                                         index={index}
                                                         errors={errors}
-                                                        changeHandler={null}
+                                                        changeHandler={(e, data) => {
+                                                            console.log(data);
+                                                            if (data.value.length == 0) {
+                                                                setValue(`products.${index}.name`, "");
+                                                                setValue(`products.${index}.barcode`, "");
+                                                                setValue(`products.${index}.product`, [{ _id: "", name: "" }]);
+                                                                setValue(`products.${index}.description`, "");
+                                                                setValue(`products.${index}.unit`, [{ _id: "", name: "" }]);
+                                                                setValue(`products.${index}.quantity`, 0);
+                                                                setValue(`products.${index}.taxes`, "");
+                                                                setValue(`products.${index}.unitPrice`, 0.00);
+                                                                setValue(`products.${index}.mrp`, "");
+                                                                setValue(`products.${index}.subTotal`, "");
+                                                                setValue(`products.${index}.account`, "");
+                                                                setValue(`products.${index}.index`, "");
+                                                                updateOrderLines(index)
+                                                            }
+                                                        }}
                                                         blurHandler={async (event, data) => {
                                                             if (!data?.okay) return
                                                             const productId = data?.okay[0]?._id;
@@ -1415,6 +1512,7 @@ export default function Purchase() {
                                                                 console.log(productObj);
                                                                 if (productObj) {
                                                                     setValue(`products.${index}.name`, productObj.name);
+                                                                    setValue(`products.${index}.barcode`, productObj.barcode);
                                                                     setValue(`products.${index}.description`, productObj.description);
                                                                     setValue(`products.${index}.unit`, productObj.uom);
                                                                     setValue(`products.${index}.quantity`, 1);

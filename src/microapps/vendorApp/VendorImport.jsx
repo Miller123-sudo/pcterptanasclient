@@ -40,19 +40,23 @@ export default function ImportVendor() {
         // const wbName = wb.SheetNames[0]
         // const ws = wb.Sheets[wbName]
         // const xlData = xlxs.utils.sheet_to_json(ws)
-        const xlData = getxlData()
-        console.log(xlData);
+        if (xlfile) {
+            const xlData = getxlData()
+            console.log(xlData);
 
-        try {
-            ApiService.setHeader();
-            const res = await ApiService.post('/vendor/import', xlData)
-            if (res.data.isSuccess) {
-                console.log(res.data.documents);
-                navigate(`/${rootPath}/vendors`);
+            try {
+                ApiService.setHeader();
+                const res = await ApiService.post('/vendor/import', xlData)
+                if (res.data.isSuccess) {
+                    console.log(res.data.documents);
+                    navigate(`/${rootPath}/vendors`);
+                }
+
+            } catch (e) {
+                errorMessage(e, null)
             }
-
-        } catch (e) {
-            errorMessage(e, null)
+        } else {
+            infoNotification("Please select any file to upload")
         }
     }
 
@@ -88,12 +92,12 @@ export default function ImportVendor() {
             <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content">
                 <Container className="pct-app-content-header m-0 mt-2 pb-2" style={{ borderBottom: '1px solid black' }} fluid>
                     <Row>
-                        <Col><h3>Vendor Upload</h3></Col>
+                        <Col><h3>VENDOR UPLOAD</h3></Col>
                     </Row>
                     <Row>
                         <Col>
                             <Button type="submit" variant="primary" size="sm">IMPORT</Button>
-                            <Button as={Link} to={`/${rootPath}/product/list`} variant="light" size="sm">DISCARD</Button>
+                            <Button as={Link} to={`/${rootPath}/vendors`} variant="light" size="sm">DISCARD</Button>
 
                         </Col>
                     </Row>
@@ -104,7 +108,7 @@ export default function ImportVendor() {
                     <Container className="mt-2" fluid>
                         <Row>
                             <Form.Group as={Col} md="12" className="mb-2">
-                                <Form.Label className="m-0">Upload file</Form.Label>
+                                <Form.Label className="m-0">UPLOAD FILE</Form.Label>
                                 <Form.Control
                                     type="file"
                                     id="file"

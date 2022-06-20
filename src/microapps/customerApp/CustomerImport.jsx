@@ -88,7 +88,12 @@ export default function ImportCustomer() {
             <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content">
                 <Container className="pct-app-content-header m-0 mt-2 pb-2" style={{ borderBottom: '1px solid black' }} fluid>
                     <Row>
-                        <Col><h3>Product Upload</h3></Col>
+                        <Col className='p-0 ps-2'>
+                            <Breadcrumb style={{ fontSize: '24px', marginBottom: '0 !important' }}>
+                                <Breadcrumb.Item className='breadcrumb-item'>   <div className='breadcrum-label'>CUSTOMER UPLOAD</div></Breadcrumb.Item>
+
+                            </Breadcrumb>
+                        </Col>
                     </Row>
                     <Row>
                         <Col>

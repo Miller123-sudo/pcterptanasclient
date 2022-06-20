@@ -68,7 +68,20 @@ export default function SelectField({ control, field, errors, queryPath, index, 
                         selected={value}
                         flip={true}
                         clearButton
-
+                        renderMenuItemChildren={(option) => {
+                            if (option.name.split("/")[0] == "BILL") {
+                                return (
+                                    <div>
+                                        <span>{option.name}</span><span> ( <small><b>Ref No.</b></small> {option?.referenceNumber})</span>
+                                        <div>
+                                            <small><b>Total:</b> {(option?.estimation.total).toFixed(2)}</small>
+                                        </div>
+                                    </div>
+                                )
+                            } else {
+                                return (<div>{option.name}</div>)
+                            }
+                        }}
 
                     />
                 )

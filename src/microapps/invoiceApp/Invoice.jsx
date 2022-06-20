@@ -213,7 +213,7 @@ export default function Invoice() {
                 <Row>
                     <Col>
                         <Breadcrumb style={{ fontSize: '24px' }}>
-                            <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/invoices` }} ><h3 className="breadcrum-label">INVOICES ALL</h3></Breadcrumb.Item>
+                            <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/invoices` }} ><h3 className="breadcrum-label">INVOICES</h3></Breadcrumb.Item>
                             {/* {!isAddMode &&
                                 state?.sourceDocument ? <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/accounting/customerinvoices/edit/${state?.sourceDocument?.id}?mode=view` }} ><span className="breadcrum-label">{state?.sourceDocument?.name}</span></Breadcrumb.Item> :
                                 <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/accounting/customerinvoices/edit/${state?.attachedPO?._id}?mode=view` }} ><span className="breadcrum-label">{state?.attachedPO?.name}</span></Breadcrumb.Item>

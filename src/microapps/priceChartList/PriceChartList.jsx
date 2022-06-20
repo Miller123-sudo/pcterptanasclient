@@ -99,12 +99,12 @@ export default function PriceChartList() {
             <Container className="pct-app-content" fluid>
                 <Container className="pct-app-content-header p-0 m-0 pb-2" fluid>
                     <Row>
-                        <Col><h3>Price Chart</h3></Col>
+                        <Col><h3>PRICE CHART</h3></Col>
                     </Row>
 
                     <Row>
                         <Form.Group as={Col} md="4" className="mb-2">
-                            <Form.Label className="m-0">Cost</Form.Label>
+                            <Form.Label className="m-0">COST</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="range"
@@ -122,7 +122,7 @@ export default function PriceChartList() {
                             />
                         </Form.Group>
                         <Form.Group as={Col} md="4" className="mb-2">
-                            <Button variant="primary" size="md" onClick={findMRP} style={{ marginTop: 26 }}>Calculate</Button>
+                            <Button variant="primary" size="sm" onClick={findMRP} style={{ marginTop: 26 }}>CALCULATE</Button>
                         </Form.Group>
                         <Form.Group as={Col} md="4" className="mb-2">
                             <Form.Label className="m-0">MRP</Form.Label>

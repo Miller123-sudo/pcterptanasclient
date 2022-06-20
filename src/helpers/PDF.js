@@ -2,14 +2,675 @@ import ApiService from "./ApiServices";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "jspdf-barcode";
-import listReactFiles from "list-react-files";
-import { getAllFiles, getAllFilesSync } from "get-all-files";
 import { infoNotification } from "./Utils";
-var read = require("read-directory");
-const fs = require("fs");
 
 // 1. Purchase Order, Product Receipt, Bill, Bill Payment
 const PurchaseOrderPDF = {
+  // Generate RTGS PDF
+  generateRTGS(data) {
+    var doc = new jsPDF("p", "pt", "a4");
+
+    // Format data for PDF
+    let array = new Array();
+    console.log(data);
+    data?.map((e) => {
+      let obj = new Object();
+      obj.name = e.vendorArray[0].name;
+      // obj.date = new Date(e.billDate).toLocaleDateString();
+      // obj.vendor = e.vendorArray[0].name;
+      obj.total = e.estimation.total;
+      // obj.paymentStatus = e.paymentStatus;
+
+      array.push(obj);
+    });
+
+    doc.setFontSize(35);
+    doc.setTextColor("#3498DB");
+    doc.setFont("sans-serif", "bold");
+    doc.text("TANAS CREATION LLP", 50, 60);
+    doc.setFont("sans-serif", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor("#A52A2A");
+    doc.text("Wholesale & Retail Cloth & General Merchants", 80, 90);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "normal");
+    doc.text("Phone:", 450, 40);
+    doc.text("03192-230419", 480, 40);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "bold");
+    doc.setTextColor("#2471A3");
+    doc.text("ABERDEEN BAZAAR, PORT BLAIR- 744101, ANADAMANS", 70, 120);
+    doc.setLineWidth(0.5); // line width
+    doc.setDrawColor("#EC7063"); // draw red lines
+    doc.line(0, 125, 700, 125);
+    doc.setFont("italic");
+    doc.text("Ref No.", 50, 140);
+    doc.text(`Date- ${new Date().toLocaleDateString()}`, 450, 140);
+
+    doc.setFont("sans-serif", "normal");
+    doc.setTextColor("black");
+    doc.setFontSize(10);
+    doc.text("To,", 50, 160);
+    doc.text("The Manager", 60, 180);
+    doc.text("Axis Bank", 60, 200);
+    doc.text("Port Blair", 60, 220);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Sub:", 150, 240);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Request for RTGS in the following name given below", 170, 240);
+    doc.setDrawColor("#000000"); // draw red lines
+    doc.line(170, 245, 400, 245);
+    doc.setTextColor("black");
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "normal");
+    doc.text("Dear Sir,", 50, 260);
+    doc.text(
+      "We at TANAS Creation LLP having a Current A/c No: 919020051359611. We would like you to kindly make\nRTGS payment against yourself for RTGS cheque no- 210839 issued to you in the following names given below.",
+      80,
+      280
+    );
+
+    let height = 200;
+    console.log(array);
+
+    doc.autoTable({
+      margin: { top: 320 },
+      styles: {
+        lineColor: [0, 0, 0],
+        textColor: [0, 0, 0],
+        fontStyle: ["sans-serif", "normal"],
+        lineWidth: 1,
+        fillColor: [255, 255, 255],
+      },
+      columnStyles: {
+        europe: { halign: "center" },
+        0: { cellWidth: 95 },
+        2: { cellWidth: 100, halign: "right" },
+        3: { cellWidth: 80, halign: "right" },
+        4: { cellWidth: 80 },
+      },
+      body: array,
+      columns: [
+        { header: "Name", dataKey: "name" },
+        { header: "Account No.", dataKey: "date" },
+        { header: "Bank Name", dataKey: `` },
+        { header: "Total", dataKey: `total` },
+        // { header: "Bank Name", dataKey: "branch" },
+        { header: "Branch", dataKey: "branch" },
+        { header: "IFS Code", dataKey: "ifsc" },
+      ],
+      didDrawPage: (d) => (height = d.cursor.y), // calculate height of the autotable dynamically
+    });
+
+    let h = height + 30;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text("Kindly do the needful", 50, h);
+    doc.text("Yours faithfyully", 450, h);
+    doc.text("Thanking you", 50, h + 30);
+    doc.text("Tanas Creation LLP", 450, h + 30);
+
+    // doc.text("Yours faithfyully", 450, 500);
+    // doc.text("Thank you", 50, 530);
+    // doc.text("Tanas creation", 450, 530);
+
+    const pageCount = doc.internal.getNumberOfPages();
+
+    doc.text(`${pageCount}`, 300, 820);
+
+    doc.save(`RTGS.pdf`);
+  },
+
+  // Generate cheque PDF
+  generateCheque() {
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: [200.66, 91.44], // Standard cheque size 7.9 inch width & 3.6 inch height (here uses in mm);
+    });
+
+    var pageWidth = 200.66;
+    var pageHeight = 91.44;
+
+    var unitHeight = pageHeight / 10;
+    doc.setDrawColor(102, 102, 102);
+
+    /** Header */
+    // doc.setDrawColor(0);
+    doc.setFillColor(242, 242, 242);
+    doc.rect(0, 0, pageWidth, unitHeight * 2, "F");
+
+    /**Bank Primary details */
+    doc.text("BANK NAME", 10, 7.5);
+    doc.setFontSize(8);
+    doc.text("Bank Address", 10, 11);
+    doc.text("Bank IFSC code", 10, 14);
+
+    /**Type of Cheque */
+    doc.line(
+      pageWidth / 2 - pageWidth / 15,
+      7.5,
+      pageWidth - pageWidth / 2 + pageWidth / 15,
+      7.5
+    );
+    doc.line(
+      pageWidth / 2 - pageWidth / 15,
+      7.5 + unitHeight * 0.5,
+      pageWidth - pageWidth / 2 + pageWidth / 15,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text("A/c Payee", 5 + pageWidth / 2 - pageWidth / 15, 11);
+
+    /**Date */
+    doc.setFontSize(6);
+    doc.text(
+      "VALID FOR THREE MONTHS FROM THE DATE OF ISSUE",
+      pageWidth - 10,
+      6.5,
+      "right"
+    );
+
+    doc.setFontSize(8);
+    doc.text("DATE", (pageWidth / 4) * 3 - 20, 7.5 + unitHeight * 0.4);
+    doc.rect((pageWidth / 4) * 3 - 10, 7.5, pageWidth / 4, unitHeight * 0.5);
+
+    doc.setFontSize(6);
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 1 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 1 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "D",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 1 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 2 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 2 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "D",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 2 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 3 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 3 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "M",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 3 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 4 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 4 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "M",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 4 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 5 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 5 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "Y",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 5 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 6 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 6 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "Y",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 6 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 7 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 7 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "Y",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 7 - 14,
+      7.5 + unitHeight * 0.8
+    );
+    doc.line(
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 8 - 10,
+      7.5,
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 8 - 10,
+      7.5 + unitHeight * 0.5
+    );
+    doc.text(
+      "Y",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 8 - 14,
+      7.5 + unitHeight * 0.8
+    );
+
+    //Setting date value
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      "1",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 1 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "3",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 2 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "0",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 3 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "6",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 4 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "2",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 5 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "0",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 6 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "2",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 7 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.text(
+      "2",
+      (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 8 - 14,
+      7.5 + unitHeight * 0.4
+    );
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    /** Lines Parts */
+    doc.setLineWidth(0.25);
+    doc.text("Pay", 10, unitHeight * 3 - 2);
+
+    //Setting payee name
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("R Swaminathan & Company - Port Blair", 20, unitHeight * 3 - 2);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    doc.line(10, unitHeight * 3, pageWidth - 10, unitHeight * 3);
+    doc.text("OR ORDER", pageWidth - 25, unitHeight * 3 - 2);
+
+    doc.text("Rupees", 10, unitHeight * 4 - 2);
+
+    //Setting paying amount in words
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      "One Lakh Forty Four Thousand Nine Hundred Eighty Only",
+      25,
+      unitHeight * 4 - 2
+    );
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    doc.line(10, unitHeight * 4, pageWidth - 10, unitHeight * 4);
+    doc.text("RS.", (pageWidth / 4) * 3 - 7, unitHeight * 5 - 3);
+
+    //Setting paying amount in numbers
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("1,44,980.00/-", (pageWidth / 4) * 3 + 5, unitHeight * 5 - 3);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    doc.line(
+      (pageWidth / 4) * 3 - 10,
+      unitHeight * 4,
+      (pageWidth / 4) * 3 - 10,
+      unitHeight * 5
+    );
+    doc.line(
+      (pageWidth / 4) * 3,
+      unitHeight * 4,
+      (pageWidth / 4) * 3,
+      unitHeight * 5
+    );
+    doc.line(pageWidth - 10, unitHeight * 4, pageWidth - 10, unitHeight * 5);
+    doc.line(10, unitHeight * 5, pageWidth - 10, unitHeight * 5);
+
+    /**Account No box */
+    doc.text("A/C NO.", 15, unitHeight * 6 - 2);
+    doc.rect(10, unitHeight * 5.25, pageWidth / 3, unitHeight * 0.75);
+
+    //Setting A/c number
+    doc.text("919020051359611", 40, unitHeight * 6 - 2);
+    doc.line(
+      10 + pageWidth / 9,
+      unitHeight * 5.25,
+      10 + pageWidth / 9,
+      unitHeight * 6
+    ); //vertical line
+
+    /**Company */
+    //Setting Company
+    doc.text(
+      "For TANAS CREATION LLP",
+      pageWidth - 10,
+      unitHeight * 5.5,
+      "right"
+    );
+
+    /**Signature */
+    doc.text(
+      "Authorised Signatory(ies)",
+      pageWidth - 10,
+      unitHeight * 8 - 5,
+      "right"
+    );
+    doc.setFontSize(6);
+    doc.text("Please sign above", pageWidth - 10, unitHeight * 8 - 2, "right");
+
+    /**Instruction */
+    var txtWidth = doc.getTextWidth(
+      "Payable at par at all branches of Bank Name in India."
+    );
+    doc.text(
+      "Payable at par at all branches of Bank Name in India.",
+      pageWidth / 2 - txtWidth / 2,
+      unitHeight * 8 - 2
+    );
+
+    /**Other box */
+    doc.setFillColor(179, 179, 179);
+    doc.rect(10, unitHeight * 6.5, pageWidth / 4, unitHeight, "F");
+
+    /** Footer */
+    doc.setFillColor(242, 242, 242);
+    doc.rect(0, pageHeight - unitHeight * 2, pageWidth, unitHeight * 2, "F");
+    doc.setFontSize(10);
+    doc.setFont("courier", "bold");
+    var txtWidth2 = doc.getTextWidth('||" 210402 ||" 744211002|: 157460||" 29');
+    doc.text(
+      '||" 210402 ||" 744211002|: 157460||" 29',
+      pageWidth / 2 - txtWidth2 / 2,
+      unitHeight * 9
+    );
+
+    // console.log(converter.toWords(20000));
+
+    /**Saving document */
+    doc.save(`Cheque.pdf`);
+  },
+
+  // Generate acknoledgement
+  generateAcknowledgment() {
+    var doc = new jsPDF("p", "pt", "a4");
+    doc.setFontSize(35);
+    doc.setTextColor("#3498DB");
+    doc.setFont("sans-serif", "bold");
+    doc.text("TANAS CREATION LLP", 50, 60);
+    doc.setFont("sans-serif", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor("#A52A2A");
+    doc.text("Wholesale & Retail Cloth & General Merchants", 50, 90);
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "normal");
+    doc.setTextColor("#000000");
+    doc.text("Off: 230419, 231184", 480, 55);
+    doc.setDrawColor("#7FB3D5"); // draw blue lines
+    doc.line(0, 110, 700, 110);
+    doc.line(0, 113, 700, 113);
+    doc.setFont("sans-serif", "bold");
+    doc.text("ABERDEEN BAZAAR,   PORT BLAIR- 744101,    ANADAMANS", 50, 125);
+    doc.setFont("italic");
+    doc.text("Ref No.", 50, 150);
+    doc.text("Date-", 450, 150);
+    doc.setFont("sans-serif", "normal");
+    doc.setTextColor("black");
+    doc.setFontSize(10);
+    doc.text("To,", 50, 170);
+    doc.text("M/s", 60, 190);
+    doc.setDrawColor("#000000"); // draw black lines
+    doc.setLineWidth(0.2);
+    doc.line(75, 195, 520, 195);
+    doc.line(75, 230, 520, 230);
+    doc.line(75, 265, 520, 265);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Dear Sir,", 50, 290);
+    doc.setFont("sans-serif", "normal");
+    doc.setTextColor("black");
+    doc.text(
+      "We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No.",
+      50,
+      310
+    );
+    var txtWidth = doc.getTextWidth(
+      "We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No."
+    );
+    doc.line(50 + txtWidth, 312, 520, 312);
+    doc.text("Dt.", 50, 330);
+    doc.line(60, 332, 150, 332);
+    doc.text("for Rs.", 150, 330);
+    var txtWidth1 = doc.getTextWidth("for Rs.");
+    doc.line(160 + txtWidth1, 332, 350, 332);
+    doc.text("Rupees", 350, 330);
+    var textWidht2 = doc.getTextWidth("Rupees");
+    doc.line(360 + textWidht2, 332, 520, 332);
+    doc.line(50, 365, 510, 365);
+    doc.text("only", 510, 365);
+    doc.text("drawn on S.B.I/ Axis Bank", 50, 385);
+    var txtWidth3 = doc.getTextWidth("drawn on S.B.I/ Axis Bank");
+    doc.line(50 + txtWidth3, 387, 370, 387);
+    doc.text("branch against PART / FULL payment", 372, 387);
+    doc.text("of your bills as per  following details", 50, 405);
+
+    let height = 200;
+
+    var data = [
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+      {
+        billno: "1",
+        billdate: "1",
+        billamount: "1",
+        discount: "1",
+        permtr: "1",
+      },
+    ];
+    doc.autoTable({
+      margin: { top: 420 },
+      styles: {
+        lineColor: [0, 0, 0],
+        textColor: [0, 0, 0],
+        fontStyle: ["sans-serif", "normal"],
+        lineWidth: 1,
+        fillColor: [255, 255, 255],
+      },
+      columnStyles: {
+        europe: { halign: "center" },
+        0: { cellWidth: 90 },
+        2: { cellWidth: 80, halign: "right" },
+        3: { cellWidth: 80, halign: "right" },
+        4: { cellWidth: 80 },
+      },
+      body: data,
+      columns: [
+        { header: "Bill No.", dataKey: "billno" },
+        { header: "Bill Date", dataKey: "billdate" },
+        { header: "Amount", dataKey: "billamount" },
+        { header: "Discount less", dataKey: "discount" },
+        { header: "Per mtr", dataKey: "permtr" },
+        // { header: "Bill No.", dataKey: "" },
+        // { header: "Bill Dt.", dataKey: "" },
+        // { header: "Bill Amount", dataKey: "." },
+        // { header: "Discount less", dataKey: "" },
+        // { header: "Per Mtr", dataKey: "" },
+      ],
+      didDrawPage: (d) => (height = d.cursor.y), // calculate height of the autotable dynamically
+    });
+
+    let h = height + 30;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Kindly acknowledge the receipt", 50, h);
+    doc.text("Yours faithfully", 450, h);
+    doc.text("Thanking You,", 50, h + 30);
+
+    const pageCount = doc.internal.getNumberOfPages();
+
+    doc.text(`${pageCount}`, 300, 820);
+
+    doc.save(`ACk.pdf`);
+  },
+
   // PRODUCT RECEIVED PDF
   generateProductReceivedPDF(productReceivedId) {
     let vendor = "";

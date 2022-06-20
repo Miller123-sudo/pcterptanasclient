@@ -155,7 +155,7 @@ export default function BillPayment() {
                         {
                             state?.invoice?.paymentStatus !== "Paid" && <Button type="submit" variant="primary" size="sm">CREATE PAYMENT</Button>
                         }
-                        <Button as={Link} to={`/${rootPath}/customerpayments/list`} variant="light" size="sm">DISCARD</Button>{" "}
+                        <Button as={Link} to={`/${rootPath}/customerinvoicepayments/list`} variant="light" size="sm">DISCARD</Button>{" "}
 
                     </Col>
                 </Row>

@@ -57,7 +57,7 @@ export default function ProductReceiveList() {
         },
         { headerName: 'Receipt ID', field: 'name' },
         { headerName: 'Sourced Document', field: 'sourceDocument.name' },
-        { headerName: 'Vendor Name', field: 'vendor', valueGetter: (params) => params.data?.vendor ? params.data?.vendor[0]?.name : "Not Available" },
+        { headerName: 'Vendor Name', field: 'vendor', valueGetter: (params) => params.data?.vendor ? params.data?.vendor?.name : "Not Available" },
         { headerName: 'Effective Date', field: 'effectiveDate', valueGetter: (params) => params.data?.effectiveDate ? moment(params.data?.effectiveDate).format("DD/MM/YYYY") : "Not Available" },
         { headerName: 'Status', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) }
     ]
@@ -74,7 +74,7 @@ export default function ProductReceiveList() {
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
             }
-            case 'Fully Billed': {
+            case 'Done': {
                 return <div style={{ backgroundColor: '#2ECC71', borderRadius: '20px', color: 'white', width: '100%', height: '60%', maxHeight: '2rem', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
@@ -116,7 +116,9 @@ export default function ProductReceiveList() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            <Button size="sm" as={Link} to={`/${rootPath}/receivedproducts/add`}>CREATE</Button>{" "}
+                            {
+                                rootPath == "purchase" ? "" : <Button size="sm" as={Link} to={`/${rootPath}/receivedproducts/add`}>CREATE</Button>
+                            }
                         </Col>
                         <Col md="4" sm="6">
                             <Row>
