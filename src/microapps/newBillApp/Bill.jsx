@@ -25,6 +25,7 @@ import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import { PurchaseOrderPDF } from '../../helpers/PDF';
 import CheckboxField from '../../pcterp/field/CheckboxField';
 import swal from "sweetalert2"
+import InputGroupWithButton from '../../pcterp/field/InputGroupWithButton';
 
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
@@ -77,6 +78,7 @@ export default function Invoice() {
         formData.boxLess = vendorData.boxLess
         formData.perPcsLess = vendorData.perPcsLess
         formData.perMeterLess = vendorData.perMeterLess
+
         console.log(formData);
 
         await ApiService.patch("newBill/findDuplicatereferenceNumber", { referenceNumber: getValues("referenceNumber") }).then(res => {
@@ -98,6 +100,7 @@ export default function Invoice() {
     }
 
     const createDocument = async (data) => {
+        console.log(data);
         console.log("PROCESSING")
         if (state?.paymentStatus === "Paid") {
             alert("You can't Update this record")
@@ -179,9 +182,9 @@ export default function Invoice() {
         })
     }
 
-    const findOneDocument = () => {
+    const findOneDocument = async () => {
         ApiService.setHeader();
-        return ApiService.get(`/newBill/${id}`).then(response => {
+        return ApiService.get(`/newBill/${id}`).then(async response => {
             const document = response?.data.document;
             console.log(document);
             setState(document)
@@ -189,6 +192,18 @@ export default function Invoice() {
             if (document.billDate) {
                 setValue('billDate', document.billDate.split("T")[0])
             }
+
+            //
+            // Find all bill payments related to each record
+            const allBills = await ApiService.get(`billPayment/findBillsById/${response?.data.document?._id}`)
+            if (allBills?.data.isSuccess) {
+                console.log(allBills?.data.documents);
+                setbillList(allBills?.data.documents)
+            } else {
+                errorMessage(allBills.data.message, null)
+            }
+            //
+
             setLoderStatus("SUCCESS");
         }).catch(e => {
             console.log(e.response?.data.message);
@@ -221,7 +236,7 @@ export default function Invoice() {
         // setShowRegisterPaymentModal(true);
         // history.push("/purchase/billpayment/" + state.id);
         console.log(state);
-        await ApiService.post("/billPayment", state).then((res) => {
+        await ApiService.post("/billPayment/createStandaloneBillPayment", state).then((res) => {
             if (res.data.isSuccess) {
                 console.log(res.data);
                 navigate(`/${rootPath}/billpayment/edit/` + res.data.document._id)
@@ -236,7 +251,8 @@ export default function Invoice() {
     }
 
     const handleBillPayment = () => {
-        navigate(`/accounting/bill/billpayments/${state?._id}`)
+        console.log(billList);
+        navigate(`/${rootPath}/billpayment/${id}`)
     }
 
 
@@ -366,14 +382,13 @@ export default function Invoice() {
         }
     }
 
-    useEffect(() => {
+    useEffect(async () => {
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
             findOneDocument()
             calculateBillCount();
         }
-
     }, []);
 
     if (loderStatus === "RUNNING") {
@@ -399,7 +414,7 @@ export default function Invoice() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            {!isAddMode && state?.isUsed ? "" : <Button type="submit" variant="primary" size="sm">SAVE</Button>}{" "}
+                            {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <Button type="submit" variant="primary" size="sm">SAVE</Button>}{" "}
                             <Button as={Link} to={`/${rootPath}/bills/list`} variant="secondary" size="sm">DISCARD</Button>
                             {!isAddMode && state?.isUsed ? "" : <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
@@ -412,12 +427,12 @@ export default function Invoice() {
             </AppContentHeader>
             <AppContentBody>
                 {/* STATUS BAR */}
-                <Row className="p-0 mb-2 m-0">
-                    <Col className='p-0 ps-2'>
+                <Row className="p-0 mt-2 m-0">
+                    <Col >
                         <ButtonGroup size="sm">
 
                             {state?.status === "Draft" ? <Button onClick={handleConfirmButton} type="button" variant="primary">CONFIRM</Button> : ""}
-                            {state?.status === "Posted" && state?.paymentStatus == "Not Paid" ? <Button onClick={handleRegisterPaymentButton} type="button" variant="primary">REGISTER PAYMENT</Button> : ""}
+                            {(state.status == "Posted" && state.paymentStatus == "Not Paid") || (state.status == "Posted" && state.paymentStatus == "Partially Paid") ? <Button onClick={handleRegisterPaymentButton} type="button" variant="primary">REGISTER PAYMENT</Button> : ""}
                             {!isAddMode && <Button variant="light" onClick={handlePrintOrder}>PRINT Bill</Button>}
                         </ButtonGroup>
                     </Col>
@@ -425,10 +440,15 @@ export default function Invoice() {
                         {/* <div className="me-1 d-flex justify-content-end">
                                 {!isAddMode && state.status == "Fully Billed" ? <Button size="sm" onClick={handleVendorBill} varient="primary">1 Vendor Bills</Button> : ""}
                             </div> */}
-                        <div className="me-1 d-flex justify-content-end">
+
+                        <div className="m-2 d-flex justify-content-end">
+                            {!isAddMode && billList?.length ? <Button size="sm" onClick={handleBillPayment} varient="primary">Bill Payments</Button> : ""}
+                        </div>
+
+                        <div className="m-2 d-flex justify-content-end">
                             {!isAddMode && <div className='' style={{ padding: '5px 20px', backgroundColor: '#2ECC71', color: 'white' }}>{state?.status}</div>}
                         </div>
-                        <div className="me-1 d-flex justify-content-end">
+                        <div className="m-2 d-flex justify-content-end">
                             {!isAddMode && <div className='' style={{ padding: '5px 20px', backgroundColor: '#2ECC71', color: 'white' }}>{state?.paymentStatus}</div>}
                         </div>
                     </Col>
@@ -438,9 +458,9 @@ export default function Invoice() {
                 {/* BODY FIELDS */}
                 <Container fluid>
                     <Row>
-                        <Col><BiEditAlt onClick={() => {
+                        {/* <Col><BiEditAlt onClick={() => {
                             navigate("/accounting/vendor/add")
-                        }} /></Col>
+                        }} /></Col> */}
                         {
                             (!isAddMode || addDiscount) &&
                             <>
@@ -492,7 +512,7 @@ export default function Invoice() {
                                 /> : ""
                         }
 
-                        <SelectField
+                        {/* <SelectField
                             control={control}
                             errors={errors}
                             field={{
@@ -509,9 +529,11 @@ export default function Invoice() {
                                 console.log(data.value);
                                 if (!data.value) return
 
-                                if (!data.value.length) setaddDiscount(false)
-
+                                if (!data.value.length) {
+                                    setaddDiscount(false)
+                                }
                                 if (data.value) {
+                                    setValue("referenceNumber", `${data?.value?.name}-`)
                                     setValue("vendor", data?.value?.id)
                                     setvendorObj(data.value)
 
@@ -531,9 +553,85 @@ export default function Invoice() {
                                     setaddDiscount(false)
                                 }
                             }}
-                            blurHandler={null}
+                            blurHandler={(e, data) => {
+                                console.log(data.value);
+                                if (data.value == "undefined") {
+                                    setValue("referenceNumber", "")
+                                } else if (data.value?.length == 0) setValue("referenceNumber", "")
+                            }}
+                        /> */}
+
+                        <InputGroupWithButton
+                            control={control}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "VENDOR",
+                                fieldId: "vendorArray",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the department name!",
+                                selectRecordType: "vendor",
+                                createRecordType: "vendor",
+                                isVisible: isAddMode ? true : false
+                            }}
+                            changeHandler={async (event, data) => {
+                                console.log(data.value);
+                                if (!data.value) return
+
+                                if (!data.value.length) {
+                                    setaddDiscount(false)
+                                }
+                                if (data.value) {
+                                    setValue("referenceNumber", `${data?.value?.name}-`)
+                                    setValue("vendor", data?.value?.id)
+                                    setvendorObj(data.value)
+
+                                    const vendor = await ApiService.get("vendor/" + data.value._id)
+                                    if (vendor.data.isSuccess) {
+                                        console.log(vendor.data.document);
+                                        setvendorData(vendor.data.document)
+                                        if (vendor.data.document.boxLess == 0 && vendor.data.document.perMeterLess == 0 && vendor.data.document.perPcsLess == 0 && vendor.data.document.discountPercentLess == 0) {
+                                            setaddDiscount(false)
+                                        } else {
+                                            setaddDiscount(true)
+                                        }
+                                    } else {
+                                        return
+                                    }
+                                } else {
+                                    setaddDiscount(false)
+                                }
+                            }}
+                            blurHandler={(e, data) => {
+                                console.log(data.value);
+                                if (data.value == "undefined") {
+                                    setValue("referenceNumber", "")
+                                } else if (data.value?.length == 0) setValue("referenceNumber", "")
+                            }}
                         />
 
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "SUB VENDOR",
+                                fieldId: "subVendor",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={(e) => {
+                                console.log(e.target.value);
+                                if (e.target.value) {
+                                    setValue("referenceNumber", `${vendorObj?.name}-${e.target.value}-`)
+                                } else {
+                                    setValue("referenceNumber", `${vendorObj?.name}-`)
+                                }
+                            }}
+                        />
 
                         <DateField
                             register={register}
@@ -638,6 +736,22 @@ export default function Invoice() {
                                 }}
                             />
                         }
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "REMAIN AMOUNT TO PAY",
+                                fieldId: "remainAmountToPay",
+                                placeholder: "",
+                                disabled: true
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
 
                         {/* <TextField
                             register={register}
@@ -1189,11 +1303,11 @@ export default function Invoice() {
                                 {/* <Card.Header as="h5">Featured</Card.Header> */}
                                 <Card.Body>
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>UNTAXED TOTAL:</Col>
+                                        <Col>GROSS TOTAL:</Col>
                                         <Col>{formatNumber(state?.estimation?.untaxedAmount)}</Col>
                                     </Row>
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>FREDGE COST:</Col>
+                                        <Col>FREIGHT COST:</Col>
                                         <Col>
                                             {
                                                 !isAddMode ? <Col>{formatNumber(state?.estimation?.fredgeCost)}</Col> :
@@ -1227,7 +1341,7 @@ export default function Invoice() {
                                     }
 
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                        <Col>TOTAL:</Col>
+                                        <Col>NET:</Col>
                                         <Col style={{ borderTop: '1px solid black' }}>{formatNumber(state?.estimation?.total)}</Col>
                                     </Row>
 

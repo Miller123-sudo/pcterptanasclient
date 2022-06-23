@@ -175,7 +175,7 @@ export default function Vendor() {
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
                             <Button type="submit" variant="primary" size="sm">SAVE</Button>{" "}
-                            <Button as={Link} to={`/${rootPath}/vendors/list`} variant="light" size="sm">DISCARD</Button>
+                            <Button as={Link} to={rootPath == "accounting" ? `/${rootPath}/bills/add` : `/${rootPath}/vendors/list`} variant="light" size="sm">DISCARD</Button>
                             {!isAddMode && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
                             </DropdownButton>}

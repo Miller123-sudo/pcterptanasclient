@@ -54,7 +54,8 @@ export default function BillListForRTGS() {
     const findAllDocument = async () => {
         try {
             ApiService.setHeader();
-            const response = await ApiService.get('newBill/getUnpaidBills');
+            // const response = await ApiService.get('newBill/getUnpaidBills');
+            const response = await ApiService.get('billPayment/findNotPaidPayment');
             if (response.data.isSuccess) {
                 console.log(response.data.documents)
                 setstate(response.data.documents)
@@ -152,22 +153,36 @@ export default function BillListForRTGS() {
     }
 
 
+    // const columns = [
+    //     {
+    //         headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+    //             <>
+    //                 <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
+    //                 {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
+    //             </>
+    //     },
+    //     { headerName: 'Bill#', field: 'name' },
+    //     { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
+    //     { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
+    //     { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
+    //     { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
+    //     { headerName: 'Is Used', field: 'isUsed' },
+    //     { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
+    //     { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)) }
+    // ]
+
     const columns = [
         {
-            headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+            headerName: ' ', field: '_id', sortable: false, filter: false, cellRendererFramework: (params) =>
                 <>
-                    <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
-                    {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
+                    <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/billpayment/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
+                    {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
                 </>
         },
-        { headerName: 'Bill#', field: 'name' },
-        { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
-        { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
-        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
-        { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
-        { headerName: 'Is Used', field: 'isUsed' },
-        { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
-        { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)) }
+        { headerName: 'Bill Payment#', field: 'name' },
+        { headerName: 'Journal Type', field: 'journalType' },
+        { headerName: 'Payment Date', field: 'paymentDate', valueGetter: (params) => params.data?.paymentDate ? moment(params.data?.paymentDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
+        { headerName: 'Amount', field: 'amount', valueGetter: (params) => formatNumber(params.data?.amount) }
     ]
 
 
@@ -248,20 +263,16 @@ export default function BillListForRTGS() {
                     <Table striped bordered hover size="sm">
                         <thead>
                             <tr>
-                                <th>Bill#</th>
-                                <th>REFERENCE NO.</th>
-                                <th>VENDOR</th>
-                                <th>PAYMENT STATUS</th>
+                                <th>BILL PAYMENT#</th>
+                                <th>AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
                             {
                                 selectedBill?.map(e => {
-                                    return (<tr key={e._id}>
+                                    return (<tr>
                                         <td>{e.name}</td>
-                                        <td>{e.referenceNumber}</td>
-                                        <td>{e.vendorArray[0].name}</td>
-                                        <td>{e.paymentStatus}</td>
+                                        <td>{e.amount}</td>
                                     </tr>
                                     )
                                 })

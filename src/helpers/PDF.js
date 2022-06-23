@@ -15,10 +15,10 @@ const PurchaseOrderPDF = {
     console.log(data);
     data?.map((e) => {
       let obj = new Object();
-      obj.name = e.vendorArray[0].name;
+      obj.name = e.anything.vendorArray[0].name;
       // obj.date = new Date(e.billDate).toLocaleDateString();
-      // obj.vendor = e.vendorArray[0].name;
-      obj.total = e.estimation.total;
+      obj.accountno = String(e.bankAccount[0].name).split(" ")[0];
+      obj.total = e.amount;
       // obj.paymentStatus = e.paymentStatus;
 
       array.push(obj);
@@ -96,7 +96,124 @@ const PurchaseOrderPDF = {
       body: array,
       columns: [
         { header: "Name", dataKey: "name" },
-        { header: "Account No.", dataKey: "date" },
+        { header: "Account No.", dataKey: "accountno" },
+        { header: "Bank Name", dataKey: `` },
+        { header: "Total", dataKey: `total` },
+        // { header: "Bank Name", dataKey: "branch" },
+        { header: "Branch", dataKey: "branch" },
+        { header: "IFS Code", dataKey: "ifsc" },
+      ],
+      didDrawPage: (d) => (height = d.cursor.y), // calculate height of the autotable dynamically
+    });
+
+    let h = height + 30;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text("Kindly do the needful", 50, h);
+    doc.text("Yours faithfyully", 450, h);
+    doc.text("Thanking you", 50, h + 30);
+    doc.text("Tanas Creation LLP", 450, h + 30);
+
+    // doc.text("Yours faithfyully", 450, 500);
+    // doc.text("Thank you", 50, 530);
+    // doc.text("Tanas creation", 450, 530);
+
+    const pageCount = doc.internal.getNumberOfPages();
+
+    doc.text(`${pageCount}`, 300, 820);
+
+    doc.save(`RTGS.pdf`);
+  },
+
+  generateSingleRTGS(data) {
+    var doc = new jsPDF("p", "pt", "a4");
+
+    // // Format data for PDF
+    // let array = new Array();
+    // console.log(data);
+    // data?.map((e) => {
+    //   let obj = new Object();
+    //   obj.name = e.anything.vendorArray[0].name;
+    //   // obj.date = new Date(e.billDate).toLocaleDateString();
+    //   obj.accountno = String(e.bankAccount[0].name).split(" ")[0];
+    //   obj.total = e.amount;
+    //   // obj.paymentStatus = e.paymentStatus;
+
+    //   array.push(obj);
+    // });
+
+    doc.setFontSize(35);
+    doc.setTextColor("#3498DB");
+    doc.setFont("sans-serif", "bold");
+    doc.text("TANAS CREATION LLP", 50, 60);
+    doc.setFont("sans-serif", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor("#A52A2A");
+    doc.text("Wholesale & Retail Cloth & General Merchants", 80, 90);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "normal");
+    doc.text("Phone:", 450, 40);
+    doc.text("03192-230419", 480, 40);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "bold");
+    doc.setTextColor("#2471A3");
+    doc.text("ABERDEEN BAZAAR, PORT BLAIR- 744101, ANADAMANS", 70, 120);
+    doc.setLineWidth(0.5); // line width
+    doc.setDrawColor("#EC7063"); // draw red lines
+    doc.line(0, 125, 700, 125);
+    doc.setFont("italic");
+    doc.text("Ref No.", 50, 140);
+    doc.text(`Date- ${new Date().toLocaleDateString()}`, 450, 140);
+
+    doc.setFont("sans-serif", "normal");
+    doc.setTextColor("black");
+    doc.setFontSize(10);
+    doc.text("To,", 50, 160);
+    doc.text("The Manager", 60, 180);
+    doc.text("Axis Bank", 60, 200);
+    doc.text("Port Blair", 60, 220);
+
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Sub:", 150, 240);
+    doc.setFont("sans-serif", "bold");
+    doc.text("Request for RTGS in the following name given below", 170, 240);
+    doc.setDrawColor("#000000"); // draw red lines
+    doc.line(170, 245, 400, 245);
+    doc.setTextColor("black");
+    doc.setFontSize(10);
+    doc.setFont("sans-serif", "normal");
+    doc.text("Dear Sir,", 50, 260);
+    doc.text(
+      "We at TANAS Creation LLP having a Current A/c No: 919020051359611. We would like you to kindly make\nRTGS payment against yourself for RTGS cheque no- 210839 issued to you in the following names given below.",
+      80,
+      280
+    );
+
+    let height = 200;
+
+    doc.autoTable({
+      margin: { top: 320 },
+      styles: {
+        lineColor: [0, 0, 0],
+        textColor: [0, 0, 0],
+        fontStyle: ["sans-serif", "normal"],
+        lineWidth: 1,
+        fillColor: [255, 255, 255],
+      },
+      columnStyles: {
+        europe: { halign: "center" },
+        0: { cellWidth: 95 },
+        2: { cellWidth: 100, halign: "right" },
+        3: { cellWidth: 80, halign: "right" },
+        4: { cellWidth: 80 },
+      },
+      body: data,
+      columns: [
+        { header: "Name", dataKey: "name" },
+        { header: "Account No.", dataKey: "accountno" },
         { header: "Bank Name", dataKey: `` },
         { header: "Total", dataKey: `total` },
         // { header: "Bank Name", dataKey: "branch" },
@@ -431,8 +548,25 @@ const PurchaseOrderPDF = {
   },
 
   // Generate acknoledgement
-  generateAcknowledgment() {
+  generateAcknowledgment(data) {
     var doc = new jsPDF("p", "pt", "a4");
+
+    // Format data for PDF
+    let array = new Array();
+    let total = 0;
+    console.log(data);
+    data?.map((e) => {
+      let obj = new Object();
+      obj.billno = e.name;
+      obj.billdate = e.billDate
+        ? new Date(e.billDate).toLocaleDateString()
+        : new Date(e.paymentDate).toLocaleDateString();
+      obj.billamount = e.estimation?.total ? e.estimation.total : e.amount;
+
+      total += e.estimation?.total ? e.estimation.total : e.amount;
+      array.push(obj);
+    });
+
     doc.setFontSize(35);
     doc.setTextColor("#3498DB");
     doc.setFont("sans-serif", "bold");
@@ -452,7 +586,7 @@ const PurchaseOrderPDF = {
     doc.text("ABERDEEN BAZAAR,   PORT BLAIR- 744101,    ANADAMANS", 50, 125);
     doc.setFont("italic");
     doc.text("Ref No.", 50, 150);
-    doc.text("Date-", 450, 150);
+    doc.text(`Date- ${new Date().toLocaleDateString()}`, 450, 150);
     doc.setFont("sans-serif", "normal");
     doc.setTextColor("black");
     doc.setFontSize(10);
@@ -476,9 +610,9 @@ const PurchaseOrderPDF = {
       "We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No."
     );
     doc.line(50 + txtWidth, 312, 520, 312);
-    doc.text("Dt.", 50, 330);
+    doc.text(`Dt. ${new Date().toLocaleDateString()}`, 50, 330);
     doc.line(60, 332, 150, 332);
-    doc.text("for Rs.", 150, 330);
+    doc.text(`for Rs. ${total}`, 150, 330);
     var txtWidth1 = doc.getTextWidth("for Rs.");
     doc.line(160 + txtWidth1, 332, 350, 332);
     doc.text("Rupees", 350, 330);
@@ -633,18 +767,18 @@ const PurchaseOrderPDF = {
       },
       columnStyles: {
         europe: { halign: "center" },
-        0: { cellWidth: 90 },
+        0: { cellWidth: 130 },
         2: { cellWidth: 80, halign: "right" },
         3: { cellWidth: 80, halign: "right" },
         4: { cellWidth: 80 },
       },
-      body: data,
+      body: array,
       columns: [
         { header: "Bill No.", dataKey: "billno" },
         { header: "Bill Date", dataKey: "billdate" },
         { header: "Amount", dataKey: "billamount" },
-        { header: "Discount less", dataKey: "discount" },
-        { header: "Per mtr", dataKey: "permtr" },
+        // { header: "Discount less", dataKey: "discount" },
+        // { header: "Per mtr", dataKey: "permtr" },
         // { header: "Bill No.", dataKey: "" },
         // { header: "Bill Dt.", dataKey: "" },
         // { header: "Bill Amount", dataKey: "." },
@@ -2162,7 +2296,13 @@ const SalesOrderPDF = {
 };
 
 const BarcodePDF = {
-  generateDefaultPurchaseOrderBarcodePDF(qty, data, company, product) {
+  generateDefaultPurchaseOrderBarcodePDF(
+    qty,
+    data,
+    company,
+    product,
+    stickerType
+  ) {
     // if (data?.barcode) {
     let size;
     var doc = new jsPDF("p", "pt", "a4");
@@ -2244,11 +2384,9 @@ const BarcodePDF = {
                   break;
               }
 
-              doc.text(
-                `Size: ${data?.incomeAccount ? "" : size}`,
-                95 + j * 300,
-                50 + i * 110
-              );
+              if (stickerType == 1) {
+                doc.text(`Size: ${size}`, 95 + j * 300, 50 + i * 110);
+              }
             }
             doc.text(
               `Price: Rs. ${
@@ -2257,22 +2395,30 @@ const BarcodePDF = {
               95 + j * 300,
               65 + i * 110
             );
-            doc.text(
-              `MFG Date: ${product.mfgDate}`,
-              95 + j * 300,
-              80 + i * 110
-            );
+            if (stickerType == 1) {
+              doc.text(
+                `MFG Date: ${product.mfgDate}`,
+                95 + j * 300,
+                80 + i * 110
+              );
 
-            doc.barcode(`${data?.barcode}`, {
-              // barcodeValue: "123456789101",
-              // barcodeText: "123456789101",
-              format: "EAN13",
-              displayValue: true,
-              fontSize: 30,
-              textColor: "#000000",
-              x: 88 + j * 300,
-              y: 110 + i * 110,
-            });
+              doc.barcode(`${data?.barcode}`, {
+                // barcodeValue: "123456789101",
+                // barcodeText: "123456789101",
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 30,
+                textColor: "#000000",
+                x: 88 + j * 300,
+                y: 110 + i * 110,
+              });
+            } else {
+              doc.text(
+                `Barcode: ${data?.barcode}`,
+                88 + j * 300,
+                110 + i * 110
+              );
+            }
             c += 1;
           }
           doc.setTextColor(0, 0, 0);

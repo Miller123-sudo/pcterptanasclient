@@ -144,7 +144,7 @@ export default function BillPayment() {
             <AppContentHeader>
                 <Row>
                     <Breadcrumb style={{ fontSize: '24px' }}>
-                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: '/accounting/customerpayments/list' }} ><h3 className="breadcrum-label">Customer Payments</h3></Breadcrumb.Item>
+                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/customerpayments/list` }} ><h3 className="breadcrum-label">CUSTOMER PAYMENTS</h3></Breadcrumb.Item>
                         <Breadcrumb.Item active ><span className="breadcrum-label">{state?.name}</span></Breadcrumb.Item>
                         {/* <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/purchase/vendorbills/edit/${state?.bill?.id}` }} ><span className="breadcrum-label">{state?.bill?.name}</span></Breadcrumb.Item> */}
                         {/* {isAddMode ? <Breadcrumb.Item active><span >New</span></Breadcrumb.Item> : <Breadcrumb.Item active><span>Register Payment</span></Breadcrumb.Item>} */}

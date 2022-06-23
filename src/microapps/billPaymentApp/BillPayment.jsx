@@ -26,6 +26,8 @@ import Decimal128Field from '../../pcterp/field/Decimal128Field';
 
 export default function BillPayment() {
     const [loderStatus, setLoderStatus] = useState(null);
+    const [frmData, setfrmData] = useState();
+    const [vendor, setvendor] = useState();
     const [state, setState] = useState(null)
     const navigate = useNavigate();
     const location = useLocation();
@@ -44,6 +46,7 @@ export default function BillPayment() {
     // Functions
 
     const onSubmit = (formData) => {
+        setfrmData(formData)
         return createDocument(formData)
     }
 
@@ -67,7 +70,7 @@ export default function BillPayment() {
 
     const findOneDocument = () => {
         ApiService.setHeader();
-        return ApiService.get(`/billPayment/${id}`).then(response => {
+        return ApiService.get(`/billPayment/${id}`).then(async response => {
             const document = response?.data.document;
             console.log(document)
             setState(document)
@@ -77,6 +80,13 @@ export default function BillPayment() {
             }
 
             setValue('paymentDate', document.paymentDate.split("T")[0]);
+
+            const res = await ApiService.get("vendor/" + document?.bill?.vendor)
+            if (res?.data.isSuccess) {
+                console.log(res?.data.document)
+                setvendor(res?.data.document)
+            }
+
             setLoderStatus("SUCCESS");
         }).catch(e => {
             console.log(e.response?.data.message);
@@ -123,21 +133,41 @@ export default function BillPayment() {
     /** Print cheque function for single cheque payment. After printing cheque, bill's status will be set to "Paid" and payment 
     * record will be created.
     */
-    const printCheque = () => {
-
+    const printCheque = async () => {
+        ApiService.setHeader();
+        console.log(getValues());
+        await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, getValues()).then(response => {
+            if (response.data.isSuccess) {
+                console.log(response.data);
+                PurchaseOrderPDF.generateCheque()
+                navigate(`/${rootPath}/billpayment`)
+            }
+        }).catch(e => {
+            console.log(e);
+        })
     }
 
     // Print RTGS function for single cheque payment
-    const printRTGS = () => {
+    const printRTGS = async () => {
+        let obj = new Object()
+        console.log(state);
+        const res = await ApiService.get("vendor/" + state?.bill?.vendor)
+        if (res?.data.isSuccess) {
+            console.log(res?.data.document)
+            obj.name = res?.data.document.name
+            obj.accountno = String(state?.bankAccount[0].name).split(' ')[0]
+            obj.total = state?.amount
 
+            PurchaseOrderPDF.generateSingleRTGS([obj])
+        }
     }
 
     // Print Acknoledgement function for single cheque payment
     const printAcknoledgement = () => {
-
+        PurchaseOrderPDF.generateAcknowledgment([state])
     }
 
-    useEffect(() => {
+    useEffect(async () => {
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
@@ -158,7 +188,7 @@ export default function BillPayment() {
             <AppContentHeader>
                 <Row>
                     <Breadcrumb style={{ fontSize: '24px' }}>
-                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}` }} ><span className="breadcrum-label">BILLS</span></Breadcrumb.Item>
+                        <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/bills` }} ><span className="breadcrum-label">BILLS</span></Breadcrumb.Item>
                         <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/${rootPath}/bills/edit/${state?.bill?.id}` }} ><span className="breadcrum-label">{state?.memo}</span></Breadcrumb.Item>
                         {isAddMode ? <Breadcrumb.Item active><span >New</span></Breadcrumb.Item> : <Breadcrumb.Item active><span>Register Payment</span></Breadcrumb.Item>}
                     </Breadcrumb>
@@ -166,12 +196,16 @@ export default function BillPayment() {
                 <Row>
                     <Col>
                         {
-                            state?.bill?.paymentStatus !== "Paid" && <Button type="submit" variant="primary" size="sm">CREATE PAYMENT</Button>
+                            // state?.bill?.paymentStatus !== "Paid" && <Button type="submit" variant="primary" size="sm">CREATE PAYMENT</Button>
+                            state?.status == "Draft" && <Button type="submit" variant="primary" size="sm">CREATE PAYMENT</Button>
                         }
                         <Button as={Link} to={`/${rootPath}/billpayment/list`} variant="light" size="sm">DISCARD</Button>{" "}
-                        <Button variant="primary" size="sm" onClick={printCheque}>RTGS PAYMENT</Button>{" "}
-                        <Button variant="primary" size="sm" onClick={printRTGS} >CHEQUE PAYMENT</Button>{" "}
-                        <Button variant="primary" size="sm" onClick={printAcknoledgement} >CHEQUE PAYMENT</Button>{" "}
+                        <Button variant="primary" size="sm" onClick={printRTGS}>RTGS PAYMENT</Button>{" "}
+                        {
+                            // state?.bill?.paymentStatus !== "Paid" && <Button variant="primary" size="sm" onClick={printCheque} >CHEQUE PAYMENT</Button>
+                            state?.status == "Draft" && <Button variant="primary" size="sm" onClick={printCheque} >CHEQUE PAYMENT</Button>
+                        }
+                        <Button variant="primary" size="sm" onClick={printAcknoledgement} > ACKNOWLEDGEMENT</Button>{" "}
 
                     </Col>
                     <Col>

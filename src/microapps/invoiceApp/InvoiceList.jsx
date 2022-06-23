@@ -128,7 +128,7 @@ export default function InvoiceList() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            <Button size="sm" as={Link} to={`/${rootPath}/customerinvoices/add`}>CREATE</Button>{" "}
+                            <Button size="sm" as={Link} to={`/${rootPath}/invoices/add`}>CREATE</Button>{" "}
                         </Col>
                         <Col md="4" sm="6">
                             <Row>

@@ -54,7 +54,8 @@ export default function BillListForCheque() {
     const findAllDocument = async () => {
         try {
             ApiService.setHeader();
-            const response = await ApiService.get('newBill/getUnpaidBills');
+            // const response = await ApiService.get('newBill/getUnpaidBills');
+            const response = await ApiService.get('billPayment/findNotPaidPayment');
             if (response.data.isSuccess) {
                 console.log(response.data.documents)
                 setstate(response.data.documents)
@@ -62,7 +63,7 @@ export default function BillListForCheque() {
 
             }
         } catch (error) {
-            errorMessage(error, dispatch)
+            errorMessage(error, null)
         }
     }
 
@@ -129,37 +130,69 @@ export default function BillListForCheque() {
     }
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
-    const printCHEQUE = () => {
-        // if (selectedBill.length > 0) {
-        PurchaseOrderPDF.generateCheque()
+    const printCHEQUE = async () => {
+        if (selectedBill.length > 0) {
+            PurchaseOrderPDF.generateCheque()
 
+            await ApiService.post('/billPayment/updateBillPaymentAndBillForCheque', selectedBill).then(response => {
+                if (response.data.isSuccess) {
+                    console.log(response.data);
+
+                    setselectedBill([])
+                    findAllDocument()
+                    setshow(false)
+                    while (arr.length > 0) {
+                        arr.pop();
+                    }
+
+                    navigate(`/${rootPath}/printcheque`)
+                }
+            }).catch(e => {
+                console.log(e);
+            })
+        } else {
+            infoNotification("Please add some bill for print RTGS")
+        }
+    }
+
+    const resetArray = () => {
         setselectedBill([])
         setshow(false)
         while (arr.length > 0) {
             arr.pop();
         }
-        // } else {
-        //     infoNotification("Please add some bill for print RTGS")
-        // }
     }
 
 
+    // const columns = [
+    //     {
+    //         headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+    //             <>
+    //                 <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
+    //                 {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
+    //             </>
+    //     },
+    //     { headerName: 'Bill#', field: 'name' },
+    //     { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
+    //     { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
+    //     { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
+    //     { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
+    //     { headerName: 'Is Used', field: 'isUsed' },
+    //     { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
+    //     { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)) }
+    // ]
     const columns = [
         {
-            headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+            headerName: ' ', field: '_id', sortable: false, filter: false, cellRendererFramework: (params) =>
                 <>
-                    <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
-                    {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
+                    <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/billpayment/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
+                    {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
                 </>
         },
-        { headerName: 'Bill#', field: 'name' },
-        { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
-        { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
-        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
-        { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
-        { headerName: 'Is Used', field: 'isUsed' },
-        { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
-        { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)) }
+        { headerName: 'Bill Payment#', field: 'name' },
+        { headerName: 'Journal Type', field: 'journalType' },
+        { headerName: 'Payment Date', field: 'paymentDate', valueGetter: (params) => params.data?.paymentDate ? moment(params.data?.paymentDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
+        { headerName: 'Amount', field: 'amount', valueGetter: (params) => formatNumber(params.data?.amount) }
     ]
 
 
@@ -203,7 +236,7 @@ export default function BillListForCheque() {
                                 <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>EXPORT CSV</span></Button></Col> */}
                                 <Col md="4"><input type="text" className="openning-cash-control__amount--input" name="search" ref={ref} placeholder="Search..." /></Col>{""}
                                 <Col md="1"><Button variant="primary" size="sm" onClick={searchHandler}><span>SEARCH</span></Button></Col>{""}
-                                <Col md="1"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>RESET</span></Button></Col>{""}
+                                <Col md="1"><Button variant="primary" size="sm" onClick={resetArray}><span>RESET</span></Button></Col>{""}
                                 <Col md="2"><Button variant="primary" size="sm" onClick={toggleHandler}><span>SELECTED BILL'S</span></Button></Col>{""}
                                 <Col md="2"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>PRINT CHEQUE</span></Button></Col>{""}
                             </Row>
@@ -240,10 +273,8 @@ export default function BillListForCheque() {
                     <Table striped bordered hover size="sm">
                         <thead>
                             <tr>
-                                <th>Bill#</th>
-                                <th>REFERENCE NO.</th>
-                                <th>VENDOR</th>
-                                <th>PAYMENT STATUS</th>
+                                <th>BILL PAYMENT#</th>
+                                <th>AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,9 +282,7 @@ export default function BillListForCheque() {
                                 selectedBill?.map(e => {
                                     return (<tr>
                                         <td>{e.name}</td>
-                                        <td>{e.referenceNumber}</td>
-                                        <td>{e.vendorArray[0].name}</td>
-                                        <td>{e.paymentStatus}</td>
+                                        <td>{e.amount}</td>
                                     </tr>
                                     )
                                 })

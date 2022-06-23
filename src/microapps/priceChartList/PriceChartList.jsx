@@ -1,5 +1,5 @@
 import { React, useEffect, useState } from 'react';
-import { Button, ButtonGroup, Tabs, Tab, Col, Container, Form, Row, Card, Table, DropdownButton, Dropdown, Breadcrumb } from 'react-bootstrap';
+import { Button, Col, Container, Form, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
@@ -8,6 +8,8 @@ import { AgGridColumn, AgGridReact } from 'ag-grid-react';
 import { useHistory, useParams } from 'react-router';
 import ApiService from '../../helpers/ApiServices';
 import AppLoader from '../../pcterp/components/AppLoader';
+import TextField from '../../pcterp/field/TextField';
+import { infoNotification, TanasUtils } from '../../helpers/Utils';
 const moment = require('moment');
 
 export default function PriceChartList() {
@@ -58,14 +60,31 @@ export default function PriceChartList() {
         { headerName: 'MRP', field: 'MRP' },
     ]
 
+    const findPriceFactor = (price) => {
+        let result = price / 25;
+        return Math.ceil(result);
+    }
+
     const findMRP = async () => {
-        if (value) {
-            const response = await ApiService.patch(`priceChartUpload/findMRP?search=${value}`);
-            if (response.data.isSuccess) {
-                setValue("mrp", response.data.document.MRP)
-                setValue("range", " ")
-                document.getElementById("range").focus();
-            }
+        // if (value) {
+        //     const response = await ApiService.patch(`priceChartUpload/findMRP?search=${value}`);
+        //     if (response.data.isSuccess) {
+        //         setValue("mrp", response.data.document.MRP)
+        //         setValue("range", " ")
+        //         document.getElementById("range").focus();
+        //     }
+        // }
+        if (!isNaN(getValues("cost")) && !isNaN(getValues("expence")) && !isNaN(getValues("transport")) && !isNaN(getValues("profit")) && !isNaN(getValues("gst"))) {
+            console.log("number");
+            const tanasUtil = new TanasUtils();
+            const rangeArray = tanasUtil.calculatePrice(parseInt(1), parseInt(1), parseInt(getValues("cost")), parseInt(getValues("expence")), parseInt(getValues("transport")), parseInt(getValues("profit")), parseInt(getValues("gst")))
+            console.log(rangeArray);
+
+            setValue("mrp", rangeArray[0].price)
+            document.getElementById("cost").focus();
+        } else {
+            console.log("not number");
+            infoNotification("Please enter only number")
         }
 
     }
@@ -81,18 +100,13 @@ export default function PriceChartList() {
         }
     }, [])
 
-    // if (loderStatus === "RUNNING") {
-    //     return (
-    //         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20%', }}><PropagateLoader color="#009999" style={{ height: 15 }} /></div>
-    //     )
-    // }
+
 
     if (loderStatus === "RUNNING") {
         return (
             <AppLoader />
         )
     }
-
 
     return (
         <Container className="pct-app-content-container p-0 m-0" fluid>
@@ -103,7 +117,7 @@ export default function PriceChartList() {
                     </Row>
 
                     <Row>
-                        <Form.Group as={Col} md="4" className="mb-2">
+                        {/* <Form.Group as={Col} md="4" className="mb-2">
                             <Form.Label className="m-0">COST</Form.Label>
                             <Form.Control
                                 type="text"
@@ -120,11 +134,86 @@ export default function PriceChartList() {
 
                                 }}
                             />
-                        </Form.Group>
-                        <Form.Group as={Col} md="4" className="mb-2">
+                        </Form.Group> */}
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "COST",
+                                fieldId: "cost",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "EXPENCE",
+                                fieldId: "expence",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "TRANSPORT (%)",
+                                fieldId: "transport",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "PROFIT (%)",
+                                fieldId: "profit",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "GST (%)",
+                                fieldId: "gst",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <Form.Group as={Col} md="4" className="mb-1">
                             <Button variant="primary" size="sm" onClick={findMRP} style={{ marginTop: 26 }}>CALCULATE</Button>
                         </Form.Group>
-                        <Form.Group as={Col} md="4" className="mb-2">
+                        {/* <Form.Group as={Col} md="4" className="mb-2">
                             <Form.Label className="m-0">MRP</Form.Label>
                             <Form.Control
                                 disabled
@@ -133,7 +222,22 @@ export default function PriceChartList() {
                                 name="mrp"
                                 {...register("mrp")}
                             />
-                        </Form.Group>
+                        </Form.Group> */}
+                        <TextField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "MRP",
+                                fieldId: "mrp",
+                                placeholder: "",
+                                disabled: true
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
                     </Row>
                 </Container>
                 <Container className="pct-app-content-body p-0 m-0" style={{ height: '100vh' }} fluid>

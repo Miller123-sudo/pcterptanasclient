@@ -3,7 +3,7 @@ import { Col, Row, Button } from 'react-bootstrap'
 import { PropagateLoader } from "react-spinners";
 import { BsBoxArrowInUpRight, BsEyeFill } from 'react-icons/bs';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { UserContext } from '../../components/states/contexts/UserContext'
 import ApiService from '../../helpers/ApiServices'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
@@ -13,15 +13,18 @@ import AppLoader from '../../pcterp/components/AppLoader';
 import { errorMessage, formatNumber } from '../../helpers/Utils';
 const moment = require('moment')
 
-export default function BillPaymentList() {
+export default function BillPaymentListofSingleBill() {
     const navigate = useNavigate();
     const location = useLocation();
     const rootPath = location?.pathname?.split('/')[1];
     const { dispatch, user } = useContext(UserContext)
     const [loderStatus, setLoderStatus] = useState(null);
+    const [billList, setbillList] = useState([]);
     const [state, setstate] = useState(null);
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
+    const { id } = useParams();
+    const isAddMode = !id;
 
 
     function onGridReady(params) {
@@ -40,16 +43,30 @@ export default function BillPaymentList() {
 
     const findAllDocument = async () => {
         try {
-            ApiService.setHeader();
-            const response = await ApiService.get('billPayment');
-            if (response.data.isSuccess) {
-                console.log(response.data.documents)
-                setstate(response.data.documents)
-                setLoderStatus("SUCCESS");
+            // ApiService.setHeader();
+            // const response = await ApiService.get('billPayment');
+            // if (response.data.isSuccess) {
+            //     console.log(response.data.documents)
+            //     setstate(response.data.documents)
+            //     setLoderStatus("SUCCESS");
 
+            // }
+
+            ApiService.setHeader();
+            const res = await ApiService.get("newBill/" + id)
+            console.log(res?.data.document);
+            if (res.data.isSuccess) {
+                setstate(res.data.document)
+            }
+
+            const allBills = await ApiService.get(`billPayment/findBillsById/${id}`)
+            if (allBills.data.isSuccess) {
+                console.log(allBills?.data.documents);
+                setbillList(allBills?.data.documents)
+                setLoderStatus("SUCCESS");
             }
         } catch (error) {
-            errorMessage(error, dispatch)
+            errorMessage(error, null)
         }
     }
 
@@ -116,7 +133,7 @@ export default function BillPaymentList() {
         <AppContentForm>
             <AppContentHeader>
                 <Row>
-                    <Col><h3>Vendor Bill Payments</h3></Col>
+                    <Col><h3>BILL PAYMENTS OF BILL NUMBER- {state?.name}</h3></Col>
                 </Row>
                 <Row>
 
@@ -135,7 +152,7 @@ export default function BillPaymentList() {
                 <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
                     <AgGridReact
                         onGridReady={onGridReady}
-                        rowData={state}
+                        rowData={billList}
                         columnDefs={columns}
                         defaultColDef={{
                             editable: true,

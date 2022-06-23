@@ -130,23 +130,17 @@ export default function BillListForAcknoledge() {
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = () => {
-        // if (selectedBill.length > 0) {
-        PurchaseOrderPDF.generateAcknowledgment()
+        if (selectedBill.length > 0) {
+            PurchaseOrderPDF.generateAcknowledgment(selectedBill)
 
-        setselectedBill([])
-        setshow(false)
-        while (arr.length > 0) {
-            arr.pop();
+            setselectedBill([])
+            setshow(false)
+            while (arr.length > 0) {
+                arr.pop();
+            }
+        } else {
+            infoNotification("Please add some bill for print RTGS")
         }
-        // } else {
-        //     infoNotification("Please add some bill for print RTGS")
-        // }
-
-        // setselectedBill([])
-        // setshow(false)
-        // while (arr.length > 0) {
-        //     arr.pop();
-        // }
     }
 
 

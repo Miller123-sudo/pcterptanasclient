@@ -5,7 +5,7 @@ import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage } from '../../helpers/Utils'
+import { errorMessage, formatNumber } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -25,7 +25,14 @@ import { PurchaseOrderPDF, SalesOrderPDF } from '../../helpers/PDF';
 
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
-    const [state, setState] = useState(null)
+    const [state, setState] = useState({
+        estimation: {
+            fredgeCost: 0.00,
+            untaxedAmount: 0.00,
+            tax: 0.00,
+            total: 0.00
+        }
+    })
     const navigate = useNavigate();
     const location = useLocation();
     const rootPath = location?.pathname?.split('/')[1];
@@ -57,7 +64,7 @@ export default function Invoice() {
             ApiService.setHeader();
             return ApiService.post('/invoice/createStandaloneInv', data).then(response => {
                 if (response.data.isSuccess) {
-                    navigate(`/${rootPath}/customerinvoices/list`)
+                    navigate(`/${rootPath}/invoices/list`)
                 }
             }).catch(e => {
                 console.log(e);
@@ -74,7 +81,7 @@ export default function Invoice() {
             ApiService.setHeader();
             return ApiService.patch(`/invoice/updateStandaloneInv/${id}`, data).then(response => {
                 if (response.data.isSuccess) {
-                    navigate(`/${rootPath}/customerinvoices/list`)
+                    navigate(`/${rootPath}/invoices/list`)
                 }
             }).catch(e => {
                 console.log(e);
@@ -87,7 +94,7 @@ export default function Invoice() {
         ApiService.setHeader();
         return ApiService.delete(`/invoice/${id}`).then(response => {
             if (response.status == 204) {
-                navigate(`/${rootPath}/customerinvoices/list`)
+                navigate(`/${rootPath}/invoices/list`)
             }
         }).catch(e => {
             console.log(e.response.data.message);
@@ -169,7 +176,7 @@ export default function Invoice() {
         console.log(products);
         products?.map((val) => {
             cumulativeSum += parseFloat(val?.subTotal);
-            totalTax += (parseFloat(val?.taxes[0]) * parseFloat(val?.subTotal)) / 100
+            totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
         });
 
         console.log("totalTax: ", totalTax);
@@ -456,8 +463,8 @@ export default function Invoice() {
                                                                     setValue(`invoiceLines.${index}.unit`, productDoc.data.document?.uom)
                                                                     setValue(`invoiceLines.${index}.account`, productDoc.data.document?.assetAccount)
                                                                     setValue(`invoiceLines.${index}.unitPrice`, productDoc.data.document?.salesPrice)
-                                                                    setValue(`invoiceLines.${index}.taxes`, productDoc.data.document?.vendorTaxes)
-                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(unitPrice)) * 1)
+                                                                    setValue(`invoiceLines.${index}.taxes`, productDoc.data.document?.igstRate)
+                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productDoc.data.document?.salesPrice)) * 1)
                                                                     // Calculate amount
                                                                     updateOrderLines(index)
                                                                 }
@@ -719,9 +726,8 @@ export default function Invoice() {
 
                 <Container className="mt-4 mb-4" fluid>
                     <Row style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Col sm="12" md="4" >
+                        {/* <Col sm="12" md="4" >
                             <Card style={{ marginTop: -4 }}>
-                                {/* <Card.Header as="h5">Featured</Card.Header> */}
                                 <Card.Body>
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
                                         <Col>SubTotal:</Col>
@@ -736,6 +742,52 @@ export default function Invoice() {
                                         <Col style={{ borderTop: '1px solid black' }}>{state?.estimation?.total}</Col>
                                     </Row>
 
+
+                                </Card.Body>
+                            </Card>
+
+                        </Col> */}
+                        <Col sm="12" md="4">
+                            <Card>
+                                {/* <Card.Header as="h5">Featured</Card.Header> */}
+                                <Card.Body>
+                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                        <Col>GROSS TOTAL:</Col>
+                                        <Col>{formatNumber(state?.estimation?.untaxedAmount)}</Col>
+                                    </Row>
+                                    {/* <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                        <Col>FREIGHT COST:</Col>
+                                        <Col>
+                                            {
+                                                !isAddMode ? <Col>{formatNumber(state?.estimation?.fredgeCost)}</Col> :
+                                                    <input step="0.001" type="number" id='fredgeCost' name="fredgeCost" {...register(`fredgeCost`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
+                                                        onBlur={fredgeCostCalculation}
+                                                    />
+                                            }
+                                        </Col>
+                                    </Row> */}
+
+                                    <div>
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>UTGST:</Col>
+                                            <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                        </Row>
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>SGST:</Col>
+                                            <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                        </Row>
+                                    </div>
+                                    <div>
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>IGST:</Col>
+                                            <Col>{formatNumber(state?.estimation?.tax)}</Col>
+                                        </Row>
+                                    </div>
+
+                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                        <Col>NET AMOUNT:</Col>
+                                        <Col style={{ borderTop: '1px solid black' }}>{formatNumber(state?.estimation?.total)}</Col>
+                                    </Row>
 
                                 </Card.Body>
                             </Card>

@@ -34,12 +34,7 @@
         {
           "nav_dropdown": {
             "nav_dropdown_name": "Reportings",
-            "nav_dropdown_items": [
-              {
-                "item_name": "Inventory Analysis",
-                "item_navigation": "inventoryanalysis"
-              }
-            ]
+            "nav_dropdown_items": []
           }
         },
         {

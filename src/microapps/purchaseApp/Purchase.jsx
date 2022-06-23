@@ -612,7 +612,7 @@ export default function Purchase() {
                                         console.log(obj);
                                         setValue(`products`, products)
 
-                                        resetItemCategory()
+                                        // resetItemCategory() // test
                                     }
                                     // } else {
                                     //     console.log("can not get size data")
@@ -700,7 +700,7 @@ export default function Purchase() {
 
                         await updateProductList();
                         updateOrderLines()
-                        resetItemCategory()
+                        // resetItemCategory() // test
                     }
 
                     // if (products.length == rangeArray.length + 1) {
@@ -1388,7 +1388,18 @@ export default function Purchase() {
                                                                                             if (com.setupType == "COMPANY_SETUP") {
                                                                                                 await ApiService.get("product/" + e.product[0]._id).then(r => {
                                                                                                     if (r.data.isSuccess) {
-                                                                                                        BarcodePDF.generateDefaultPurchaseOrderBarcodePDF(result.value, e, com, r?.data.document)
+                                                                                                        swal.fire({
+                                                                                                            title: `Enter sticker type`,
+                                                                                                            text: "Enter 1 for sticker1 and 2 for sticker2",
+                                                                                                            input: 'number',
+                                                                                                            showCancelButton: true
+                                                                                                        }).then(async (res) => {
+                                                                                                            if (res.value) {
+                                                                                                                console.log(res.value);
+                                                                                                                console.log(result.value);
+                                                                                                                BarcodePDF.generateDefaultPurchaseOrderBarcodePDF(result.value, e, com, r?.data.document, res.value)
+                                                                                                            }
+                                                                                                        })
                                                                                                     }
                                                                                                 })
                                                                                             }
