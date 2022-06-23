@@ -51,8 +51,9 @@ export default function BillPayment() {
     }
 
     const createDocument = async (data) => {
-        console.log(data);
         console.log(state);
+        data.status = "Posted"
+        console.log(data);
         ApiService.setHeader();
         await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state.id, data).then(response => {
             if (response.data.isSuccess) {
@@ -136,7 +137,10 @@ export default function BillPayment() {
     const printCheque = async () => {
         ApiService.setHeader();
         console.log(getValues());
-        await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, getValues()).then(response => {
+        let data = getValues()
+        data.status = "Posted"
+
+        await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, data).then(response => {
             if (response.data.isSuccess) {
                 console.log(response.data);
                 PurchaseOrderPDF.generateCheque()
