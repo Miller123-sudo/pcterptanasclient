@@ -65,6 +65,10 @@
               {
                 "item_name": "Purchase Analysis",
                 "item_navigation": "purchasereportsdashboard"
+              },
+              {
+                "item_name": "Stock Adjustment",
+                "item_navigation": "stockAdjustment"
               }
             ]
           }

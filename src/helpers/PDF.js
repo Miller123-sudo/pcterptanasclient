@@ -243,12 +243,35 @@ const PurchaseOrderPDF = {
   },
 
   // Generate cheque PDF
-  generateCheque() {
+  generateCheque(payee, pay, amountInWord, amount) {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: [200.66, 91.44], // Standard cheque size 7.9 inch width & 3.6 inch height (here uses in mm);
     });
+
+    console.log(new Date().toLocaleDateString().split("/"));
+    let a, b, c, d, e, f, g, h;
+    e = new Date().toLocaleDateString().split("/")[2].charAt(0);
+    f = new Date().toLocaleDateString().split("/")[2].charAt(1);
+    g = new Date().toLocaleDateString().split("/")[2].charAt(2);
+    h = new Date().toLocaleDateString().split("/")[2].charAt(3);
+    if (new Date().toLocaleDateString().split("/")[1].length < 2) {
+      a = 0;
+      b = new Date().toLocaleDateString().split("/")[1];
+    } else {
+      a = new Date().toLocaleDateString().split("/")[1].slice(0, 1);
+      b = new Date().toLocaleDateString().split("/")[1].slice(1);
+    }
+
+    if (new Date().toLocaleDateString().split("/")[0].length < 2) {
+      c = 0;
+      d = new Date().toLocaleDateString().split("/")[0];
+    } else {
+      c = new Date().toLocaleDateString().split("/")[0].slice(0, 1);
+      d = new Date().toLocaleDateString().split("/")[0].slice(1);
+    }
+    console.log(`${a},${b},${c},${d}`);
 
     var pageWidth = 200.66;
     var pageHeight = 91.44;
@@ -280,7 +303,7 @@ const PurchaseOrderPDF = {
       pageWidth - pageWidth / 2 + pageWidth / 15,
       7.5 + unitHeight * 0.5
     );
-    doc.text("A/c Payee", 5 + pageWidth / 2 - pageWidth / 15, 11);
+    doc.text(`${payee}`, 5 + pageWidth / 2 - pageWidth / 15, 11);
 
     /**Date */
     doc.setFontSize(6);
@@ -389,42 +412,42 @@ const PurchaseOrderPDF = {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text(
-      "1",
+      `${a}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 1 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "3",
+      `${b}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 2 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "0",
+      `${c}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 3 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "6",
+      `${d}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 4 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "2",
+      `${e}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 5 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "0",
+      `${f}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 6 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "2",
+      `${g}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 7 - 14,
       7.5 + unitHeight * 0.4
     );
     doc.text(
-      "2",
+      `${h}`,
       (pageWidth / 4) * 3 + (pageWidth / 4 / 8) * 8 - 14,
       7.5 + unitHeight * 0.4
     );
@@ -438,7 +461,7 @@ const PurchaseOrderPDF = {
     //Setting payee name
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("R Swaminathan & Company - Port Blair", 20, unitHeight * 3 - 2);
+    doc.text(`${pay}`, 20, unitHeight * 3 - 2);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
 
@@ -450,11 +473,7 @@ const PurchaseOrderPDF = {
     //Setting paying amount in words
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      "One Lakh Forty Four Thousand Nine Hundred Eighty Only",
-      25,
-      unitHeight * 4 - 2
-    );
+    doc.text(`${amountInWord}`, 25, unitHeight * 4 - 2);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
 
@@ -464,7 +483,7 @@ const PurchaseOrderPDF = {
     //Setting paying amount in numbers
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("1,44,980.00/-", (pageWidth / 4) * 3 + 5, unitHeight * 5 - 3);
+    doc.text(`${amount}/-`, (pageWidth / 4) * 3 + 5, unitHeight * 5 - 3);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
 

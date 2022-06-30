@@ -25,6 +25,7 @@
     "jspdf-barcode": "0.0.6",
     "list-react-files": "^0.2.0",
     "moment": "^2.29.1",
+    "number-to-words": "^1.2.4",
     "react": "^17.0.2",
     "react-bootstrap": "^2.0.3",
     "react-bootstrap-typeahead": "^6.0.0-alpha.9",

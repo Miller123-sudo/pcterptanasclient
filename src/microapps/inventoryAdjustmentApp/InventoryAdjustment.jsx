@@ -356,9 +356,8 @@ export default function InventoryAdjustment() {
                                                             ApiService.get('product/' + productId).then(response => {
                                                                 const productObj = response.data.document;
                                                                 if (productObj) {
-                                                                    setValue(`products.${index}.name`, productObj.name);
+                                                                    setValue(`products.${index}.productName`, productObj.name);
                                                                     setValue(`products.${index}.description`, productObj.description);
-                                                                    // setValue(`products.${index}.unit`, productObj.uom);
                                                                     setValue(`products.${index}.quantity`, 1);
                                                                     //setValue(`products.${index}.taxes`, productObj?.vendorTaxes);
                                                                     setValue(`products.${index}.unitPrice`, productObj.salesPrice);

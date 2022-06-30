@@ -32,6 +32,7 @@ import PriceChartListApp from "../../microapps/priceChartList";
 import ImportVendor from "../../microapps/vendorApp/VendorImport";
 import ProductGradeApp from "../../microapps/productGradeApp/Index";
 import UpdateGSTApp from "../../microapps/updateGSTApp/Index";
+import StockAdjustmentPerProduct from "../../microapps/purchaseReportApp/StockAdjustedPerProduct";
 
 export default function PurchaseModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -182,6 +183,11 @@ export default function PurchaseModule() {
           <Route
             path={"/purchasereportsdashboard/*"}
             element={<PurchaseAnalysisApp />}
+          />
+
+          <Route
+            path={"/stockAdjustment"}
+            element={<StockAdjustmentPerProduct />}
           />
         </Routes>
       </AppContentContainer>

@@ -14,6 +14,8 @@ import AppLoader from '../../pcterp/components/AppLoader';
 import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils';
 import { render } from '@testing-library/react';
 import { PurchaseOrderPDF } from '../../helpers/PDF';
+import swal from "sweetalert2"
+var converter = require('number-to-words');
 const moment = require('moment')
 
 export default function BillListForCheque() {
@@ -132,24 +134,76 @@ export default function BillListForCheque() {
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = async () => {
         if (selectedBill.length > 0) {
-            PurchaseOrderPDF.generateCheque()
+            swal.fire({
+                title: `A/C Payee`,
+                text: "Enter payee name",
+                input: 'text',
+                showCancelButton: true
+            }).then(async (payee) => {
+                if (payee.value) {
+                    swal.fire({
+                        title: `Pay`,
+                        text: "To pay",
+                        input: 'text',
+                        showCancelButton: true
+                    }).then(async (pay) => {
+                        if (payee.value == undefined || pay.value == undefined) {
+                            // infoNotification("please enter something in popup..")
+                        } else {
+                            console.log("payee:", payee.value);
+                            console.log("pay:", pay.value);
+                            let total = 0;
+                            selectedBill?.map(e => {
+                                total += parseFloat(e.amount)
+                            })
+                            console.log(converter.toWords(total))
+                            const mySentence = converter.toWords(total);
 
-            await ApiService.post('/billPayment/updateBillPaymentAndBillForCheque', selectedBill).then(response => {
-                if (response.data.isSuccess) {
-                    console.log(response.data);
+                            const finalSentence = mySentence.replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+                            console.log(finalSentence);
+                            PurchaseOrderPDF.generateCheque(payee.value, pay.value, `${finalSentence} Only`, total)
 
-                    setselectedBill([])
-                    findAllDocument()
-                    setshow(false)
-                    while (arr.length > 0) {
-                        arr.pop();
-                    }
+                            await ApiService.post('/billPayment/updateBillPaymentAndBillForCheque', selectedBill).then(response => {
+                                if (response.data.isSuccess) {
+                                    console.log(response.data);
 
-                    navigate(`/${rootPath}/printcheque`)
+                                    setselectedBill([])
+                                    findAllDocument()
+                                    setshow(false)
+                                    while (arr.length > 0) {
+                                        arr.pop();
+                                    }
+
+                                    navigate(`/${rootPath}/printcheque`)
+                                }
+                            }).catch(e => {
+                                console.log(e);
+                            })
+
+
+                        }
+                    })
                 }
-            }).catch(e => {
-                console.log(e);
             })
+
+
+            // await ApiService.post('/billPayment/updateBillPaymentAndBillForCheque', selectedBill).then(response => {
+            //     if (response.data.isSuccess) {
+            //         console.log(response.data);
+
+            //         setselectedBill([])
+            //         findAllDocument()
+            //         setshow(false)
+            //         while (arr.length > 0) {
+            //             arr.pop();
+            //         }
+
+            //         navigate(`/${rootPath}/printcheque`)
+            //     }
+            // }).catch(e => {
+            //     console.log(e);
+            // })
+
         } else {
             infoNotification("Please add some bill for print RTGS")
         }
@@ -226,7 +280,8 @@ export default function BillListForCheque() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            {(rootPath == "accounting" && location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>}
+
+                            {/* {(rootPath == "accounting" && location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>} */}
 
                         </Col>
                         {/* <Col md="4" sm="6"> */}

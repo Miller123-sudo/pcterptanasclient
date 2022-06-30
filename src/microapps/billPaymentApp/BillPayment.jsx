@@ -23,6 +23,8 @@ import LineNumberField from '../../pcterp/field/LineNumberField';
 import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import { PurchaseOrderPDF } from '../../helpers/PDF';
 import Decimal128Field from '../../pcterp/field/Decimal128Field';
+import swal from "sweetalert2"
+var converter = require('number-to-words');
 
 export default function BillPayment() {
     const [loderStatus, setLoderStatus] = useState(null);
@@ -140,15 +142,60 @@ export default function BillPayment() {
         let data = getValues()
         data.status = "Posted"
 
-        await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, data).then(response => {
-            if (response.data.isSuccess) {
-                console.log(response.data);
-                PurchaseOrderPDF.generateCheque()
-                navigate(`/${rootPath}/billpayment`)
+        swal.fire({
+            title: `A/C Payee`,
+            text: "Enter payee name",
+            input: 'text',
+            showCancelButton: true
+        }).then(async (payee) => {
+            if (payee.value) {
+                swal.fire({
+                    title: `Pay`,
+                    text: "To pay",
+                    input: 'text',
+                    showCancelButton: true
+                }).then(async (pay) => {
+                    if (payee.value == undefined || pay.value == undefined) {
+                        // infoNotification("please enter something in popup..")
+                    } else {
+                        console.log("payee:", payee.value);
+                        console.log("pay:", pay.value);
+                        // let total = 0;
+                        // selectedBill?.map(e => {
+                        //     total += parseFloat(e.amount)
+                        // })
+                        // console.log(converter.toWords(total))
+                        const mySentence = converter.toWords(getValues("amount"));
+
+                        const finalSentence = mySentence.replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+                        console.log(finalSentence);
+                        PurchaseOrderPDF.generateCheque(payee.value, pay.value, `${finalSentence} Only`, getValues("amount"))
+
+
+                        await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, data).then(response => {
+                            if (response.data.isSuccess) {
+                                console.log(response.data);
+                                PurchaseOrderPDF.generateCheque()
+                                navigate(`/${rootPath}/billpayment`)
+                            }
+                        }).catch(e => {
+                            console.log(e);
+                        })
+
+                    }
+                })
             }
-        }).catch(e => {
-            console.log(e);
         })
+
+        // await ApiService.patch('/billPayment/updateBillPaymentAndBill/' + state._id, data).then(response => {
+        //     if (response.data.isSuccess) {
+        //         console.log(response.data);
+        //         PurchaseOrderPDF.generateCheque()
+        //         navigate(`/${rootPath}/billpayment`)
+        //     }
+        // }).catch(e => {
+        //     console.log(e);
+        // })
     }
 
     // Print RTGS function for single cheque payment
@@ -212,8 +259,11 @@ export default function BillPayment() {
                         <Button variant="primary" size="sm" onClick={printAcknoledgement} > ACKNOWLEDGEMENT</Button>{" "}
 
                     </Col>
-                    <Col>
+                    <Col style={{ display: 'flex', justifyContent: 'end' }}>
 
+                        <div className="m-2 d-flex justify-content-end">
+                            {!isAddMode && <div className='' style={{ padding: '5px 20px', backgroundColor: '#2ECC71', color: 'white' }}>{state?.status}</div>}
+                        </div>
                     </Col>
                 </Row>
 

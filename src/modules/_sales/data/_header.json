@@ -7,22 +7,6 @@
       "nav_dropdowns": [
         {
           "nav_dropdown": {
-            "nav_dropdown_name": "Orders",
-            "nav_dropdown_items": [
-              {
-                "item_name": "Sales Orders",
-                "item_navigation": "salesorders"
-              },
-
-              {
-                "item_name": "Delivered Products",
-                "item_navigation": "productdeliveries"
-              }
-            ]
-          }
-        },
-        {
-          "nav_dropdown": {
             "nav_dropdown_name": "Customers",
             "nav_dropdown_items": [
               {
@@ -66,6 +50,14 @@
               {
                 "item_name": "Sales Analysis",
                 "item_navigation": "salesanalysis"
+              },
+              {
+                "item_name": "Stock Undervalued",
+                "item_navigation": "stockUndervalued"
+              },
+              {
+                "item_name": "Sales Report By Date",
+                "item_navigation": "salesReportBydate"
               }
             ]
           }

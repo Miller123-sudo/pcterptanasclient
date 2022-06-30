@@ -36,23 +36,23 @@ export default function ImportCustomer() {
 
     const createDocument = async (data) => {
         console.log(xlfile);
-        // const wb = xlxs.read(xlfile, { type: "buffer" })
-        // const wbName = wb.SheetNames[0]
-        // const ws = wb.Sheets[wbName]
-        // const xlData = xlxs.utils.sheet_to_json(ws)
-        const xlData = getxlData()
-        console.log(xlData);
+        if (xlfile) {
+            const xlData = getxlData()
+            console.log(xlData);
 
-        try {
-            ApiService.setHeader();
-            const res = await ApiService.post('/customer/import', xlData)
-            if (res.data.isSuccess) {
-                console.log(res.data.documents);
-                navigate(`/${rootPath}/customers`);
+            try {
+                ApiService.setHeader();
+                const res = await ApiService.post('/customer/import', xlData)
+                if (res.data.isSuccess) {
+                    console.log(res.data.documents);
+                    navigate(`/${rootPath}/customers`);
+                }
+
+            } catch (e) {
+                errorMessage(e, null)
             }
-
-        } catch (e) {
-            errorMessage(e, null)
+        } else {
+            infoNotification("Please select file")
         }
     }
 
@@ -88,7 +88,7 @@ export default function ImportCustomer() {
             <Form onSubmit={handleSubmit(onSubmit)} className="pct-app-content">
                 <Container className="pct-app-content-header m-0 mt-2 pb-2" style={{ borderBottom: '1px solid black' }} fluid>
                     <Row>
-                        <Col className='p-0 ps-2'>
+                        <Col className='p-0 ps-2' style={{ marginLeft: 9 }}>
                             <Breadcrumb style={{ fontSize: '24px', marginBottom: '0 !important' }}>
                                 <Breadcrumb.Item className='breadcrumb-item'>   <div className='breadcrum-label'>CUSTOMER UPLOAD</div></Breadcrumb.Item>
 

@@ -20,6 +20,8 @@ import InvoicePaymentApp from "../../microapps/invoicePaymentApp/Index";
 import Dashboard from "../../microapps/purchaseReportingApp/Dashboard";
 import ImportProduct from "../../microapps/productApp/ImportProduct";
 import ImportCustomer from "../../microapps/customerApp/CustomerImport";
+import StockUndervalued from "../../microapps/salesReportApp/StockUndervalued";
+import SalesReportByDate from "../../microapps/salesReportApp/SalesReportByDate";
 
 export default function SalesModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -148,6 +150,8 @@ export default function SalesModule() {
           <Route path="/importproduct/*" element={<ImportProduct />} />
           <Route path="/importcustomers/*" element={<ImportCustomer />} />
           {/* <Route path="/invoicepayment/*" element={<InvoicePaymentApp />} /> */}
+          <Route path="/stockUndervalued/*" element={<StockUndervalued />} />
+          <Route path="/salesReportBydate/*" element={<SalesReportByDate />} />
         </Routes>
       </AppContentContainer>
     </AppContainer>

@@ -324,8 +324,8 @@ export default function Invoice() {
                                 label: "Customer",
                                 fieldId: "customer",
                                 placeholder: "",
-                                // required: true,
-                                // validationMessage: "Please enter the department name!",
+                                required: true,
+                                validationMessage: "Please enter customer name!",
                                 selectRecordType: "customer"
 
                             }}
@@ -381,7 +381,7 @@ export default function Invoice() {
                             blurHandler={null}
                         />
 
-                        <TextField
+                        {/* <TextField
                             register={register}
                             errors={errors}
                             field={{
@@ -394,7 +394,7 @@ export default function Invoice() {
                             }}
                             changeHandler={null}
                             blurHandler={null}
-                        />
+                        /> */}
 
 
                     </Row>
@@ -413,6 +413,7 @@ export default function Invoice() {
                                             <th style={{ minWidth: "20rem" }}>Product</th>
                                             <th style={{ minWidth: "16rem" }}>Description</th>
                                             <th style={{ minWidth: "16rem" }}>UoM</th>
+                                            <th style={{ minWidth: "16rem" }}>HSN</th>
                                             <th style={{ minWidth: "16rem" }}>Account</th>
                                             <th style={{ minWidth: "16rem" }}>Quantity</th>
                                             <th style={{ minWidth: "16rem" }}>Price</th>
@@ -463,6 +464,7 @@ export default function Invoice() {
                                                                     setValue(`invoiceLines.${index}.unit`, productDoc.data.document?.uom)
                                                                     setValue(`invoiceLines.${index}.account`, productDoc.data.document?.assetAccount)
                                                                     setValue(`invoiceLines.${index}.unitPrice`, productDoc.data.document?.salesPrice)
+                                                                    setValue(`invoiceLines.${index}.hsn`, productDoc.data.document?.HSNSACS)
                                                                     setValue(`invoiceLines.${index}.taxes`, productDoc.data.document?.igstRate)
                                                                     setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productDoc.data.document?.salesPrice)) * 1)
                                                                     // Calculate amount
@@ -509,6 +511,23 @@ export default function Invoice() {
                                                     />
 
                                                 </td>
+
+                                                <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"invoiceLines"}
+                                                        field={{
+                                                            fieldId: "hsn",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+
+                                                </td>
+
                                                 <td>
                                                     <LineSelectField
                                                         control={control}

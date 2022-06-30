@@ -32,6 +32,8 @@ import AppLoader from '../../pcterp/components/AppLoader';
 import AppContentHeaderPanel from '../../pcterp/builder/AppContentHeaderPanel';
 import AppContentStatusPanel from '../../pcterp/builder/AppContentStatusPanel';
 import swal from "sweetalert2"
+import Calculator from '../../pcterp/components/Calculator';
+import ManualEnterCostAndMrp from '../../pcterp/components/ManualEnterCostAndMRP';
 
 export default function Purchase() {
     const [loderStatus, setLoderStatus] = useState("NOTHING");
@@ -53,10 +55,18 @@ export default function Purchase() {
     const [firstCategoryList, setFirstCategoryList] = useState([])
     const [sizeList, setSizeList] = useState([])
     const [secondCategoryList, setSecondCategoryList] = useState([])
+    const [calculatorObj, setcalculatorObj] = useState()
+    const [manualEnterCostMRP, setmanualEnterCostMRP] = useState()
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [ShowManualModal, setShowManualModal] = useState(false);
+    const [ShowCalclatorBtn, setShowCalclatorBtn] = useState(false);
+    const [ShowChartBtn, setShowChartBtn] = useState(true);
+    const [ShowManualBtn, setShowManualBtn] = useState(false);
     const [productGrade, setproductGrade] = useState([])
     const [productList, setProductList] = useState([])
     const [MaxMinSizeList, setMaxMinSizeList] = useState([])
     const [productGradeList, setproductGradeList] = useState([])
+    const [pricingType, setpricingType] = useState(["Chart", "Calculator", "Manual"])
     const [vendors, setvendors] = useState([])
     const [colleapseRange, setcolleapseRange] = useState(false);
     const [toggle, settoggle] = useState(false);
@@ -449,210 +459,222 @@ export default function Purchase() {
 
     const generateItemName = async () => {
         console.log(getValues("productGrade"));
-        if (getValues("costPrice")) {
-            if (getValues("productGrade") != "Choose.." || getValues("productGrade") == "") {
 
-                const formData = getValues();
-                console.log(formData);
+        if (getValues("productGrade") != "Choose.." || getValues("productGrade") == "") {
 
-                const categoryObjArr = [
-                    {
-                        categoryValue: formData.productMaster,
-                        listName: productMasterList
-                    },
-                    {
-                        categoryValue: formData.groupMaster,
-                        listName: groupMasterList
-                    },
-                    {
-                        categoryValue: formData.brand,
-                        listName: brandList
-                    },
-                    {
-                        categoryValue: formData.firstCategory,
-                        listName: firstCategoryList
-                    },
-                    {
-                        categoryValue: formData.secondCategory,
-                        listName: secondCategoryList
-                    },
-                    {
-                        categoryValue: formData.size,
-                        listName: sizeList
-                    }
-                ]
+            const formData = getValues();
+            console.log(formData);
 
-                let itemName = createItemName(categoryObjArr);
-                // setValue("name", itemName)
-                let itemId;
-                if (itemName !== '') {
-                    await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
-                        .then(async response => {
-                            if (response.data.isSuccess && response.data.document.length > 0) {
-                                itemId = response.data.document[0].id
-                                await updateProductList();
-                                if (itemId) {
-                                    console.log("Item already present in database");
-                                    // swal.fire({
-                                    //     title: "Item already present in database",
-                                    //     buttons: false
-                                    // })
-
-                                    swal.fire({
-                                        title: response.data.isCostSame ? `Item already present in database and its cost(${response.data.document[0].cost}) is same` : `Item already present in database and its cost(${response.data.document[0].cost}) is not same`,
-                                        text: "Do you want to change the cost price of this product ? (If yes then give new price and click 'OK' otherwise 'Cancel')",
-                                        input: 'number',
-                                        showCancelButton: true
-                                    }).then(async (result) => {
-                                        console.log(result.value);
-                                        if (result.value == undefined || result.value == '') {
-                                            infoNotification("please enter something on the popup");
-                                            setInLine(response.data.document[0]);
-                                        } else {
-                                            // Upadte cost and MRP of that product 
-                                            await ApiService.patch(`priceChartUpload/findMRP?search=${result.value}`).then(async r => {
-                                                if (r.data.isSuccess) {
-                                                    let cost = parseFloat(result.value).toFixed(2)
-                                                    let salesPrice = parseFloat(r.data.document.MRP).toFixed(2)
-                                                    let igstRate = r.data.document.MRP >= 1000 ? 12.00 : 5.00
-                                                    let sgstRate = r.data.document.MRP >= 1000 ? 6.00 : 2.50
-
-                                                    await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(res => {
-                                                        if (res.data.isSuccess) {
-                                                            infoNotification("Cost update successfull")
-                                                            setValue("costPrice", result.value)
-                                                            setInLine(res.data.document);
-
-                                                        } else {
-                                                            infoNotification("Can't update cost")
-                                                        }
-                                                    })
-                                                }
-                                            })
-                                            // await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: parseFloat(result.value).toFixed(2) }).then(res => {
-                                            //     if (res.data.isSuccess) {
-                                            //         infoNotification("Cost update successfull")
-                                            //         setValue("costPrice", result.value)
-                                            //     } else {
-                                            //         infoNotification("Can't update cost")
-                                            //     }
-                                            // })
-                                        }
-                                    })
-
-                                }
-                            }
-                            else {
-
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e.response?.data.message);
-                            // errorMessage(e, dispatch)
-                        })
-
-                    let productListLength = formData.products?.length
-                    let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
-                    let categoryQty = formData.itemQty
-                    if (itemAlreadyPresent === -1) {
-                        // itemAppend({})
-                        // setValue(`products.${productListLength}.product`, itemId)
-
-                        // Generate items according to sizes and set in line
-                        if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize) && parseInt(formData.size)) {
-                            infoNotification("Either select only size or select max and min size")
-                        } else if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize)) {
-                            console.log("min and max size present");
-                            const itmName = createItemNameForRange(categoryObjArr)
-                            console.log(itmName);
-                            createAndSetItems(formData, itmName)
-                        } else {
-                            // Create single product if max min size ia not present
-                            let sizeResponse;
-                            console.log("min and max size not present");
-                            console.log(formData);
-                            console.log(formData.itemQty);
-                            // if (formData.size != "Choose..") {
-                            try {
-                                const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
-                                if (res.data.isSuccess) {
-
-                                    //find size
-                                    if (formData.size != "Choose..") {
-                                        sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
-                                    }
-                                    // if (sizeResponse?.data.isSuccess) {
-                                    const r = await ApiService.post(`product/procedure`, {
-                                        name: itemName,
-                                        description: `${itemName}`,
-                                        cost: formData.costPrice,
-                                        salesPrice: res.data.document.MRP,
-                                        igstRate: res.data.document.MRP >= 1000 ? 12.00 : 5.00,
-                                        sgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
-                                        utgstRate: res.data.document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
-                                    })
-                                    if (r.data.isSuccess) {
-                                        itemId = await r.data.document.id;
-                                        await updateProductList();
-
-                                        let products = getValues('products')
-                                        let obj = new Object()
-                                        obj.product = [r.data.document]
-                                        obj.quantity = 1
-                                        obj.description = r.data.document?.description
-                                        obj.unit = r.data.document?.uom
-                                        obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
-                                        obj.unitPrice = r.data?.document.cost
-                                        obj.mrp = r.data?.document.salesPrice
-                                        obj.taxes = r.data?.document.igstRate
-                                        obj.subTotal = r.data?.document.cost
-                                        obj.received = 0
-                                        obj.billed = 0
-                                        products.push(obj)
-                                        console.log(obj);
-                                        setValue(`products`, products)
-
-                                        // resetItemCategory() // test
-                                    }
-                                    // } else {
-                                    //     console.log("can not get size data")
-                                    // }
-                                }
-
-                            } catch (e) {
-                                console.log(e.response);
-                                // errorMessage(e, dispatch)
-                            }
-                            // } else {
-                            //     infoNotification("Please select size")
-                            // }
-                        }
-                        updateOrderLines();
-                    } else {
-                        swal.fire({
-                            title: "Item already present in line",
-                            text: "Quantity will be added by 1. Do you want to proceed?",
-                            buttons: true
-                        }).then(data => {
-                            if (data) {
-                                let lineData = getValues(`products.${itemAlreadyPresent}`)
-                                console.log(parseFloat(formData));
-                                console.log(parseFloat(formData.itemQty) + parseFloat(lineData.quantity));
-                                setValue(`products.${itemAlreadyPresent}.quantity`, 1 + parseFloat(lineData.quantity))
-                                setValue(`products.${itemAlreadyPresent}.subTotal`, (getValues(`products.${itemAlreadyPresent}.quantity`)) * parseInt(getValues(`products.${itemAlreadyPresent}.unitPrice`)));
-                                updateOrderLines();
-                            }
-                        })
-                    }
+            const categoryObjArr = [
+                {
+                    categoryValue: formData.productMaster,
+                    listName: productMasterList
+                },
+                {
+                    categoryValue: formData.groupMaster,
+                    listName: groupMasterList
+                },
+                {
+                    categoryValue: formData.brand,
+                    listName: brandList
+                },
+                {
+                    categoryValue: formData.firstCategory,
+                    listName: firstCategoryList
+                },
+                {
+                    categoryValue: formData.secondCategory,
+                    listName: secondCategoryList
+                },
+                {
+                    categoryValue: formData.size,
+                    listName: sizeList
                 }
-                updateOrderLines()
-                // resetItemCategory()
-            } else {
-                infoNotification("Please enter product grade ❕")
+            ]
+
+            let itemName = createItemName(categoryObjArr);
+            // setValue("name", itemName)
+            let itemId;
+            if (itemName !== '') {
+                await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
+                    .then(async response => {
+                        if (response.data.isSuccess && response.data.document.length > 0) {
+                            itemId = response.data.document[0].id
+                            await updateProductList();
+                            if (itemId) {
+                                console.log("Item already present in database");
+                                // swal.fire({
+                                //     title: "Item already present in database",
+                                //     buttons: false
+                                // })
+
+                                swal.fire({
+                                    title: response.data.isCostSame ? `Item already present in database and its cost(${response.data.document[0].cost}) is same` : `Item already present in database and its cost(${response.data.document[0].cost}) is not same`,
+                                    text: "Do you want to change the cost price of this product ? (If yes then give new price and click 'OK' otherwise 'Cancel')",
+                                    input: 'number',
+                                    showCancelButton: true
+                                }).then(async (result) => {
+                                    console.log(result.value);
+                                    if (result.value == undefined || result.value == '') {
+                                        infoNotification("please enter something on the popup");
+                                        setInLine(response.data.document[0]);
+                                    } else {
+                                        // Upadte cost and MRP of that product 
+                                        await ApiService.patch(`priceChartUpload/findMRP?search=${result.value}`).then(async r => {
+                                            if (r.data.isSuccess) {
+                                                let cost = parseFloat(result.value).toFixed(2)
+                                                let salesPrice = parseFloat(r.data.document.MRP).toFixed(2)
+                                                let igstRate = r.data.document.MRP >= 1000 ? 12.00 : 5.00
+                                                let sgstRate = r.data.document.MRP >= 1000 ? 6.00 : 2.50
+
+                                                await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(res => {
+                                                    if (res.data.isSuccess) {
+                                                        infoNotification("Cost update successfull")
+                                                        setValue("costPrice", result.value)
+                                                        setInLine(res.data.document);
+
+                                                    } else {
+                                                        infoNotification("Can't update cost")
+                                                    }
+                                                })
+                                            }
+                                        })
+                                        // await ApiService.patch(`product/${response.data.document[0]._id}`, { cost: parseFloat(result.value).toFixed(2) }).then(res => {
+                                        //     if (res.data.isSuccess) {
+                                        //         infoNotification("Cost update successfull")
+                                        //         setValue("costPrice", result.value)
+                                        //     } else {
+                                        //         infoNotification("Can't update cost")
+                                        //     }
+                                        // })
+                                    }
+                                })
+
+                            }
+                        }
+                        else {
+
+                        }
+                    })
+                    .catch(e => {
+                        console.log(e.response?.data.message);
+                        // errorMessage(e, dispatch)
+                    })
+
+                let productListLength = formData.products?.length
+                let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
+                let categoryQty = formData.itemQty
+                if (itemAlreadyPresent === -1) {
+                    // itemAppend({})
+                    // setValue(`products.${productListLength}.product`, itemId)
+
+                    // Generate items according to sizes and set in line
+                    if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize) && parseInt(formData.size)) {
+                        infoNotification("Either select only size or select max and min size")
+                    } else if (parseInt(formData.minimunSize) && parseInt(formData.mazimumSize)) {
+                        console.log("min and max size present");
+                        const itmName = createItemNameForRange(categoryObjArr)
+                        console.log(itmName);
+                        createAndSetItems(formData, itmName)
+                    } else {
+                        // Create single product if max min size ia not present
+                        let sizeResponse, document, costPrice;
+                        console.log("min and max size not present");
+                        console.log(formData);
+                        console.log(formData.itemQty);
+                        // if (formData.size != "Choose..") {
+                        try {
+                            if (getValues("pricingType") == "Chart") {
+                                console.log("chart");
+                                const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+                                console.log(res);
+                                if (res.data.isSuccess) {
+                                    document = res.data.document
+                                    costPrice = formData.costPrice
+                                } else {
+                                    infoNotification("Given cost price is not in the range of price list. Please select 'Calculator' or 'Manual'")
+                                }
+                            } else if (getValues("pricingType") == "Calculator") {
+                                document = calculatorObj
+                                costPrice = calculatorObj.costPrice
+                            } else if (getValues("pricingType") == "Manual") {
+                                document = manualEnterCostMRP
+                                costPrice = manualEnterCostMRP.cost
+                            }
+                            // if (res.data.isSuccess) {
+
+                            //find size
+                            if (formData.size != "Choose..") {
+                                sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
+                            }
+                            // if (sizeResponse?.data.isSuccess) {
+                            const r = await ApiService.post(`product/procedure`, {
+                                name: itemName,
+                                description: `${itemName}`,
+                                // cost: formData.costPrice,
+                                cost: costPrice,
+                                salesPrice: document.MRP,
+                                igstRate: document.MRP >= 1000 ? 12.00 : 5.00,
+                                sgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                                utgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                            })
+                            if (r.data.isSuccess) {
+                                itemId = await r.data.document.id;
+                                await updateProductList();
+
+                                let products = getValues('products')
+                                let obj = new Object()
+                                obj.product = [r.data.document]
+                                obj.quantity = 1
+                                obj.description = r.data.document?.description
+                                obj.unit = r.data.document?.uom
+                                obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
+                                obj.unitPrice = r.data?.document.cost
+                                obj.mrp = r.data?.document.salesPrice
+                                obj.taxes = r.data?.document.igstRate
+                                obj.subTotal = r.data?.document.cost
+                                obj.received = 0
+                                obj.billed = 0
+                                products.push(obj)
+                                console.log(obj);
+                                setValue(`products`, products)
+
+                                // resetItemCategory() // test
+                            }
+                            // }
+
+                        } catch (e) {
+                            console.log(e);
+                            // errorMessage(e, dispatch)
+                        }
+                        // } else {
+                        //     infoNotification("Please select size")
+                        // }
+                    }
+                    updateOrderLines();
+                } else {
+                    swal.fire({
+                        title: "Item already present in line",
+                        text: "Quantity will be added by 1. Do you want to proceed?",
+                        buttons: true
+                    }).then(data => {
+                        if (data) {
+                            let lineData = getValues(`products.${itemAlreadyPresent}`)
+                            console.log(parseFloat(formData));
+                            console.log(parseFloat(formData.itemQty) + parseFloat(lineData.quantity));
+                            setValue(`products.${itemAlreadyPresent}.quantity`, 1 + parseFloat(lineData.quantity))
+                            setValue(`products.${itemAlreadyPresent}.subTotal`, (getValues(`products.${itemAlreadyPresent}.quantity`)) * parseInt(getValues(`products.${itemAlreadyPresent}.unitPrice`)));
+                            updateOrderLines();
+                        }
+                    })
+                }
             }
+            updateOrderLines()
+            // resetItemCategory()
         } else {
-            infoNotification("Please enter cost price ❕")
+            infoNotification("Please enter product grade ❕")
         }
+
     }
 
     const createAndSetItems = async (formData, itemName) => {
@@ -820,6 +842,42 @@ export default function Purchase() {
         return array
     }
 
+    const handleShow = (value) => {
+        setShowAddressModal(value);
+    }
+
+    const handleManualShow = (value) => {
+        setShowManualModal(value);
+    }
+
+    /**
+     * Get data from calculator modal and according to that data get MRP
+     */
+    const setCalObj = (data) => {
+
+        const tanasUtil = new TanasUtils();
+        const rangeArray = tanasUtil.calculatePrice(parseInt(1), parseInt(1), parseInt(data.cost), parseInt(data.expence), parseInt(data.transport), parseInt(data.profit), parseInt(data.gst))
+        console.log(rangeArray);
+
+        const obj = new Object()
+        obj.MRP = rangeArray[0].price
+        obj.costPrice = data.cost
+        setcalculatorObj(obj)
+
+        handleShow(false)
+    }
+
+
+    /**
+     * Get data from manual modal
+     */
+    const setManualObj = (data) => {
+        console.log(data);
+        setmanualEnterCostMRP(data)
+
+        handleManualShow(false)
+    }
+
 
     useEffect(async () => {
 
@@ -860,6 +918,8 @@ export default function Purchase() {
         setvendors(vendorResponse.data.documents)
 
     }, []);
+
+    console.log(calculatorObj);
 
     if (loderStatus === "RUNNING") {
         return (
@@ -1083,7 +1143,7 @@ export default function Purchase() {
                             blurHandler={null}
                         />
 
-                        <TextField
+                        {/* <TextField
                             register={register}
                             errors={errors}
                             field={{
@@ -1113,7 +1173,7 @@ export default function Purchase() {
                             }}
                             changeHandler={null}
                             blurHandler={null}
-                        />
+                        /> */}
 
                     </Row>
                 </Container>
@@ -1253,6 +1313,54 @@ export default function Purchase() {
                                                             <Form.Label>Age</Form.Label>
                                                             <Form.Control type="number" min="0" id="age" name="age" {...register("age")} />
                                                         </Form.Group> */}
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">PRICEING TYPE</Form.Label>
+                                                        <FormSelect size='sm' style={{ maxWidth: '400px' }} id="pricingType" name="pricingType" {...register("pricingType")}
+                                                            onClick={(e) => {
+                                                                if (e.target.value == "Calculator") {
+                                                                    setShowCalclatorBtn(true)
+                                                                    setShowManualBtn(false)
+                                                                    setShowChartBtn(false)
+                                                                } else if (e.target.value == "Manual") {
+                                                                    setShowManualBtn(true)
+                                                                    setShowCalclatorBtn(false)
+                                                                    setShowChartBtn(false)
+                                                                } else if (e.target.value == "Chart") {
+                                                                    setShowChartBtn(true)
+                                                                    setShowCalclatorBtn(false)
+                                                                    setShowManualBtn(false)
+                                                                } else {
+                                                                    setShowCalclatorBtn(false)
+                                                                    setShowManualBtn(false)
+                                                                    setShowChartBtn(false)
+                                                                }
+                                                            }}
+                                                        >
+                                                            {/* <option value={null} selected>Chart</option> */}
+                                                            {pricingType && pricingType.map((value, index) => {
+                                                                return <option key={index} value={value} defaultValue="Chart">{value}</option>
+                                                            })}
+                                                        </FormSelect>
+                                                    </Form.Group>
+
+                                                    {
+                                                        ShowCalclatorBtn &&
+                                                        <Form.Group className="mb-2" as={Col} md="4" style={{ marginTop: 20 }}>
+                                                            <Button type="button" size="sm"
+                                                                onClick={() => {
+                                                                    handleShow(true)
+                                                                }}>OPEN CALCULATOR</Button>
+                                                        </Form.Group>
+                                                    }
+                                                    {
+                                                        ShowManualBtn &&
+                                                        <Form.Group className="mb-2" as={Col} md="4" style={{ marginTop: 20 }}>
+                                                            <Button type="button" size="sm"
+                                                                onClick={() => {
+                                                                    handleManualShow(true)
+                                                                }}>MANUAL COST ENTRY</Button>
+                                                        </Form.Group>
+                                                    }
                                                 </Row>
 
                                                 <Row>
@@ -1286,10 +1394,13 @@ export default function Purchase() {
 
                                                     }
 
-                                                    <Form.Group className="mb-2" as={Col} md="4">
-                                                        <Form.Label className="m-0">COST PRICE</Form.Label>
-                                                        <Form.Control size='sm' style={{ maxWidth: '400px' }} type="number" min="0" id="costPrice" name="costPrice" {...register("costPrice")} required />
-                                                    </Form.Group>
+                                                    {
+                                                        ShowChartBtn ?
+                                                            <Form.Group className="mb-2" as={Col} md="4">
+                                                                <Form.Label className="m-0">COST PRICE</Form.Label>
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }} type="number" min="0" id="costPrice" name="costPrice" {...register("costPrice")} required />
+                                                            </Form.Group> : ""
+                                                    }
                                                 </Row>
 
 
@@ -1863,6 +1974,20 @@ export default function Purchase() {
 
 
                     </Tabs >
+
+                    <Calculator state={state}
+                        isEditMode={!isAddMode}
+                        show={showAddressModal}
+                        handleShow={(e) => handleShow(e)}
+                        setCalObj={(e) => setCalObj(e)}
+                    />
+
+                    <ManualEnterCostAndMrp state={state}
+                        setManualObj={(e) => setManualObj(e)}
+                        isEditMode={!isAddMode}
+                        show={ShowManualModal}
+                        handleManualShow={(e) => handleManualShow(e)}
+                    />
 
                 </Container >
 

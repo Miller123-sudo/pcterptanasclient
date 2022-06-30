@@ -94,7 +94,7 @@ export default function BilledList() {
                 </>
         },
         { headerName: 'Bill#', field: 'name' },
-        { headerName: 'Sourced Document', field: 'sourceDocument.name' },
+        // { headerName: 'Sourced Document', field: 'sourceDocument.name' },
         { headerName: 'Vendor Name', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0].name : "Not Available" },
         { headerName: 'Bill Date', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
         { headerName: 'Total Price', field: 'estimation', valueGetter: (params) => params.data?.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
