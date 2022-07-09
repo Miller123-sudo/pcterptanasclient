@@ -92,7 +92,7 @@ export default function InvoiceList() {
                 </>
         },
         { headerName: 'INVOICE#', field: 'name' },
-        { headerName: 'SOURCE DOCUMENT', field: 'sourceDocument', valueGetter: (params) => params.data?.sourceDocument ? params.data?.sourceDocument[0]?.name : "Not Available" },
+        // { headerName: 'SOURCE DOCUMENT', field: 'sourceDocument', valueGetter: (params) => params.data?.sourceDocument ? params.data?.sourceDocument[0]?.name : "Not Available" },
         { headerName: 'CUSTOMER', field: 'customer', valueGetter: (params) => params.data?.customer ? params.data?.customer[0]?.name : "Not Available" },
         { headerName: 'INVOICE DATE', field: 'invoiceDate', valueGetter: (params) => params.data?.invoiceDate ? moment(params.data?.invoiceDate).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => formatNumber(params.data?.estimation?.total) },

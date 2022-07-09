@@ -287,7 +287,7 @@ export default function Invoice() {
                             changeHandler={null}
                             blurHandler={null}
                         /> */}
-                        <SelectField
+                        {/* <SelectField
                             control={control}
                             errors={errors}
                             field={{
@@ -314,7 +314,7 @@ export default function Invoice() {
                                 }
                             }}
                             blurHandler={null}
-                        />
+                        /> */}
 
                         <SelectField
                             control={control}
@@ -575,14 +575,20 @@ export default function Invoice() {
                                                         register={register}
                                                         model={"invoiceLines"}
                                                         field={{
-                                                            disabled: true,
+                                                            disabled: false,
                                                             fieldId: "unitPrice",
                                                             placeholder: ""
                                                         }}
                                                         index={index}
                                                         errors={errors}
                                                         changeHandler={null}
-                                                        blurHandler={null}
+                                                        blurHandler={(e) => {
+                                                            let qty = getValues(`invoiceLines.${index}.quantity`);
+                                                            let unitPrice = getValues(`invoiceLines.${index}.unitPrice`);
+                                                            let netAmount = (parseFloat(qty) * parseFloat(unitPrice));
+                                                            setValue(`invoiceLines.${index}.subTotal`, parseFloat(netAmount));
+                                                            updateOrderLines(index)
+                                                        }}
                                                     />
 
                                                 </td>

@@ -138,7 +138,8 @@ export default function SalesModule() {
       </AppHeader>
       <AppContentContainer>
         <Routes>
-          <Route path="/" element={<SalesApp />} />
+          {/* <Route path="/" element={<SalesApp />} /> */}
+          <Route path="/" element={<InvoiceApp />} />
           <Route path="/salesorders/*" element={<SalesApp />} />
           <Route path="/product/*" element={<ProductApp />} />
           <Route path="/customers/*" element={<CustomerApp />} />

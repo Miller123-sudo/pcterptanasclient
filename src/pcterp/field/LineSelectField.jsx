@@ -3,12 +3,16 @@ import axios from 'axios';
 import { React, useState, useEffect } from 'react';
 import { Form, Col } from 'react-bootstrap';
 import { Typeahead } from 'react-bootstrap-typeahead';
-import { Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import ApiService from '../../helpers/ApiServices';
 
 
 export default function LineSelectField({ model, control, field, index, blurHandler, changeHandler }) {
     const [state, setState] = useState([{ id: 0, name: "Rehan Nawaz" }]);
+
+    const { register } = useForm({
+        defaultValues: {}
+    });
 
     useEffect(() => {
         const getList = async () => {
@@ -29,7 +33,8 @@ export default function LineSelectField({ model, control, field, index, blurHand
         control={control}
         render={({ field: { onChange, value }, fieldState: { error } }) => (
             <Typeahead key={index} size='sm'
-                id={`${model}.${index}.${field?.fieldId}`}
+                // id={`${model}.${index}.${field?.fieldId}`}
+                {...register(`${model}.${index}.${field?.fieldId}`)}
                 disabled={field?.disabled}
                 labelKey="name"
                 multiple={field?.multiple}

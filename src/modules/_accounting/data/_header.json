@@ -20,17 +20,7 @@
             ]
           }
         },
-        {
-          "nav_dropdown": {
-            "nav_dropdown_name": "Accounting",
-            "nav_dropdown_items": [
-              {
-                "item_name": "General Ledger",
-                "item_navigation": "generalledgers"
-              }
-            ]
-          }
-        },
+
         {
           "nav_dropdown": {
             "nav_dropdown_name": "Reportings",
@@ -42,20 +32,17 @@
             "nav_dropdown_name": "Settings",
             "nav_dropdown_items": [
               {
-                "item_name": "Charts of Account",
-                "item_navigation": "accounts"
-              },
-              {
                 "item_name": "Print RTGS",
                 "item_navigation": "printrtgs"
               },
+
               {
-                "item_name": "Print Cheque",
-                "item_navigation": "printcheque"
+                "item_name": "Print Acknowledgement",
+                "item_navigation": "printacknoledge"
               },
               {
-                "item_name": "Print Acknoledge",
-                "item_navigation": "printacknoledge"
+                "item_name": "Print Acknowledgement page",
+                "item_navigation": "printacknoledgepage"
               }
             ]
           }

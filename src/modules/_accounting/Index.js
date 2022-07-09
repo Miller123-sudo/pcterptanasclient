@@ -22,6 +22,7 @@ import BillList from "../../microapps/newBillApp/BillList";
 import RtgsApp from "../../microapps/rtgsAPP/Index";
 import ChequeApp from "../../microapps/chequeApp/Index";
 import AcknoledgeApp from "../../microapps/acknoledgeApp/Index";
+import PrintAckPage from "../../microapps/acknoledgeApp/PrintAckPage";
 
 export default function AccountingModule() {
   const { dispatch, user } = useContext(UserContext);
@@ -136,7 +137,7 @@ export default function AccountingModule() {
       </AppHeader>
       <AppContentContainer>
         <Routes>
-          <Route path="/" element={<AccountApp />} />
+          <Route path="/" element={<BillApp />} />
           <Route path="/accounts/*" element={<AccountApp />} />
           <Route path="/bills/*" element={<BillApp />} />
           <Route path="/billpayment/*" element={<BillPaymentApp />} />
@@ -150,6 +151,7 @@ export default function AccountingModule() {
           <Route path="/printrtgs/*" element={<RtgsApp />} />
           <Route path="/printcheque/*" element={<ChequeApp />} />
           <Route path="/printacknoledge/*" element={<AcknoledgeApp />} />
+          <Route path="/printacknoledgepage/*" element={<PrintAckPage />} />
 
           <Route
             path="/inventoryanalysis/*"

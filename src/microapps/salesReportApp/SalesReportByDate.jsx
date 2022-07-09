@@ -50,13 +50,13 @@ export default function SalesReportByDate() {
         //             {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
         //         </>
         // },
-        { headerName: 'SALES ORDER ID#', field: 'name' },
-        { headerName: 'DATE', field: 'date', valueGetter: (params) => params.data?.date ? moment(params.data?.date).format("MM/DD/YYYY ") : "Not Available" },
+        { headerName: 'INVOICE ID#', field: 'name' },
+        { headerName: 'DATE', field: 'invoiceDate', valueGetter: (params) => params.data?.invoiceDate ? moment(params.data?.invoiceDate).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'CUSTOMER', field: `customer`, valueGetter: (params) => params.data?.customer ? params.data?.customer[0]?.name : "Not Available" },
-        { headerName: 'DELIVERY DATE', field: 'deliveryDate', valueGetter: (params) => params.data?.deliveryDate ? moment(params.data?.deliveryDate).format("MM/DD/YYYY ") : "Not Available" },
+        // { headerName: 'DELIVERY DATE', field: 'deliveryDate', valueGetter: (params) => params.data?.deliveryDate ? moment(params.data?.deliveryDate).format("MM/DD/YYYY ") : "Not Available" },
         { headerName: 'TOTAL', field: 'estimation.total', valueGetter: (params) => formatNumber(params.data.estimation?.total) },
         {
-            headerName: 'INVOICING STATUS', field: 'invoiceStatus', minWidth: 300, cellRendererFramework: (params) => (renderStatus(params.value)),
+            headerName: 'INVOICING STATUS', field: 'paymentStatus', minWidth: 300, cellRendererFramework: (params) => (renderStatus(params.value)),
         },
     ]
 
@@ -67,12 +67,12 @@ export default function SalesReportByDate() {
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
             }
-            case 'Waiting Bills': {
+            case 'Not Paid': {
                 return <div style={{ backgroundColor: 'royalblue', borderRadius: '20px', color: 'white', width: '100%', height: '60%', maxHeight: '2rem', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
             }
-            case 'Fully Invoiced': {
+            case 'Paid': {
                 return <div style={{ backgroundColor: '#2ECC71', borderRadius: '20px', color: 'white', width: '100%', height: '60%', maxHeight: '2rem', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>{value}</div>
                 </div>
@@ -198,7 +198,7 @@ export default function SalesReportByDate() {
                             </Row>
                         </Col>
                     </Row>
-                    <Row><span><b>Total Amount: </b>{total}</span></Row>
+                    <Row><span><b>Total Amount: </b>{total.toFixed(2)}</span></Row>
 
                 </Container>
                 <Container className="pct-app-content-body p-0 m-0" style={{ height: '100vh' }} fluid>

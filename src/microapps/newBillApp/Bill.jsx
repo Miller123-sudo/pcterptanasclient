@@ -3,7 +3,7 @@ import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
 import { BiEditAlt } from "react-icons/bi";
 import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form } from 'react-bootstrap'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
 import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils'
@@ -26,6 +26,7 @@ import { PurchaseOrderPDF } from '../../helpers/PDF';
 import CheckboxField from '../../pcterp/field/CheckboxField';
 import swal from "sweetalert2"
 import InputGroupWithButton from '../../pcterp/field/InputGroupWithButton';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
@@ -34,6 +35,9 @@ export default function Invoice() {
     const [showDiscountAmountAndSaveBtn, setshowDiscountAmountAndSaveBtn] = useState(false)
     const [vendorObj, setvendorObj] = useState()
     const [vendorData, setvendorData] = useState()
+    const [Products, setProducts] = useState([])
+    const [CustomIndex, setCustomIndex] = useState(0)
+
     const [lineSelectProductObj, setlineSelectProductObj] = useState()
     const [state, setState] = useState({
         estimation: {
@@ -51,7 +55,7 @@ export default function Invoice() {
     const [searchParams] = useSearchParams();
     const [billList, setbillList] = useState([])
 
-    const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
+    const { register, control, reset, handleSubmit, getValues, setValue, setFocus, watch, formState: { errors } } = useForm({
         defaultValues: {
             recepientAccountArray: null,
             sourceDocumentArray: null,
@@ -66,6 +70,7 @@ export default function Invoice() {
     });
 
     const { append: invoiceLineAppend, remove: invoiceLineRemove, fields: invoiceLineFields } = useFieldArray({ control, name: "invoiceLines" });
+    const { append: deductionAndAditionAppend, remove: deductionAndAditionRemove, fields: deductionAndAditionFields } = useFieldArray({ control, name: "deductionAndAditions" });
     const { append: journalItemAppend, remove: journalItemRemove, fields: journalItemFields } = useFieldArray({ control, name: "journalItems" });
 
     let totalPurchasedQuantity = 0;
@@ -94,6 +99,7 @@ export default function Invoice() {
         return isAddMode
             ? createDocument(formData)
             : updateDocument(id, formData);
+
         // }
         // }).catch (e => {
         //     console.log(e);
@@ -280,8 +286,10 @@ export default function Invoice() {
     }
 
     const updateOrderLines = () => {
-        let cumulativeSum = 0, totalTax = 0;
+        let cumulativeSum = 0, totalTax = 0, discountOraddition = 0;
         const products = getValues('invoiceLines')
+        const disAndAdd = getValues('deductionAndAditions')
+        console.log(disAndAdd);
         console.log(getValues("fredgeCost"));
         console.log(getValues("discountCharge"));
         products?.map((val) => {
@@ -289,10 +297,15 @@ export default function Invoice() {
             totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
         });
 
+        disAndAdd?.map((val) => {
+            discountOraddition += parseFloat(val?.amount);
+        });
+        console.log(discountOraddition);
+
         setValue("estimation", {
             untaxedAmount: cumulativeSum,
             tax: totalTax,
-            total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0))
+            total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
         });
 
         setState(prevState => ({
@@ -303,7 +316,7 @@ export default function Invoice() {
                 discountCharge: !isAddMode ? state?.estimation.discountCharge : parseFloat((getValues("discountCharge"))),
                 tax: totalTax,
                 // total: parseFloat(cumulativeSum + totalTax)
-                total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0))
+                total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
             }
         }));
     }
@@ -425,7 +438,21 @@ export default function Invoice() {
         }
     }
 
+    const setStatusToPaid = async () => {
+        console.log("in");
+        await ApiService.patch("newBill/" + state?._id, { status: "Posted", paymentStatus: "Paid" }).then(res => {
+            if (res.data.isSuccess) {
+                console.log(res.data.document);
+                navigate(`/${rootPath}/bills/list`)
+            }
+        })
+    }
+
     useEffect(async () => {
+
+        const response = await ApiService.get(`/product/list`);
+        console.log(response.data.documents)
+        setProducts(response.data.documents)
 
         if (!isAddMode) {
             setLoderStatus("RUNNING");
@@ -460,10 +487,10 @@ export default function Invoice() {
                             {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <Button type="submit" variant="primary" size="sm">SAVE</Button>}{" "}
                             {showDiscountAmountAndSaveBtn ? <Button type="submit" variant="primary" size="sm">SAVE</Button> : ""}{" "}
                             <Button as={Link} to={`/${rootPath}/bills/list`} variant="secondary" size="sm">DISCARD</Button>
-                            {!isAddMode && state?.isUsed ? "" : <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
+                            {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
                             </DropdownButton>}
-
+                            {state.status == "Posted" ? "" : <Button variant="primary" size="sm" onClick={setStatusToPaid}>CONFIRM PAYMENT</Button>}
                         </Col>
                     </Row>
                 </Container>
@@ -475,7 +502,7 @@ export default function Invoice() {
                     <Col >
                         <ButtonGroup size="sm">
 
-                            {state?.status === "Draft" ? <Button onClick={handleConfirmButton} type="button" variant="primary">CONFIRM</Button> : ""}
+                            {/* {state?.status === "Draft" ? <Button onClick={handleConfirmButton} type="button" variant="primary">CONFIRM</Button> : ""} */}
                             {(state.status == "Posted" && state.paymentStatus == "Not Paid") || (state.status == "Posted" && state.paymentStatus == "Partially Paid") ? <Button onClick={handleRegisterPaymentButton} type="button" variant="primary">REGISTER PAYMENT</Button> : ""}
                             {!isAddMode && <Button variant="light" onClick={handlePrintOrder}>PRINT Bill</Button>}
                         </ButtonGroup>
@@ -620,14 +647,16 @@ export default function Invoice() {
                                 isVisible: isAddMode ? true : false,
                                 disabled: isAddMode ? false : true
                             }}
-                            changeHandler={async (event, data) => {
+                            changeHandler={async (e, data) => {
                                 console.log(data.value);
+                                console.log(e);
                                 if (!data.value) return
 
                                 if (!data.value.length) {
                                     setaddDiscount(false)
+                                    setValue("referenceNumber", "")
                                 }
-                                if (data.value) {
+                                if (data.value && e.length) {
                                     setValue("referenceNumber", `${data?.value?.name}-`)
                                     setValue("vendor", data?.value?.id)
                                     setvendorObj(data.value)
@@ -650,7 +679,7 @@ export default function Invoice() {
                             }}
                             blurHandler={(e, data) => {
                                 console.log(data.value);
-                                if (data.value == "undefined") {
+                                if (data.value == undefined) {
                                     setValue("referenceNumber", "")
                                 } else if (data.value?.length == 0) setValue("referenceNumber", "")
                             }}
@@ -695,7 +724,7 @@ export default function Invoice() {
                             blurHandler={null}
                         />
 
-                        <SelectField
+                        {/* <SelectField
                             control={control}
                             errors={errors}
                             field={{
@@ -714,7 +743,7 @@ export default function Invoice() {
                                 setValue("recepientAccount", data?.value?.id)
                             }}
                             blurHandler={null}
-                        />
+                        /> */}
                         <TextField
                             register={register}
                             errors={errors}
@@ -947,11 +976,10 @@ export default function Invoice() {
 
                                                 <td style={{ textAlign: 'center', paddingTop: '8px' }}>{index + 1}</td>
                                                 <td>
-                                                    <LineSelectField
+                                                    {/* <LineSelectField
                                                         control={control}
                                                         model={"invoiceLines"}
                                                         field={{
-
                                                             fieldId: "productArray",
                                                             placeholder: "",
                                                             selectRecordType: "product",
@@ -989,7 +1017,78 @@ export default function Invoice() {
                                                                 console.log("ERROR", err)
                                                             })
                                                         }}
+                                                    /> */}
+
+
+                                                    <Controller
+                                                        name={`invoiceLines.${index}.productArray`}
+                                                        control={control}
+                                                        // rules={{ required: field?.required ? field?.validationMessage : false }}
+                                                        render={({ field: { onChange, value }, fieldState: { error } }) => {
+
+                                                            return (
+                                                                <Typeahead size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
+
+                                                                    id="productArray"
+                                                                    {...register(`invoiceLines.${index}.productArray`)}
+                                                                    labelKey="name"
+                                                                    onChange={async (e, data) => {
+                                                                        console.log(e);
+                                                                        if (!e.length) return
+                                                                        setValue("product", e[0]._id);
+
+                                                                    }}
+                                                                    onBlur={async (e, data) => {
+                                                                        console.log(e.target.value);
+
+                                                                        if (!e.target.value) return
+
+                                                                        ApiService.setHeader();
+                                                                        const res = await ApiService.get(`product/search/${e.target.value}`)
+                                                                        console.log(res?.data?.document[0]?._id);
+
+                                                                        // const productId = data?.okay[0]?._id;
+                                                                        const productId = res?.data?.document[0]?._id;
+                                                                        ApiService.get('product/' + productId).then(response => {
+                                                                            const productObj = response.data.document;
+                                                                            setlineSelectProductObj(productObj)
+                                                                            console.log(productObj);
+
+                                                                            let obj = new Object();
+                                                                            obj._id = productObj._id
+                                                                            obj.id = productObj.id
+                                                                            obj.name = productObj.name
+
+                                                                            if (productObj) {
+                                                                                setValue(`invoiceLines.${index}.product`, productObj._id);
+                                                                                setValue(`invoiceLines.${index}.productArray`, [obj]);
+                                                                                setValue(`invoiceLines.${index}.name`, productObj.name);
+                                                                                setValue(`invoiceLines.${index}.label`, productObj.description);
+                                                                                setValue(`invoiceLines.${index}.unitArray`, productObj.uom);
+                                                                                setValue(`invoiceLines.${index}.quantity`, 1);
+                                                                                setValue(`invoiceLines.${index}.taxes`, productObj?.igstRate);
+                                                                                setValue(`invoiceLines.${index}.unitPrice`, productObj.cost);
+                                                                                setValue(`invoiceLines.${index}.mrp`, productObj.salesPrice);
+                                                                                setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
+                                                                                setValue(`invoiceLines.${index}.accountArray`, productObj.assetAccount);
+                                                                                updateOrderLines(index)
+                                                                            }
+                                                                        }).catch(err => {
+                                                                            console.log("ERROR", err)
+                                                                        })
+                                                                    }}
+                                                                    options={Products}
+                                                                    selected={value}
+                                                                    positionFixed={true}
+                                                                    flip={true}
+                                                                    clearButton
+
+                                                                />
+                                                            )
+                                                        }
+                                                        }
                                                     />
+
                                                 </td>
 
                                                 <td>
@@ -1090,7 +1189,7 @@ export default function Invoice() {
 
                                                 </td>
                                                 <td>
-                                                    <LineNumberField
+                                                    <LineDecimal128Field
                                                         register={register}
                                                         model={"invoiceLines"}
                                                         field={{
@@ -1114,7 +1213,7 @@ export default function Invoice() {
                                                 </td>
 
                                                 <td>
-                                                    <LineNumberField
+                                                    <LineDecimal128Field
                                                         register={register}
                                                         model={"invoiceLines"}
                                                         field={{
@@ -1203,8 +1302,10 @@ export default function Invoice() {
                                                         taxes: 0,
                                                         unitPrice: 0,
                                                         subTotal: 0
-                                                    })
+                                                    }, { focusName: `invoiceLines.${CustomIndex}.productArray` })
 
+                                                    // setFocus(`invoiceLines.${CustomIndex}.productArray`)
+                                                    setCustomIndex(CustomIndex + 1)
                                                 }
                                                 }
                                                 >Add a item</Button>
@@ -1215,8 +1316,103 @@ export default function Invoice() {
                                 </Table>
                             </AppContentLine>
                         </Tab>
-                        <Tab eventKey="journalItems" title="JOURNAL ITEMS">
+                        <Tab eventKey="deductionAndAditions" title="DEDUCTION & ADDITION">
                             <AppContentLine>
+                                <Table striped bordered hover size="sm">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th style={{ minWidth: "20rem" }}>REASON</th>
+                                            <th style={{ minWidth: "16rem" }}>AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {deductionAndAditionFields.map((field, index) => {
+                                            return (<tr key={field.id}>
+                                                <td>
+                                                    <Button size="sm" variant="secondary"
+                                                        onClick={() => {
+                                                            // invoiceLineRemove(index)
+                                                            // updateOrderLines(index)
+
+                                                            swal.fire({
+                                                                title: `Delete warning`,
+                                                                text: "Do you really want to delete this line?",
+                                                                // input: 'number',
+                                                                showCancelButton: true
+                                                            }).then(async (result) => {
+                                                                if (result.value == undefined) {
+                                                                    // infoNotification("please enter something in popup..")
+                                                                } else {
+                                                                    deductionAndAditionRemove(index)
+                                                                    updateOrderLines(index)
+                                                                }
+                                                            })
+                                                        }}
+                                                    ><BsTrash /></Button>
+                                                </td>
+
+                                                <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"deductionAndAditions"}
+                                                        field={{
+                                                            fieldId: "reason",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
+                                                </td>
+
+                                                <td>
+                                                    <LineDecimal128Field
+                                                        register={register}
+                                                        model={"deductionAndAditions"}
+                                                        field={{
+                                                            fieldId: "amount",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={(e) => {
+
+                                                            console.log(e.target.value);
+                                                            if (e.target.value) {
+                                                                updateOrderLines()
+                                                            } else {
+                                                                setValue(`deductionAndAditions.${index}.amount`, 0)
+                                                                updateOrderLines()
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                            </tr>
+                                            )
+                                        })}
+
+                                        <tr>
+                                            <td colSpan="14">
+                                                <Button size="sm" style={{ minWidth: "8rem" }} onClick={() => {
+                                                    deductionAndAditionAppend({
+                                                        reason: '',
+                                                        amount: 0,
+                                                    })
+                                                    updateOrderLines()
+                                                }
+                                                }
+                                                >Add</Button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </Table>
+
+                            </AppContentLine>
+
+                            {/* <AppContentLine>
                                 <Table striped bordered hover size="sm">
                                     <thead>
                                         <tr>
@@ -1300,7 +1496,7 @@ export default function Invoice() {
                                     </tbody>
                                 </Table>
 
-                            </AppContentLine>
+                            </AppContentLine> */}
 
                         </Tab>
 

@@ -135,7 +135,7 @@ export default function BillList() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            {(rootPath == "accounting" && location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>}
+                            {(rootPath == "accounting" || location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>}
 
                         </Col>
                         <Col md="4" sm="6">

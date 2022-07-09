@@ -567,11 +567,14 @@ const PurchaseOrderPDF = {
   },
 
   // Generate acknoledgement
-  generateAcknowledgment(data) {
+  generateAcknowledgment(data, mergedArray) {
     var doc = new jsPDF("p", "pt", "a4");
 
     // Format data for PDF
     let array = new Array();
+    let arr = new Array();
+    let finalarr = new Array();
+
     let total = 0;
     console.log(data);
     data?.map((e) => {
@@ -581,10 +584,21 @@ const PurchaseOrderPDF = {
         ? new Date(e.billDate).toLocaleDateString()
         : new Date(e.paymentDate).toLocaleDateString();
       obj.billamount = e.estimation?.total ? e.estimation.total : e.amount;
+      obj.deductionAndAditions = e.deductionAndAditions;
 
       total += e.estimation?.total ? e.estimation.total : e.amount;
       array.push(obj);
     });
+
+    mergedArray?.map((e) => {
+      console.log(e.reason);
+      arr.push(e?.reason);
+      arr.push(String(e?.amount));
+      finalarr.push(arr);
+      arr = [];
+    });
+    console.log(arr);
+    console.log(finalarr);
 
     doc.setFontSize(35);
     doc.setTextColor("#3498DB");
@@ -787,23 +801,38 @@ const PurchaseOrderPDF = {
       columnStyles: {
         europe: { halign: "center" },
         0: { cellWidth: 130 },
-        2: { cellWidth: 80, halign: "right" },
-        3: { cellWidth: 80, halign: "right" },
-        4: { cellWidth: 80 },
+        1: { cellWidth: 80, halign: "right" },
+        2: { cellWidth: 230, halign: "right" },
+        3: { cellWidth: 80 },
       },
       body: array,
       columns: [
         { header: "Bill No.", dataKey: "billno" },
         { header: "Bill Date", dataKey: "billdate" },
+        { header: "Discounts", dataKey: "" },
         { header: "Amount", dataKey: "billamount" },
-        // { header: "Discount less", dataKey: "discount" },
-        // { header: "Per mtr", dataKey: "permtr" },
-        // { header: "Bill No.", dataKey: "" },
-        // { header: "Bill Dt.", dataKey: "" },
-        // { header: "Bill Amount", dataKey: "." },
-        // { header: "Discount less", dataKey: "" },
-        // { header: "Per Mtr", dataKey: "" },
       ],
+      didDrawCell: function (data) {
+        console.log(data);
+        if (data.column.index == 2 && data.cell.section === "body") {
+          doc.autoTable({
+            head: [["Reason", "Amount"]],
+            body: finalarr,
+            // columns: [
+            //   { header: "Reason", dataKey: "reason" },
+            //   { header: "Amount", dataKey: "amount" },
+            // ],
+            startY: data.cell.y + 2,
+            margin: { left: data.cell.x + data.cell.padding("left") },
+            tableWidth: "wrap",
+            theme: "grid",
+            styles: {
+              fontSize: 7,
+              cellPadding: 1,
+            },
+          });
+        }
+      },
       didDrawPage: (d) => (height = d.cursor.y), // calculate height of the autotable dynamically
     });
 

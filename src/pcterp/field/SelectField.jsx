@@ -50,7 +50,7 @@ export default function SelectField({ control, field, errors, queryPath, index, 
                 }
                 console.log(error);
                 return (
-                    <Typeahead key={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
+                    <Typeahead id={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
                         isInvalid={errors[field?.fieldId]}
                         disabled={field?.disabled}
                         labelKey="name"
@@ -74,6 +74,7 @@ export default function SelectField({ control, field, errors, queryPath, index, 
                                     <div>
                                         <span>{option.name}</span><span> ( <small><b>Ref No.</b></small> {option?.referenceNumber})</span>
                                         <div>
+                                            <small><b>Vendor:</b> {(option?.vendorArray[0]?.name)} </small><br />
                                             <small><b>Total:</b> {(option?.estimation.total).toFixed(2)}</small>
                                         </div>
                                     </div>

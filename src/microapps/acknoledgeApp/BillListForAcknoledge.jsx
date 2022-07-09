@@ -13,7 +13,10 @@ import AppContentHeader from '../../pcterp/builder/AppContentHeader'
 import AppLoader from '../../pcterp/components/AppLoader';
 import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils';
 import { render } from '@testing-library/react';
+import jsPDF from "jspdf";
 import { PurchaseOrderPDF } from '../../helpers/PDF';
+import PrintAckPage from './PrintAckPage';
+import { useReactToPrint } from 'react-to-print';
 const moment = require('moment')
 
 export default function BillListForAcknoledge() {
@@ -128,18 +131,65 @@ export default function BillListForAcknoledge() {
 
     }
 
+
+
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = () => {
-        if (selectedBill.length > 0) {
-            PurchaseOrderPDF.generateAcknowledgment(selectedBill)
+        // if (selectedBill.length > 0) {
+        let arr = new Array();
+        let finalarr = new Array();
+        let mergedArray = new Array();
+        console.log(selectedBill);
 
-            setselectedBill([])
-            setshow(false)
-            while (arr.length > 0) {
-                arr.pop();
-            }
-        } else {
-            infoNotification("Please add some bill for print RTGS")
+        selectedBill?.map((ele) => {
+
+            mergedArray.push(...ele.deductionAndAditions);
+        });
+        console.log(mergedArray);
+
+
+        var doc = document.getElementById('printAck').innerHTML
+        var originalContents = document.body.innerHTML;
+
+        var printWindow = window.open();
+        printWindow.document.write('</head><body >');
+        printWindow.document.write(doc);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        document.body.innerHTML = doc;
+        printWindow.print();
+        document.body.innerHTML = originalContents;
+
+        // var doc = new jsPDF("p", "pt", "a4");
+        // doc.html(document.querySelector("#printAck"), {
+        //     callback: function (pdf) {
+        //         pdf.save("ack.pdf")
+        //     }
+        // })
+        // PurchaseOrderPDF.generateAcknowledgment(selectedBill, mergedArray)
+
+        setselectedBill([])
+        setshow(false)
+        while (arr.length > 0) {
+            arr.pop();
+        }
+        navigate(`/${rootPath}/bills`)
+        window.location.reload()
+        // } else {
+        //     infoNotification("Please add some bill for print RTGS")
+        // }
+    }
+
+    // const handlePrint = useReactToPrint({
+    //     content: () => ref.current,
+    // });
+
+    const resetList = () => {
+        setselectedBill([])
+        setshow(false)
+        while (arr.length > 0) {
+            arr.pop();
         }
     }
 
@@ -203,9 +253,10 @@ export default function BillListForAcknoledge() {
                                 <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>EXPORT CSV</span></Button></Col> */}
                                 <Col md="4"><input type="text" className="openning-cash-control__amount--input" name="search" ref={ref} placeholder="Search..." /></Col>{""}
                                 <Col md="1"><Button variant="primary" size="sm" onClick={searchHandler}><span>ADD</span></Button></Col>{""}
-                                <Col md="1"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>RESET</span></Button></Col>{""}
+                                <Col md="1"><Button variant="primary" size="sm" onClick={resetList}><span>RESET</span></Button></Col>{""}
                                 <Col md="2"><Button variant="primary" size="sm" onClick={toggleHandler}><span>SELECTED BILL'S</span></Button></Col>{""}
                                 <Col md="2"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>PRINT ACKNOLEDGE</span></Button></Col>{""}
+
                             </Row>
                         </Col>
                     </Row>
@@ -264,7 +315,73 @@ export default function BillListForAcknoledge() {
             }
 
             {/* </AppContentBody> */}
+            {/* <PrintAckPage ref={ref} /> */}
 
+            <Container fluid style={{ border: "1px solid black", paddingLeft: 30, paddingRight: 30, display: "none" }} id="printAck">
+                <span><span style={{ fontSize: 60, fontWeight: "bold", color: "#3498DB", fontFamily: "sans-serif" }}>TANAS CREATION LLP </span><span>off:230419,231184</span></span>
+                <div style={{ fontSize: 20, fontWeight: "bold", color: "#A52A2A", fontFamily: "sans-serif" }}>Wholesale & Retail Cloth & General Merchants</div>
+                <hr style={{ color: "#7FB3D5" }} />
+                <hr style={{ color: "#7FB3D5" }} />
+                <div style={{ fontSize: 15, fontWeight: "bold", fontFamily: "sans-serif" }}>ABERDEEN BAZAAR,   PORT BLAIR- 744101,    ANADAMANS</div>
+                <div></div>
+                <div>
+                    <Row>
+                        <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-start" }}>Ref No.</Col>
+                        <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-end" }}>Date- {Date.now().toLocaleString()}</Col>
+                    </Row>
+                </div>
+                <div>To,</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s<hr /><hr style={{ marginTop: 70 }} /><hr style={{ marginTop: 70 }} /></div>
+                <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
+                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. 300 Rupees one hundred three only
+                    drawn on S.B.I Axis Bank bank name brunch against  PART / FULL payment of your bills as per following details.
+                </div>
+                <div >
+                    <Table striped bordered hover size="sm" style={{ width: "100%", border: "1px solid black" }}>
+                        <thead>
+                            <tr style={{ backgroundColor: "#FFFFFF" }}>
+                                <th style={{ marginLeft: '-20px', border: "1px black" }}>Bill#</th>
+                                <th style={{ marginLeft: '-20px', border: "1px black" }}>DISCOUNTS</th>
+                                <th style={{ marginLeft: '-20px', border: "1px black" }}>AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                selectedBill?.map(e => {
+                                    return (<tr style={{ backgroundColor: "#E0FFFF" }}>
+                                        <td>{e.name}</td>
+                                        <td>
+                                            <Table>
+
+                                                {
+                                                    e.deductionAndAditions.map(ele => {
+                                                        return (
+                                                            <tr>
+                                                                <td>{ele.reason}</td>
+                                                                <td>{ele.amount}</td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                }
+                                            </Table>
+                                        </td>
+                                        <td>{e.estimation.total}</td>
+                                    </tr>
+                                    )
+                                })
+                            }
+                        </tbody>
+                    </Table>
+                    <div>
+                        <Row>
+                            <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-start" }}>Kindly acknowledge the receipt</Col>
+                            <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-end" }}>Yours faithfully</Col>
+                        </Row>
+                    </div>
+                    <div></div>
+                    <div style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-start" }}>Thanking You</div>
+                </div>
+            </Container >
 
         </AppContentForm >
     )

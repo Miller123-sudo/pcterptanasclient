@@ -50,7 +50,7 @@ export default function StockUndervalued() {
         //         </>
         // },
         { headerName: 'PRODUCT', field: 'product', valueGetter: (params) => params.data?.product ? params.data?.product[0]?.name : "Not Available" },
-        { headerName: 'SO No.', field: 'SOname', valueGetter: (params) => params.data?.SOname ? params.data?.SOname : "Not Available" },
+        { headerName: 'INV No.', field: 'docname', valueGetter: (params) => params.data.docname ? params.data.docname : "Not Available" },
         { headerName: 'ORIGINAL SALE VALUE', field: 'originalSalesPrice', valueGetter: (params) => params.data.originalSalesPrice ? formatNumber(params.data?.originalSalesPrice) : "Not Available" },
         { headerName: 'SALE VALUE', field: 'unitPrice', valueGetter: (params) => params.data.unitPrice ? formatNumber(params.data?.unitPrice) : "Not Available" },
         { headerName: 'UNDERVALUED BY', field: 'undervaluedBy', valueGetter: (params) => params.data.undervaluedBy ? formatNumber(params.data?.undervaluedBy) : "Not Available" },
