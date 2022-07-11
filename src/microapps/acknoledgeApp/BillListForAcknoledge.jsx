@@ -12,6 +12,7 @@ import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
 import AppLoader from '../../pcterp/components/AppLoader';
 import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils';
+import swal from "sweetalert2"
 import { render } from '@testing-library/react';
 import jsPDF from "jspdf";
 import { PurchaseOrderPDF } from '../../helpers/PDF';
@@ -30,6 +31,8 @@ export default function BillListForAcknoledge() {
     const [state, setstate] = useState(null);
     const [selectedBill, setselectedBill] = useState([]);
     const [Total, setTotal] = useState(0);
+    const [address, setaddress] = useState("");
+    const [chequeNo, setchequeNo] = useState();
     const [show, setshow] = useState(false);
     const [array, setarray] = useState([]);
     const [gridApi, setGridApi] = useState(null);
@@ -117,29 +120,45 @@ export default function BillListForAcknoledge() {
         console.log(set);
     }
 
-    const toggleHandler = () => {
+    const toggleHandler = async () => {
         if (show) {
             infoNotification("Selected bills are shown. If you not selected any bill then refresh the page.")
         } else {
-            for (const element of set) {
+            swal.fire({
+                title: `Enter cheque number`,
+                text: "",
+                input: 'text',
+                showCancelButton: true
+            }).then(async (result) => {
+                if (result.value == undefined) {
+                    // infoNotification("please enter something in popup..")
+                } else {
+                    for (const element of set) {
+                        arr.push(element)
+                    }
 
-                arr.push(element)
-            }
+                    if (set.size == arr.length) {
+                        arr?.map((ele) => {
+                            total += ele.estimation.total
+                        });
 
-            if (set.size == arr.length) {
-                arr?.map((ele) => {
-                    total += ele.estimation.total
-                });
+                        //Get vendor address
+                        const res = await ApiService.get(`vendor/${arr[0]?.vendor._id}`)
+                        if (res.data.isSuccess) {
+                            console.log(res.data.document.address);
+                            setaddress(res.data.document.address)
+                            setchequeNo(result.value)
+                            setTotal(total)
+                            setselectedBill(arr)
+                            setshow(true)
+                        }
+                    }
+                }
+            })
 
-                setTotal(total)
-                setselectedBill(arr)
-                setshow(true)
-            }
         }
 
     }
-
-
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = () => {
@@ -329,9 +348,9 @@ export default function BillListForAcknoledge() {
                     </Row>
                 </div>
                 <div>To,</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr /><hr style={{ marginTop: 70 }} /><hr style={{ marginTop: 70 }} /></div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 70 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
-                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. {Total.toFixed(2)} Rupees {converter.toWords(Total)} only
+                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. {chequeNo} Dt. {new Date().toLocaleDateString()} for Rs. {Total.toFixed(2)} Rupees {converter.toWords(Total)} only
                     drawn on S.B.I Axis Bank bank name brunch against  PART / FULL payment of your bills as per following details.
                 </div>
                 <div style={{ marginTop: 10, marginBottom: 10 }}>

@@ -3,7 +3,7 @@ import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage, formatAddressByDefault, formatAddress } from '../../helpers/Utils'
+import { errorMessage, formatAddressByDefault, formatAddress, formatAddr } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -56,6 +56,9 @@ export default function Vendor() {
 
     const onSubmit = (formData) => {
         console.log(formData);
+        let address = formatAddr(formData)
+        formData.address = address
+
         return isAddMode
             ? createDocument(formData)
             : updateDocument(id, formData);
@@ -809,7 +812,7 @@ export default function Vendor() {
                             <Row>
 
                             </Row>
-                            {!isAddMode && <LogHistories documentPath={"vendor"} documentId={id} />}
+                            {/* {!isAddMode && <LogHistories documentPath={"vendor"} documentId={id} />} */}
                         </Container>
                     </Tab>}
                 </Tabs>

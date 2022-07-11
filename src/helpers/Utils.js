@@ -39,6 +39,21 @@ const formatAddress = (values) => {
   return v;
 };
 
+const formatAddr = (values) => {
+  // const values = getValues();
+  // console.log(values.addresses);
+  let v = "";
+
+  values.addresses?.map((e) => {
+    if (e.default) {
+      v = `${e.country},${e.addressee},${e.phone},${e.address1},${e.address2},${e.address3},${e.city},${e.state},${e.zip},
+      `;
+    }
+  });
+
+  return v;
+};
+
 const formatAddressByDefault = (values) => {
   // const values = getValues();
 
@@ -507,6 +522,7 @@ export {
   formatNumber,
   findInitLetters,
   formatAddress,
+  formatAddr,
   TanasUtils,
   errorMessage,
   checkBlank,
