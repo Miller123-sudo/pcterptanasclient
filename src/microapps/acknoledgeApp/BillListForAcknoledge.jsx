@@ -17,6 +17,7 @@ import jsPDF from "jspdf";
 import { PurchaseOrderPDF } from '../../helpers/PDF';
 import PrintAckPage from './PrintAckPage';
 import { useReactToPrint } from 'react-to-print';
+var converter = require("number-to-words");
 const moment = require('moment')
 
 export default function BillListForAcknoledge() {
@@ -121,66 +122,65 @@ export default function BillListForAcknoledge() {
             infoNotification("Selected bills are shown. If you not selected any bill then refresh the page.")
         } else {
             for (const element of set) {
+
                 arr.push(element)
             }
 
             if (set.size == arr.length) {
-                console.log(arr);
                 arr?.map((ele) => {
                     total += ele.estimation.total
                 });
-                console.log(total);
 
+                setTotal(total)
                 setselectedBill(arr)
                 setshow(true)
             }
         }
 
     }
-    console.log(total);
 
 
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = () => {
-        // if (selectedBill.length > 0) {
+        if (selectedBill.length > 0) {
 
-        let arr = new Array();
-        let finalarr = new Array();
-        let mergedArray = new Array();
-        console.log(selectedBill);
+            let arr = new Array();
+            let finalarr = new Array();
+            let mergedArray = new Array();
+            console.log(selectedBill);
 
-        selectedBill?.map((ele) => {
-            mergedArray.push(...ele.deductionAndAditions);
-        });
-        console.log(mergedArray);
+            selectedBill?.map((ele) => {
+                mergedArray.push(...ele.deductionAndAditions);
+            });
+            console.log(mergedArray);
 
-        var doc = document.getElementById('printAck').innerHTML
-        var originalContents = document.body.innerHTML;
+            var doc = document.getElementById('printAck').innerHTML
+            var originalContents = document.body.innerHTML;
 
-        var printWindow = window.open();
-        printWindow.document.write('</head><body >');
-        printWindow.document.write(doc);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
+            var printWindow = window.open();
+            printWindow.document.write('</head><body >');
+            printWindow.document.write(doc);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
 
-        document.body.innerHTML = doc;
-        printWindow.print();
-        document.body.innerHTML = originalContents;
+            document.body.innerHTML = doc;
+            printWindow.print();
+            document.body.innerHTML = originalContents;
 
-        // PurchaseOrderPDF.generateAcknowledgment(selectedBill, mergedArray)
+            // PurchaseOrderPDF.generateAcknowledgment(selectedBill, mergedArray)
 
-        setselectedBill([])
-        setshow(false)
-        while (arr.length > 0) {
-            arr.pop();
+            setselectedBill([])
+            setshow(false)
+            while (arr.length > 0) {
+                arr.pop();
+            }
+            navigate(`/${rootPath}/bills`)
+            window.location.reload()
+
+        } else {
+            infoNotification("Please add some bill for print RTGS")
         }
-        navigate(`/${rootPath}/bills`)
-        window.location.reload()
-
-        // } else {
-        //     infoNotification("Please add some bill for print RTGS")
-        // }
     }
 
     const resetList = () => {
@@ -301,7 +301,7 @@ export default function BillListForAcknoledge() {
                                     return (<tr>
                                         <td>{e.name}</td>
                                         <td>{e.referenceNumber}</td>
-                                        <td>{e.vendorArray[0].name}</td>
+                                        <td>{e.vendorArray[0]?.name}</td>
                                         <td>{e.paymentStatus}</td>
                                     </tr>
                                     )
@@ -331,39 +331,57 @@ export default function BillListForAcknoledge() {
                 <div>To,</div>
                 <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr /><hr style={{ marginTop: 70 }} /><hr style={{ marginTop: 70 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
-                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. {total} Rupees one hundred three only
+                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. {Total.toFixed(2)} Rupees {converter.toWords(Total)} only
                     drawn on S.B.I Axis Bank bank name brunch against  PART / FULL payment of your bills as per following details.
                 </div>
-                <div >
-                    <Table striped bordered hover size="sm" style={{ width: "100%", border: "1px solid black" }}>
+                <div style={{ marginTop: 10, marginBottom: 10 }}>
+                    <Table striped bordered hover size="sm" style={{ width: "100%", border: "1px solid black", borderCollapse: "collapse" }}>
                         <thead>
                             <tr style={{ backgroundColor: "#FFFFFF" }}>
-                                <th style={{ marginLeft: '-20px', border: "1px black" }}>Bill#</th>
-                                <th style={{ marginLeft: '-20px', border: "1px black" }}>DISCOUNTS</th>
-                                <th style={{ marginLeft: '-20px', border: "1px black" }}>AMOUNT</th>
+                                <th style={{ marginLeft: -50, border: "1px solid black" }}>Bill#</th>
+                                <th style={{ marginLeft: -50, border: "1px solid black" }}>TOTAL / DISCOUNTS</th>
+                                <th style={{ marginLeft: -50, border: "1px solid black" }}>AMOUNT</th>
                             </tr>
                         </thead>
                         <tbody>
                             {
                                 selectedBill?.map(e => {
                                     return (<tr style={{ backgroundColor: "#E0FFFF" }}>
-                                        <td>{e.name}</td>
-                                        <td>
+                                        <td style={{ border: "1px solid black" }}>{e.name}</td>
+                                        <td style={{ border: "1px solid black" }}>
+                                            <Table>
+                                                <tr>
+                                                    <td style={{ width: 100 }}>Gross Total:</td>
+                                                    <td>{Number(e.estimation.untaxedAmount).toFixed(2)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ width: 100 }}>Freight Cost:</td>
+                                                    <td>{Number(e.estimation.fredgeCost).toFixed(2)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ width: 100 }}>igst:</td>
+                                                    <td>{Number(e.estimation.tax).toFixed(2)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ width: 100 }}>Discount:</td>
+                                                    <td>{Number(e.estimation.discountCharge).toFixed(2)}</td>
+                                                </tr>
+                                            </Table>
                                             <Table>
 
                                                 {
                                                     e.deductionAndAditions.map(ele => {
                                                         return (
                                                             <tr>
-                                                                <td>{ele.reason}</td>
-                                                                <td>{ele.amount}</td>
+                                                                <td style={{ width: 100 }}>{ele.reason}:</td>
+                                                                <td>{Number(ele.amount).toFixed(2)}</td>
                                                             </tr>
                                                         )
                                                     })
                                                 }
                                             </Table>
                                         </td>
-                                        <td>{e.estimation.total}</td>
+                                        <td style={{ border: "1px solid black" }}>{e.estimation.total}</td>
                                     </tr>
                                     )
                                 })
