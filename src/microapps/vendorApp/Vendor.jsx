@@ -44,7 +44,8 @@ export default function Vendor() {
         defaultValues: {
             perPcsLess: 0,
             perMeterLess: 0,
-            boxLess: 0
+            boxLess: 0,
+            discountPercentLess: 0,
         }
     });
     const { append: addressAppend, remove: addressRemove, fields: addressFields, update: addressUpdate, insert: addressInsert } = useFieldArray({ control, name: "addresses" });
@@ -292,7 +293,11 @@ export default function Vendor() {
                                 // validationMessage: "Please enter the vendor name!"
                             }}
                             changeHandler={null}
-                            blurHandler={null}
+                            blurHandler={(e) => {
+                                if (!e.target.value) {
+                                    setValue("discountPercentLess", 0)
+                                }
+                            }}
                         />
 
                         <TextField
@@ -307,7 +312,11 @@ export default function Vendor() {
                                 // validationMessage: "Please enter the vendor name!"
                             }}
                             changeHandler={null}
-                            blurHandler={null}
+                            blurHandler={(e) => {
+                                if (!e.target.value) {
+                                    setValue("boxLess", 0)
+                                }
+                            }}
                         />
 
                         <TextField
@@ -322,7 +331,11 @@ export default function Vendor() {
                                 // validationMessage: "Please enter the vendor name!"
                             }}
                             changeHandler={null}
-                            blurHandler={null}
+                            blurHandler={(e) => {
+                                if (!e.target.value) {
+                                    setValue("perPcsLess", 0)
+                                }
+                            }}
                         />
 
                         <TextField
@@ -337,7 +350,11 @@ export default function Vendor() {
                                 // validationMessage: "Please enter the vendor name!"
                             }}
                             changeHandler={null}
-                            blurHandler={null}
+                            blurHandler={(e) => {
+                                if (!e.target.value) {
+                                    setValue("perMeterLess", 0)
+                                }
+                            }}
                         />
 
                         <TextField

@@ -28,12 +28,14 @@ export default function BillListForAcknoledge() {
     const [loderStatus, setLoderStatus] = useState(null);
     const [state, setstate] = useState(null);
     const [selectedBill, setselectedBill] = useState([]);
+    const [Total, setTotal] = useState(0);
     const [show, setshow] = useState(false);
     const [array, setarray] = useState([]);
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
     let set = new Set()
     let arr = new Array()
+    let total = 0
 
     const { register, control, reset, handleSubmit, getValues, setValue, watch, formState: { errors } } = useForm({
         defaultValues: {}
@@ -124,29 +126,34 @@ export default function BillListForAcknoledge() {
 
             if (set.size == arr.length) {
                 console.log(arr);
+                arr?.map((ele) => {
+                    total += ele.estimation.total
+                });
+                console.log(total);
+
                 setselectedBill(arr)
                 setshow(true)
             }
         }
 
     }
+    console.log(total);
 
 
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
     const printCHEQUE = () => {
         // if (selectedBill.length > 0) {
+
         let arr = new Array();
         let finalarr = new Array();
         let mergedArray = new Array();
         console.log(selectedBill);
 
         selectedBill?.map((ele) => {
-
             mergedArray.push(...ele.deductionAndAditions);
         });
         console.log(mergedArray);
-
 
         var doc = document.getElementById('printAck').innerHTML
         var originalContents = document.body.innerHTML;
@@ -161,12 +168,6 @@ export default function BillListForAcknoledge() {
         printWindow.print();
         document.body.innerHTML = originalContents;
 
-        // var doc = new jsPDF("p", "pt", "a4");
-        // doc.html(document.querySelector("#printAck"), {
-        //     callback: function (pdf) {
-        //         pdf.save("ack.pdf")
-        //     }
-        // })
         // PurchaseOrderPDF.generateAcknowledgment(selectedBill, mergedArray)
 
         setselectedBill([])
@@ -176,14 +177,11 @@ export default function BillListForAcknoledge() {
         }
         navigate(`/${rootPath}/bills`)
         window.location.reload()
+
         // } else {
         //     infoNotification("Please add some bill for print RTGS")
         // }
     }
-
-    // const handlePrint = useReactToPrint({
-    //     content: () => ref.current,
-    // });
 
     const resetList = () => {
         setselectedBill([])
@@ -220,7 +218,7 @@ export default function BillListForAcknoledge() {
         findAllDocument();
 
     }, []);
-
+    console.log(Total);
 
     if (loderStatus === "RUNNING") {
         return (
@@ -327,13 +325,13 @@ export default function BillListForAcknoledge() {
                 <div>
                     <Row>
                         <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-start" }}>Ref No.</Col>
-                        <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-end" }}>Date- {Date.now().toLocaleString()}</Col>
+                        <Col style={{ fontWeight: "bold", display: "flex", justifyContent: "flex-end" }}>Date- {new Date().toLocaleDateString()}</Col>
                     </Row>
                 </div>
                 <div>To,</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s<hr /><hr style={{ marginTop: 70 }} /><hr style={{ marginTop: 70 }} /></div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr /><hr style={{ marginTop: 70 }} /><hr style={{ marginTop: 70 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
-                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. 300 Rupees one hundred three only
+                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. 1234 Dt. {new Date().toLocaleDateString()} for Rs. {total} Rupees one hundred three only
                     drawn on S.B.I Axis Bank bank name brunch against  PART / FULL payment of your bills as per following details.
                 </div>
                 <div >
