@@ -1241,7 +1241,11 @@ export default function Invoice() {
                                                         index={index}
                                                         errors={errors}
                                                         changeHandler={null}
-                                                        blurHandler={null}
+                                                        blurHandler={(e) => {
+                                                            if (e.target.value) {
+                                                                updateOrderLines()
+                                                            }
+                                                        }}
                                                     />
                                                 </td>
 
