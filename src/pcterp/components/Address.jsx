@@ -145,7 +145,13 @@ export default function Address({
                                 </Form.Group>
                                 <Form.Group>
                                     <Form.Label>Country</Form.Label>
-                                    <Form.Select id="country" name="country" defaultValue='India' {...register("country", { required: true })} data-live-search="true"
+                                    <Form.Control
+                                        type="text"
+                                        id="addressee"
+                                        name="addressee"
+                                        {...register(`country`)}
+                                    ></Form.Control>
+                                    {/* <Form.Select id="country" name="country" defaultValue='India' {...register("country", { required: true })} data-live-search="true"
                                         onChange={async (e) => {
                                             console.log(e.target.value);
 
@@ -159,16 +165,22 @@ export default function Address({
                                         {country.map((element, index) => {
                                             return <option value={element.name} key={index}>{element.name}</option>
                                         })}
-                                    </Form.Select>
+                                    </Form.Select> */}
                                 </Form.Group>
                                 <Form.Group>
                                     <Form.Label>State</Form.Label>
-                                    <Form.Select id="state" name="state" defaultValue='West Bengal' {...register("state", { required: true })} data-live-search="true">
+                                    <Form.Control
+                                        type="text"
+                                        id="addressee"
+                                        name="addressee"
+                                        {...register(`state`)}
+                                    ></Form.Control>
+                                    {/* <Form.Select id="state" name="state" defaultValue='West Bengal' {...register("state", { required: true })} data-live-search="true">
                                         <option value={null}>Choose..</option>
                                         {states.map((element, index) => {
                                             return <option value={element.name} key={index}>{element.name}</option>
                                         })}
-                                    </Form.Select>
+                                    </Form.Select> */}
                                 </Form.Group>
                                 <Form.Group>
                                     <Form.Label>City</Form.Label>
@@ -250,11 +262,6 @@ export default function Address({
                                         id="addressee"
                                         name="addressee"
                                         {...register(`addressee`)}
-                                    // onBlur={() => {
-                                    //     const values = getValues();
-                                    //     const v = formatAddress(values)
-                                    //     setValue("address", v);
-                                    // }}
                                     >
                                     </Form.Control>
                                 </Form.Group>
