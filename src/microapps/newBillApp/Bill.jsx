@@ -316,7 +316,7 @@ export default function Invoice() {
                 discountCharge: !isAddMode ? state?.estimation.discountCharge : parseFloat((getValues("discountCharge"))),
                 tax: totalTax,
                 // total: parseFloat(cumulativeSum + totalTax)
-                total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
+                total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
             }
         }));
     }
@@ -1537,7 +1537,8 @@ export default function Invoice() {
                                                 !isAddMode ? <Col>{formatNumber(state?.estimation?.fredgeCost)}</Col> :
                                                     <input step="0.001" type="number" id='fredgeCost' name="fredgeCost" {...register(`fredgeCost`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
                                                         onBlur={(e) => {
-                                                            fredgeCostCalculation()
+                                                            // fredgeCostCalculation()
+                                                            updateOrderLines()
                                                             console.log(e.target.value);
                                                             if (e.target.value == "") {
                                                                 setValue("fredgeCost", 0)
@@ -1584,7 +1585,8 @@ export default function Invoice() {
                                                 !isAddMode ? <Col>{formatNumber(state?.estimation?.discountCharge)}</Col> :
                                                     <input step="0.001" type="number" id='discountCharge' name="discountCharge" {...register(`discountCharge`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
                                                         onBlur={(e) => {
-                                                            discountChargesCalculation()
+                                                            // discountChargesCalculation()
+                                                            updateOrderLines()
                                                             console.log(e.target.value);
                                                             if (e.target.value == "") {
                                                                 setValue("discountCharge", 0)
