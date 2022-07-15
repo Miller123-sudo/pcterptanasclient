@@ -48,10 +48,6 @@
             "nav_dropdown_name": "Reportings",
             "nav_dropdown_items": [
               {
-                "item_name": "Sales Analysis",
-                "item_navigation": "salesanalysis"
-              },
-              {
                 "item_name": "Stock Undervalued",
                 "item_navigation": "stockUndervalued"
               },

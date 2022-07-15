@@ -348,10 +348,10 @@ export default function BillListForAcknoledge() {
                     </Row>
                 </div>
                 <div>To,</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 70 }} /></div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 20 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
-                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. {chequeNo} Dt. {new Date().toLocaleDateString()} for Rs. {Total.toFixed(2)} Rupees {converter.toWords(Total)} only
-                    drawn on S.B.I Axis Bank bank name brunch against  PART / FULL payment of your bills as per following details.
+                <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. <b>{chequeNo}</b> Dt. {new Date().toLocaleDateString()} for Rs. <b>{Total.toFixed(2)}</b> Rupees <b>{converter.toWords(Total)}</b> only
+                    drawn on Axis Bank against  PART / FULL payment of your bills as per following details.
                 </div>
                 <div style={{ marginTop: 10, marginBottom: 10 }}>
                     <Table striped bordered hover size="sm" style={{ width: "100%", border: "1px solid black", borderCollapse: "collapse" }}>
@@ -366,23 +366,23 @@ export default function BillListForAcknoledge() {
                             {
                                 selectedBill?.map(e => {
                                     return (<tr style={{ backgroundColor: "#E0FFFF" }}>
-                                        <td style={{ border: "1px solid black" }}>{e.name}</td>
+                                        <td style={{ border: "1px solid black" }}>{e.referenceNumber.split("-")[e.referenceNumber.split("-").length - 1]}</td>
                                         <td style={{ border: "1px solid black" }}>
                                             <Table>
                                                 <tr>
-                                                    <td style={{ width: 100 }}>Gross Total:</td>
+                                                    <td style={{ minWidth: 200, wordWrap: "break-word" }}>Gross Total:</td>
                                                     <td>{Number(e.estimation.untaxedAmount).toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td style={{ width: 100 }}>Freight Cost:</td>
+                                                    <td style={{ minWidth: 200, wordWrap: "break-word" }}>Freight Cost:</td>
                                                     <td>{Number(e.estimation.fredgeCost).toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td style={{ width: 100 }}>igst:</td>
+                                                    <td style={{ minWidth: 200, wordWrap: "break-word" }}>igst:</td>
                                                     <td>{Number(e.estimation.tax).toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td style={{ width: 100 }}>Discount:</td>
+                                                    <td style={{ minWidth: 200, wordWrap: "break-word" }}>Discount:</td>
                                                     <td>{Number(e.estimation.discountCharge).toFixed(2)}</td>
                                                 </tr>
                                             </Table>
@@ -392,7 +392,7 @@ export default function BillListForAcknoledge() {
                                                     e.deductionAndAditions.map(ele => {
                                                         return (
                                                             <tr>
-                                                                <td style={{ width: 100 }}>{ele.reason}:</td>
+                                                                <td style={{ minWidth: 200, wordWrap: "break-word" }}>{ele.reason}:</td>
                                                                 <td>{Number(ele.amount).toFixed(2)}</td>
                                                             </tr>
                                                         )
@@ -400,7 +400,7 @@ export default function BillListForAcknoledge() {
                                                 }
                                             </Table>
                                         </td>
-                                        <td style={{ border: "1px solid black" }}>{e.estimation.total}</td>
+                                        <td style={{ border: "1px solid black" }}>&nbsp;&nbsp;&nbsp;&nbsp;{Number(e.estimation.total).toFixed(2)}</td>
                                     </tr>
                                     )
                                 })

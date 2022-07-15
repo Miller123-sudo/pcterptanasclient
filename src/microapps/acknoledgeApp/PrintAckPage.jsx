@@ -3,7 +3,7 @@ import { Col, Row, Button, Container, Breadcrumb, Table } from 'react-bootstrap'
 
 const PrintAckPage = React.forwardRef((props, ref) => {
     return (
-        <Container fluid style={{ border: "1px solid black", paddingLeft: 30, paddingRight: 30 }} id="printAck">
+        <Container fluid style={{ border: "1px solid black", paddingLeft: 30, paddingRight: 30, display: "none" }} id="printAck">
             <span><span style={{ fontSize: 60, fontWeight: "bold", color: "#3498DB", fontFamily: "sans-serif" }}>TANAS CREATION LLP </span><span>off:230419,231184</span></span>
             <div style={{ fontSize: 20, fontWeight: "bold", color: "#A52A2A", fontFamily: "sans-serif" }}>Wholesale & Retail Cloth & General Merchants</div>
             <hr style={{ color: "#7FB3D5" }} />

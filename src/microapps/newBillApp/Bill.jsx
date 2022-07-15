@@ -2,7 +2,7 @@
 import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
 import { BiEditAlt } from "react-icons/bi";
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form } from 'react-bootstrap'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form, Spinner } from 'react-bootstrap'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
@@ -32,6 +32,7 @@ export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
     const [isPOSelected, setIsPOSelected] = useState(false)
     const [addDiscount, setaddDiscount] = useState(false)
+    const [isspin, setisspin] = useState(false)
     const [showDiscountAmountAndSaveBtn, setshowDiscountAmountAndSaveBtn] = useState(false)
     const [vendorObj, setvendorObj] = useState()
     const [vendorData, setvendorData] = useState()
@@ -82,6 +83,8 @@ export default function Invoice() {
     // Functions
     console.log(rootPath);
     const onSubmit = async (formData) => {
+        setisspin(true)
+
         formData.estimation = state.estimation
         formData.discountPercentLess = vendorData?.discountPercentLess
         formData.boxLess = vendorData?.boxLess
@@ -162,6 +165,7 @@ export default function Invoice() {
                                 }
 
                             }
+                            setisspin(false)
                             navigate(`/${rootPath}/bills/list`);
                         }
                     }).catch(e => {
@@ -292,6 +296,7 @@ export default function Invoice() {
         console.log(disAndAdd);
         console.log(getValues("fredgeCost"));
         console.log(getValues("discountCharge"));
+
         products?.map((val) => {
             cumulativeSum += parseFloat(val?.subTotal);
             totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
@@ -304,7 +309,7 @@ export default function Invoice() {
 
         setValue("estimation", {
             untaxedAmount: cumulativeSum,
-            tax: totalTax,
+            tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition))),
             total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
         });
 
@@ -314,7 +319,7 @@ export default function Invoice() {
                 untaxedAmount: cumulativeSum,
                 fredgeCost: !isAddMode ? state?.estimation.fredgeCost : parseFloat((getValues("fredgeCost"))),
                 discountCharge: !isAddMode ? state?.estimation.discountCharge : parseFloat((getValues("discountCharge"))),
-                tax: totalTax,
+                tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition))),
                 // total: parseFloat(cumulativeSum + totalTax)
                 total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
             }
@@ -484,7 +489,16 @@ export default function Invoice() {
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <Button type="submit" variant="primary" size="sm">SAVE</Button>}{" "}
+                            {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <Button type="submit" variant="primary" size="sm" disabled={isspin ? true : false}>
+                                {isspin && <Spinner
+                                    as="span"
+                                    animation="grow"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden="true"
+                                />}
+                                SAVE
+                            </Button>}{" "}
                             {showDiscountAmountAndSaveBtn ? <Button type="submit" variant="primary" size="sm">SAVE</Button> : ""}{" "}
                             <Button as={Link} to={`/${rootPath}/bills/list`} variant="secondary" size="sm">DISCARD</Button>
                             {(!isAddMode && state?.isUsed) || state.status == "Posted" ? "" : <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
@@ -640,8 +654,8 @@ export default function Invoice() {
                                 label: "VENDOR",
                                 fieldId: "vendorArray",
                                 placeholder: "",
-                                // required: true,
-                                // validationMessage: "Please enter the department name!",
+                                required: true,
+                                validationMessage: "Please enter the vendor name!",
                                 selectRecordType: "vendor",
                                 createRecordType: "vendor",
                                 isVisible: isAddMode ? true : false,
@@ -815,7 +829,7 @@ export default function Invoice() {
                             />
                         } */}
 
-                        <TextField
+                        {/* <TextField
                             register={register}
                             errors={errors}
                             field={{
@@ -829,9 +843,9 @@ export default function Invoice() {
                             }}
                             changeHandler={null}
                             blurHandler={null}
-                        />
+                        /> */}
 
-                        {
+                        {/* {
                             (showDiscountAmountAndSaveBtn || !isAddMode) &&
                             <TextField
                                 register={register}
@@ -854,7 +868,7 @@ export default function Invoice() {
                                     }
                                 }}
                             />
-                        }
+                        } */}
 
                         {
                             state?.paymentStatus == "Partially Paid" &&
@@ -932,7 +946,9 @@ export default function Invoice() {
                                 <Table striped bordered hover size="sm">
                                     <thead>
                                         <tr>
-                                            {!isPOSelected && isAddMode && <th style={{ minWidth: "2rem" }}>#</th>}
+                                            {/* {!isPOSelected && isAddMode &&  */}
+                                            <th style={{ minWidth: "2rem" }}>#</th>
+                                            {/* } */}
                                             <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "20rem" }}>PRODUCT</th>
                                             <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
@@ -951,7 +967,8 @@ export default function Invoice() {
                                     <tbody>
                                         {invoiceLineFields.map((field, index) => {
                                             return (<tr key={field.id}>
-                                                {!isPOSelected && isAddMode && <td>
+                                                {/* {!isPOSelected && isAddMode &&  */}
+                                                <td>
                                                     <Button size="sm" variant="secondary"
                                                         onClick={() => {
                                                             // invoiceLineRemove(index)
@@ -972,7 +989,8 @@ export default function Invoice() {
                                                             })
                                                         }}
                                                     ><BsTrash /></Button>
-                                                </td>}
+                                                </td>
+                                                {/* } */}
 
                                                 <td style={{ textAlign: 'center', paddingTop: '8px' }}>{index + 1}</td>
                                                 <td>
@@ -1032,50 +1050,54 @@ export default function Invoice() {
                                                                     id="productArray"
                                                                     {...register(`invoiceLines.${index}.productArray`)}
                                                                     labelKey="name"
-                                                                    onChange={async (e, data) => {
+                                                                    onChange={(e) => {
                                                                         console.log(e);
-                                                                        if (!e.length) return
-                                                                        setValue("product", e[0]._id);
+                                                                        if (!e.length) {
+                                                                            setValue(`invoiceLines.${index}.productArray`, [{ id: "", name: '' }]);
+                                                                        } else {
+                                                                            setValue(`invoiceLines.${index}.productArray`, e);
 
+                                                                        }
                                                                     }}
                                                                     onBlur={async (e, data) => {
                                                                         console.log(e.target.value);
 
-                                                                        if (!e.target.value) return
+                                                                        // if (!e.target.value) return
+                                                                        if (e.target.value) {
+                                                                            ApiService.setHeader();
+                                                                            const res = await ApiService.get(`product/search/${e.target.value}`)
+                                                                            console.log(res?.data?.document[0]?._id);
 
-                                                                        ApiService.setHeader();
-                                                                        const res = await ApiService.get(`product/search/${e.target.value}`)
-                                                                        console.log(res?.data?.document[0]?._id);
+                                                                            // const productId = data?.okay[0]?._id;
+                                                                            const productId = res?.data?.document[0]?._id;
+                                                                            ApiService.get('product/' + productId).then(response => {
+                                                                                const productObj = response.data.document;
+                                                                                setlineSelectProductObj(productObj)
+                                                                                console.log(productObj);
 
-                                                                        // const productId = data?.okay[0]?._id;
-                                                                        const productId = res?.data?.document[0]?._id;
-                                                                        ApiService.get('product/' + productId).then(response => {
-                                                                            const productObj = response.data.document;
-                                                                            setlineSelectProductObj(productObj)
-                                                                            console.log(productObj);
+                                                                                let obj = new Object();
+                                                                                obj._id = productObj._id
+                                                                                obj.id = productObj.id
+                                                                                obj.name = productObj.name
 
-                                                                            let obj = new Object();
-                                                                            obj._id = productObj._id
-                                                                            obj.id = productObj.id
-                                                                            obj.name = productObj.name
-
-                                                                            if (productObj) {
-                                                                                setValue(`invoiceLines.${index}.product`, productObj._id);
-                                                                                setValue(`invoiceLines.${index}.productArray`, [obj]);
-                                                                                setValue(`invoiceLines.${index}.name`, productObj.name);
-                                                                                setValue(`invoiceLines.${index}.label`, productObj.description);
-                                                                                setValue(`invoiceLines.${index}.unitArray`, productObj.uom);
-                                                                                setValue(`invoiceLines.${index}.quantity`, 1);
-                                                                                setValue(`invoiceLines.${index}.taxes`, productObj?.igstRate);
-                                                                                setValue(`invoiceLines.${index}.unitPrice`, productObj.cost);
-                                                                                setValue(`invoiceLines.${index}.mrp`, productObj.salesPrice);
-                                                                                setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
-                                                                                setValue(`invoiceLines.${index}.accountArray`, productObj.assetAccount);
-                                                                                updateOrderLines(index)
-                                                                            }
-                                                                        }).catch(err => {
-                                                                            console.log("ERROR", err)
-                                                                        })
+                                                                                if (productObj) {
+                                                                                    setValue(`invoiceLines.${index}.product`, productObj._id);
+                                                                                    setValue(`invoiceLines.${index}.productArray`, [obj]);
+                                                                                    setValue(`invoiceLines.${index}.name`, productObj.name);
+                                                                                    setValue(`invoiceLines.${index}.label`, productObj.description);
+                                                                                    setValue(`invoiceLines.${index}.unitArray`, productObj.uom);
+                                                                                    setValue(`invoiceLines.${index}.quantity`, 1);
+                                                                                    setValue(`invoiceLines.${index}.taxes`, productObj?.igstRate);
+                                                                                    setValue(`invoiceLines.${index}.unitPrice`, productObj.cost);
+                                                                                    setValue(`invoiceLines.${index}.mrp`, productObj.salesPrice);
+                                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
+                                                                                    setValue(`invoiceLines.${index}.accountArray`, productObj.assetAccount);
+                                                                                    updateOrderLines(index)
+                                                                                }
+                                                                            }).catch(err => {
+                                                                                console.log("ERROR", err)
+                                                                            })
+                                                                        }
                                                                     }}
                                                                     options={Products}
                                                                     selected={value}
@@ -1294,7 +1316,8 @@ export default function Invoice() {
                                             </tr>
                                             )
                                         })}
-                                        {!isPOSelected && isAddMode && <tr>
+                                        {/* {!isPOSelected && isAddMode &&  */}
+                                        <tr>
                                             <td colSpan="14">
                                                 <Button size="sm" style={{ minWidth: "8rem" }} onClick={() => {
                                                     invoiceLineAppend({
@@ -1314,7 +1337,8 @@ export default function Invoice() {
                                                 }
                                                 >Add a item</Button>
                                             </td>
-                                        </tr>}
+                                        </tr>
+                                        {/* } */}
 
                                     </tbody>
                                 </Table>

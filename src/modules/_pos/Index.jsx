@@ -160,6 +160,7 @@ export default function POSRoutes() {
                 <Route path={`customer`} element={<Customer />} />
                 <Route path={`customer/:id`} element={<Customer />} />
                 <Route path={`payment`} element={<Payment />} />
+                <Route path={`paymentByCash`} element={<Payment />} />
                 <Route path={`cashinout`} element={<CashInOut />} />
                 <Route path={`shopsession`} element={<ShopSession />} />
                 <Route path={`salesreport`} element={<SalesReport />} />

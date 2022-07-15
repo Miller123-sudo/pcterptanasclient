@@ -1,7 +1,8 @@
 import './payment.css'
 import { AgGridReact } from 'ag-grid-react';
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Button, Col, Container, Row, Table } from 'react-bootstrap';
+import PrintAckPage from "./../../microapps/acknoledgeApp/PrintAckPage"
 // import { Link } from 'react-router-dom';
 import { BsBackspaceFill, BsPersonCircle, BsXCircle, BsCheckCircle, BsPaintBucket, BsArrowDownCircle } from 'react-icons/bs';
 import PaymentOptions from '../components/PaymentOptions';
@@ -15,6 +16,8 @@ import { UserContext } from '../../components/states/contexts/UserContext';
 import ApiService from '../../helpers/ApiServices';
 import { formatNumber, infoNotification } from '../../helpers/Utils';
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 require('jspdf-autotable');
 
 
@@ -47,6 +50,26 @@ export default function Payment() {
     const { id } = useParams();
     const isAddMode = !id;
     const [searchParams] = useSearchParams();
+
+    const componentRef = useRef();
+    // const handlePrint = useReactToPrint({
+    //     content: () => componentRef.current,
+    // });
+    const handlePrint = () => {
+        var doc = document.getElementById('print').innerHTML
+        var originalContents = document.body.innerHTML;
+
+        var printWindow = window.open();
+        printWindow.document.write('</head><body >');
+        printWindow.document.write(doc);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        document.body.innerHTML = doc;
+        printWindow.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload()
+    }
 
 
     const createPaymentOptions = (mode, amount) => {
@@ -179,7 +202,7 @@ export default function Payment() {
                 product.mrp = e.salesPrice;
                 product.subTotal = (e.quantity * e.salesPrice);
                 product.grossAmount = (e.quantity * e.salesPrice);
-                product.netAmount = ((e.quantity * e.salesPrice) - (((e.quantity * e.salesPrice) / 100) * e.discountPercentage));
+                product.netAmount = Math.round(((e.quantity * e.salesPrice) - (((e.quantity * e.salesPrice) / 100) * e.discountPercentage)));
                 product.salesCode = e.salesCode;
 
                 products.push(product);
@@ -192,7 +215,7 @@ export default function Payment() {
             estimation.cgst = (parseFloat((contextValues.taxes) / 2.00)).toFixed(2);
             estimation.sgst = (parseFloat((contextValues.taxes) / 2.00)).toFixed(2);
             estimation.igst = (parseFloat(contextValues.taxes)).toFixed(2);
-            estimation.total = parseFloat(parseFloat(contextValues.totalWithTaxes)).toFixed(2);
+            estimation.total = Math.round(parseFloat(parseFloat(contextValues.totalWithTaxes).toFixed(2)));
             data.estimation = estimation;
 
             // const a = (((parseFloat(contextValues.total) / 100.00) * 5.0) * 2.0);
@@ -669,7 +692,11 @@ export default function Payment() {
         console.log(newHeight)
         // if (data.products.length == array.length) {
 
-        newDoc.save('Receipt.pdf');
+        // newDoc.save('Receipt.pdf');
+        //This is a key for printing
+        doc.autoPrint();
+        doc.output('dataurlnewwindow');
+
         // updateCustomer({ name: 'Walk-In Customer' });
         // }
     }
@@ -777,6 +804,7 @@ export default function Payment() {
     }
 
     useEffect(async () => {
+        console.log(location?.pathname?.split('/')[location?.pathname?.split('/').length - 1]);
         clearAllPaymentOptions();
     }, []);
 
@@ -801,6 +829,7 @@ export default function Payment() {
                         <Col style={{ textAlign: 'center' }}>
                             <Button className="button" onClick={() => handleInvoice(state)}>Download Invoice</Button>
                             <Button className="button" onClick={() => handleReceipt(state)}>Print Receipt</Button>
+                            {/* <Button className="button" onClick={handlePrint}>Print Receipt</Button> */}
                         </Col>
                         <Col></Col>
                     </Row>
@@ -829,15 +858,15 @@ export default function Payment() {
                                 {paymentOptions?.map(paymentOption => <PaymentOptions paymentOption={paymentOption} onClick={handleSelectPaymentOption} selectedPaymentOption={selectedPaymentOption} handleDeletePaymentOptions={handleDeletePaymentOptions} />)}
                             </div>
                             <div className="paymentOptions__choice">
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Discount')}>Discount</div>
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Coupons')}>Coupons</div>
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Discount')}>Discount</div>}
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Coupons')}>Coupons</div>}
                             </div><br />
                             <div className="paymentOptions__choice">
                                 <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Cash')}>Cash</div>
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Card')}>Card</div>
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Cheque')}>Cheque</div>
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('UPI')}>UPI</div>
-                                <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Customer Account')}>Customer Account</div>
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Card')}>Card</div>}
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Cheque')}>Cheque</div>}
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('UPI')}>UPI</div>}
+                                {location?.pathname?.split('/')[location?.pathname?.split('/').length - 1] == "payment" && <div className="paymentOptions__list paymentOptions__list-2" onClick={() => handlePaymentOptions('Customer Account')}>Customer Account</div>}
                             </div>
                         </div>
                         <div className="paymentCalculate">
@@ -863,9 +892,9 @@ export default function Payment() {
                                 <div className="keyboard">
                                     <Keyboard
                                         layout={[
-                                            ['1', '2', '3', `${keypadSign}10`],
-                                            ['4', '5', '6', `${keypadSign}20`],
                                             ['7', '8', '9', `${keypadSign}30`],
+                                            ['4', '5', '6', `${keypadSign}20`],
+                                            ['1', '2', '3', `${keypadSign}10`],
                                             [`${keypadSign}`, '0', '.', 'backspace']
                                         ]}
                                         styleKey={{
@@ -986,5 +1015,24 @@ export default function Payment() {
                 </div>}
             </div>
         </Container>
+        <Container id="print" fluid style={{ border: "1px solid black", display: "none" }}>
+            <div>
+                <div style={{ dispaly: "flex", justifyContent: "center" }}>
+                    <h3><b>TANAS CREATION LLP</b></h3>
+                    <Row>Aberdeen Bazar, Aberdeen, Port Blair</Row>
+                    <Row>Andaman and Nicobar Islands 744101
+                    </Row>
+                </div>
+                <h2 style={{ marginTop: 20 }}><b>CASH/BILL</b></h2>
+
+                <Container>
+                    <Row>
+                        <Col>Employee: &nbsp;&nbsp;&nbsp;&nbsp;Biswajit Das</Col>
+                        <Col style={{ dispaly: "flex", justifyContent: "flex-end" }}>{new Date().toLocaleDateString()}</Col>
+                    </Row>
+                </Container>
+
+            </div>
+        </Container >
     </Container >;
 }

@@ -189,18 +189,30 @@ export default function Dashboard() {
                                     <div style={{ flex: 1, textAlign: 'right' }}>Taxes:</div>
                                     <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber(contextValues?.taxes)}</div>
                                 </div> */}
-                                <div className='amountCalculationList'>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>IGST:</div>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber(contextValues?.taxes)}</div>
-                                </div>
-                                <div className='amountCalculationList'>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>CGST:</div>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber((contextValues?.taxes) / 2.00)}</div>
-                                </div>
-                                <div className='amountCalculationList'>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>SGST:</div>
-                                    <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber((contextValues?.taxes) / 2.00)}</div>
-                                </div>
+                                {
+                                    !customer.isLocal && (
+
+                                        <div className='amountCalculationList'>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>IGST:</div>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber(contextValues?.taxes)}</div>
+                                        </div>
+                                    )
+                                }
+
+                                {
+                                    customer.name == "Walk-In Customer" || customer.isLocal && (<>
+                                        <div className='amountCalculationList'>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>UTGST:</div>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber((contextValues?.taxes) / 2.00)}</div>
+                                        </div>
+                                        <div className='amountCalculationList'>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>SGST:</div>
+                                            <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber((contextValues?.taxes) / 2.00)}</div>
+                                        </div>
+                                    </>
+                                    )
+                                }
+
                                 <div className='amountCalculationList'>
                                     <div style={{ flex: 1, textAlign: 'right' }}>Total:</div>
                                     <div style={{ flex: 1, textAlign: 'right' }}>{formatNumber(contextValues?.totalWithTaxes)}</div>
@@ -282,6 +294,40 @@ export default function Dashboard() {
                                                     linkTo: '/pos/customers?stack=dashboard'
                                                 }
                                             ]}
+                                        />
+                                    </div>
+                                    <div className="controlPad__input--payment">
+                                        <Keyboard
+                                            layout={[
+                                                ['Pay By Cash']
+                                            ]}
+                                            onKeyPress={e => {
+                                                console.log(e)
+
+                                                if (contextValues.cartItems.length == 0) {
+                                                    infoNotification("Please add an item to the cart first!")
+                                                    // alert("Please add an item to the cart first!")
+                                                } else {
+                                                    navigate('/pos/paymentByCash');
+                                                }
+                                            }}
+                                            icons={[{
+                                                fieldName: 'Pay By Cash',
+                                                icon: <BsFillArrowRightCircleFill />,
+                                                iconSize: '50'
+                                            }
+                                            ]}
+                                            styleKey={{
+                                                fieldName: 'Pay By Cash',
+                                                backgroundColor: '#fff',
+                                                color: '#009999'
+                                            }}
+                                        // link={[
+                                        //     {
+                                        //         fieldName: 'Pay',
+                                        //         linkTo: '/pos/payment'
+                                        //     }
+                                        // ]}
                                         />
                                     </div>
                                     <div className="controlPad__input--payment">

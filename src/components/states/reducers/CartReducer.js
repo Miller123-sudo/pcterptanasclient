@@ -10,11 +10,11 @@ const Storage = (cartItems) => {
 export const sumItems = (cartItems) => {
   if (!cartItems) return;
   Storage(cartItems);
-
-
+  console.log(cartItems);
 
   let itemCount = cartItems?.reduce(
-    (total, product) => (parseFloat(parseFloat(total) + parseFloat(product.quantity))).toFixed(2),
+    (total, product) =>
+      parseFloat(parseFloat(total) + parseFloat(product.quantity)),
     0
   );
   let total = cartItems
@@ -23,39 +23,43 @@ export const sumItems = (cartItems) => {
         total +
         (product.salesPrice * product.quantity -
           ((product.salesPrice * product.quantity) / 100) *
-          product.discountPercentage),
+            product.discountPercentage),
       0
     )
     .toFixed(2);
+
   let taxes = cartItems
     .reduce(
       (total, product) =>
-        total + (((product.salesPrice * product.quantity) / 100) * 5),
+        total + ((product.salesPrice * product.quantity) / 100) * 5,
       0
     )
     .toFixed(2);
   let totalDiscount = cartItems
     .reduce(
       (total, product) =>
-        total + ((product.salesPrice * product.quantity) / 100) *
-        product.discountPercentage,
+        total +
+        ((product.salesPrice * product.quantity) / 100) *
+          product.discountPercentage,
       0
     )
     .toFixed(2);
   let totalWithTaxes = cartItems
     .reduce(
       (total, product) =>
-        total +
-        (product.salesPrice * product.quantity -
-          ((product.salesPrice * product.quantity) / 100) *
-          product.discountPercentage +
-          ((product.salesPrice * product.quantity) / 100) * 5),
+        Math.round(
+          total +
+            (product.salesPrice * product.quantity -
+              ((product.salesPrice * product.quantity) / 100) *
+                product.discountPercentage +
+              ((product.salesPrice * product.quantity) / 100) * 5)
+        ),
       0
     )
     .toFixed(2);
+  console.log(totalWithTaxes);
+
   return { itemCount, total, taxes, totalDiscount, totalWithTaxes };
-
-
 };
 
 export const CartReducer = (state, action) => {
@@ -67,7 +71,7 @@ export const CartReducer = (state, action) => {
           quantity: action.payload.quantity ? action.payload.quantity : 1,
           discountPercentage: 0,
           refundQuantity: 0,
-          salesCode: 'N/A'
+          salesCode: "N/A",
         });
 
         state.cartItems[
@@ -93,11 +97,13 @@ export const CartReducer = (state, action) => {
     case "INCREASE":
       const incObj =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(state);
       console.log(incObj.quantity); // BEFORE
-      const updatedQuantity = parseFloat(parseFloat(incObj.quantity) + 1.00).toFixed(2);
+      const updatedQuantity = parseFloat(
+        parseFloat(incObj.quantity) + 1.0
+      ).toFixed(2);
       incObj.quantity = updatedQuantity;
       console.log(incObj.quantity); //AFTER
       incObj.onHand--;
@@ -110,7 +116,7 @@ export const CartReducer = (state, action) => {
     case "INCREASE_BY_VALUE":
       const incObj2 =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(incObj2?.quantity);
       incObj2.quantity = parseFloat(action.value).toFixed(2);
@@ -125,7 +131,7 @@ export const CartReducer = (state, action) => {
     case "INCREASE_BY_PRICE":
       const incObj3 =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(incObj3?.salesPrice);
       incObj3.salesPrice = parseFloat(action.value).toFixed(2);
@@ -140,7 +146,7 @@ export const CartReducer = (state, action) => {
     case "CHANGE_DISCOUNT_PERCENTAGE":
       const incObj4 =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(incObj4?.discountPercentage);
       incObj4.discountPercentage = parseFloat(action.value).toFixed(2);
@@ -155,7 +161,7 @@ export const CartReducer = (state, action) => {
     case "CHANGE_REFUND_QUANTITY":
       const incObj5 =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(incObj5?.refundQuantity);
       incObj5.refundQuantity = parseInt(action.value);
@@ -170,7 +176,7 @@ export const CartReducer = (state, action) => {
     case "SET_SALES_CODE":
       const incObj6 =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(incObj6?.salesCode);
       incObj6.salesCode = action.value;
@@ -185,7 +191,7 @@ export const CartReducer = (state, action) => {
     case "ADDQUANTITY":
       const addObj =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       console.log(action.quantity);
       addObj.quantity = addObj.quantity + action.quantity;
@@ -198,7 +204,7 @@ export const CartReducer = (state, action) => {
     case "DECREASE":
       const decObj =
         state.cartItems[
-        state.cartItems.findIndex((item) => item._id === action.payload._id)
+          state.cartItems.findIndex((item) => item._id === action.payload._id)
         ];
       decObj.quantity--;
       decObj.onHand++;

@@ -1581,7 +1581,6 @@ export default function Purchase() {
                                                                 }
                                                             }).catch(err => {
                                                                 /** If there is no product with that barcode show notification and set barcode and product field to blank */
-
                                                                 infoNotification("No product with that barcode")
                                                                 setValue(`products.${index}.barcode`, "")
                                                                 setValue(`products.${index}.product`, [{ name: "" }])

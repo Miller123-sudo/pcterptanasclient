@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from 'react'
 import { Button, ButtonGroup, Tabs, Tab, Col, Container, Form, Row, Card, Table, DropdownButton, Dropdown, Breadcrumb, FormSelect } from 'react-bootstrap';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 // import { useHistory, useParams } from 'react-router';
 // import { Link, useLocation } from 'react-router-dom';
 import { PropagateLoader } from "react-spinners";
@@ -14,6 +14,9 @@ import PCTProduct from '../../components/form/searchAndSelect/PCTProduct';
 import OrdersGeneralLedger from './OrdersGeneralLedger';
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import AppLoader from '../../pcterp/components/AppLoader';
+import TextField from '../../pcterp/field/TextField';
+import DateField from '../../pcterp/field/DateField';
+import { Typeahead } from 'react-bootstrap-typeahead';
 // import PCTEmployee from '../../components/form/searchAndSelect/PCTEmployee';
 // import PCTProduct from '../../components/form/searchAndSelect/PCTProduct';
 // import ApiService from '../../../helpers/ApiServices';
@@ -25,6 +28,7 @@ export default function Order() {
     const [tabKey, setTabKey] = useState('products');
     const [ordersGLData, setOrdersGLData] = useState([])
     const [isShippingTick, setIsShippingTick] = useState([]);
+    const [Products, setProducts] = useState([]);
     const [isShippingTickAdd, setIsShippingTickAdd] = useState(false);
     const [customerList, setCustomerList] = useState([]);
     const [employeeList, setEmployeeList] = useState([]);
@@ -96,12 +100,16 @@ export default function Order() {
 
     }
 
-    useEffect(() => {
+    useEffect(async () => {
         setLoderStatus("RUNNING");
 
         if (isAddMode) {
             setLoderStatus("SUCCESS");
         }
+
+        const response = await ApiService.get(`/product/list`);
+        console.log(response.data.documents)
+        setProducts(response.data.documents)
 
         ApiService.get(`/customer`).then(response => {
             console.log(response.data)
@@ -195,7 +203,7 @@ export default function Order() {
                 <Container className="pct-app-content-body p-0 m-0 mt-2" fluid>
                     <Container fluid>
                         <Row>
-                            <Form.Group as={Col} md="4" className="mb-2">
+                            {/* <Form.Group as={Col} md="4" className="mb-2">
                                 <Form.Label className="m-0">Cash Sale ID</Form.Label>
                                 <Form.Control
                                     type="text"
@@ -204,7 +212,24 @@ export default function Order() {
                                     disabled
                                     {...register("cashSaleId")}
                                 />
-                            </Form.Group>
+                            </Form.Group> */}
+
+                            <TextField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    disabled: false,
+                                    description: "Cash Sale ID",
+                                    label: "Cash Sale ID",
+                                    fieldId: "cashSaleId",
+                                    placeholder: "",
+                                    // required: true,
+                                    // validationMessage: "Please enter the Product name!"
+                                }}
+                                changeHandler={null}
+                                blurHandler={null}
+                            />
+
                             <Form.Group as={Col} md="4" className="mb-2">
                                 <Form.Label className="m-0">Customer</Form.Label>
                                 <PCTCustomer control={control} name={"customer"} />
@@ -215,7 +240,7 @@ export default function Order() {
                             </Form.Group>
                         </Row>
                         <Row>
-                            <Form.Group as={Col} md="4" className="mb-2">
+                            {/* <Form.Group as={Col} md="4" className="mb-2">
                                 <Form.Label className="m-0">Date</Form.Label>
                                 <Form.Control
                                     type="date"
@@ -223,7 +248,19 @@ export default function Order() {
                                     name="date"
                                     {...register("date")}
                                 />
-                            </Form.Group>
+                            </Form.Group> */}
+                            <DateField
+                                register={register}
+                                errors={errors}
+                                field={{
+                                    description: "",
+                                    label: "DATE",
+                                    fieldId: "date",
+                                    placeholder: "",
+                                }}
+                                changeHandler={null}
+                                blurHandler={null}
+                            />
                         </Row>
                     </Container>
                     <Container fluid>
@@ -250,7 +287,7 @@ export default function Order() {
                                                     return (<tr key={field.id}>
                                                         <td>
                                                             <Form.Group>
-                                                                <PCTProduct control={control} name={"product"} {...register(`products.${index}.product`, { required: true })}
+                                                                <PCTProduct control={control} name={"product"} {...register(`products.${index}.product`, { required: true })} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
                                                                     onBlur={async (e) => {
                                                                         console.log(e.target.value);
                                                                         if (e.target.value) {
@@ -268,10 +305,58 @@ export default function Order() {
                                                                     }} />
 
                                                             </Form.Group>
+                                                            {/* <Controller
+                                                                name={`products.${index}.product`}
+                                                                control={control}
+                                                                render={({ field: { onChange, value }, fieldState: { error } }) => {
+
+                                                                    return (
+                                                                        <Typeahead size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
+
+                                                                            id="product"
+                                                                            {...register(`products.${index}.product`)}
+                                                                            labelKey="name"
+                                                                            onChange={null}
+                                                                            onBlur={async (e, data) => {
+                                                                                console.log(e.target.value);
+                                                                                if (e.target.value) {
+                                                                                    const product = await ApiService.get(`product/search/${e.target.value}`);
+                                                                                    console.log(product.data.document);
+                                                                                    const productObj = product.data.document;
+
+                                                                                    let obj = new Object();
+                                                                                    obj._id = productObj?._id
+                                                                                    obj.id = productObj?.id
+                                                                                    obj.name = productObj?.name
+
+                                                                                    if (productObj) {
+                                                                                        setValue(`products.${index}.product`, [obj]);
+                                                                                        setValue(`products.${index}.name`, product.data.document[0]?.name);
+                                                                                        setValue(`products.${index}.quantity`, 1);
+                                                                                        setValue(`products.${index}.description`, product.data.document[0]?.description);
+                                                                                        setValue(`products.${index}.size`, product.data.document[0]?.size);
+                                                                                        setValue(`products.${index}.unitRate`, product.data.document[0]?.salesPrice);
+                                                                                        setValue(`products.${index}.subTotal`, (product.data.document[0]?.salesPrice * 1));
+                                                                                        setValue(`products.${index}.mrp`, product.data.document[0]?.salesPrice);
+                                                                                    }
+                                                                                }
+                                                                            }}
+                                                                            options={Products}
+                                                                            selected={value}
+                                                                            positionFixed={true}
+                                                                            flip={true}
+                                                                            clearButton
+
+                                                                        />
+                                                                    )
+                                                                }
+                                                                }
+                                                            /> */}
+
                                                         </td>
                                                         <td>
                                                             <Form.Group >
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     type="text"
                                                                     id="description"
                                                                     name="description"
@@ -280,7 +365,7 @@ export default function Order() {
                                                         </td>
                                                         <td>
                                                             <Form.Group >
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     type="text"
                                                                     id="size"
                                                                     name="size"
@@ -289,7 +374,7 @@ export default function Order() {
                                                         </td>
                                                         <td>
                                                             <Form.Group >
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     // type="number"
                                                                     id="quantity"
                                                                     name="quantity"
@@ -304,7 +389,7 @@ export default function Order() {
                                                         </td>
                                                         <td>
                                                             <Form.Group>
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     // type="number"
                                                                     id="unitRate"
                                                                     name="unitRate"
@@ -320,7 +405,7 @@ export default function Order() {
                                                         </td>
                                                         <td>
                                                             <Form.Group>
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     // type="number"
                                                                     id="subTotal"
                                                                     name="subTotal"
@@ -331,7 +416,7 @@ export default function Order() {
                                                         </td>
                                                         <td>
                                                             <Form.Group>
-                                                                <Form.Control
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     // type="number"
                                                                     id="mrp"
                                                                     name="mrp"

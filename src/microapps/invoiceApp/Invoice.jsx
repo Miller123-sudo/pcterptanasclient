@@ -1,11 +1,11 @@
 
 import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card } from 'react-bootstrap'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Spinner } from 'react-bootstrap'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
-import { errorMessage, formatNumber } from '../../helpers/Utils'
+import { errorMessage, formatNumber, infoNotification } from '../../helpers/Utils'
 import AppContentBody from '../../pcterp/builder/AppContentBody'
 import AppContentForm from '../../pcterp/builder/AppContentForm'
 import AppContentHeader from '../../pcterp/builder/AppContentHeader'
@@ -22,9 +22,12 @@ import LineTextField from '../../pcterp/field/LineTextField';
 import LineNumberField from '../../pcterp/field/LineNumberField';
 import LineDecimal128Field from '../../pcterp/field/LineDecimal128Field';
 import { PurchaseOrderPDF, SalesOrderPDF } from '../../helpers/PDF';
+import InputGroupWithButton from '../../pcterp/field/InputGroupWithButton';
 
 export default function Invoice() {
     const [loderStatus, setLoderStatus] = useState(null);
+    const [isspin, setisspin] = useState(false)
+    const [customerData, setcustomerData] = useState()
     const [state, setState] = useState({
         estimation: {
             fredgeCost: 0.00,
@@ -51,6 +54,7 @@ export default function Invoice() {
     // Functions
 
     const onSubmit = (formData) => {
+        setisspin(true)
         console.log(formData);
         return isAddMode
             ? createDocument(formData)
@@ -64,6 +68,7 @@ export default function Invoice() {
             ApiService.setHeader();
             return ApiService.post('/invoice/createStandaloneInv', data).then(response => {
                 if (response.data.isSuccess) {
+                    setisspin(false)
                     navigate(`/${rootPath}/invoices/list`)
                 }
             }).catch(e => {
@@ -197,6 +202,17 @@ export default function Invoice() {
         }))
     }
 
+    const formatLineProductField = (data) => {
+        let array = new Array()
+        let obj = new Object()
+
+        obj._id = data._id
+        obj.name = data.name
+        array.push(obj)
+
+        return array
+    }
+
     useEffect(() => {
 
         if (!isAddMode) {
@@ -231,7 +247,16 @@ export default function Invoice() {
                 </Row>
                 <Row>
                     <Col>
-                        {isAddMode || state?.status == "Draft" ? <Button type="submit" variant="primary" size="sm">SAVE</Button> : ""}
+                        {isAddMode || state?.status == "Draft" ? <Button type="submit" variant="primary" size="sm" disabled={isspin ? true : false}>
+                            {isspin && <Spinner
+                                as="span"
+                                animation="grow"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                            />}
+                            SAVE
+                        </Button> : ""}
                         {/* <Button as={Link} to={state?.attachedPO ? `/accounting/customerinvoices/${state?.attachedPO?._id}` : `/${rootPath}/customerinvoices`} variant="light" size="sm">DISCARD</Button> */}
                         <Button as={Link} to={rootPath == "sales" ? `/${rootPath}/invoices` : `/${rootPath}/customerinvoices`} variant="light" size="sm">DISCARD</Button>
                         {!isAddMode && state?.status === "Draft" && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="Actions">
@@ -316,7 +341,7 @@ export default function Invoice() {
                             blurHandler={null}
                         /> */}
 
-                        <SelectField
+                        {/* <SelectField
                             control={control}
                             errors={errors}
                             field={{
@@ -330,6 +355,37 @@ export default function Invoice() {
 
                             }}
                             changeHandler={null}
+                            blurHandler={null}
+                        /> */}
+
+                        <InputGroupWithButton
+                            control={control}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "CUSTOMER",
+                                fieldId: "customer",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the department name!",
+                                selectRecordType: "customer",
+                                createRecordType: "customer",
+                                isVisible: isAddMode ? true : false,
+                                disabled: isAddMode ? false : true
+                            }}
+                            changeHandler={async (e, data) => {
+                                console.log(data.value);
+                                console.log(e);
+
+                                const customer = await ApiService.get("customer/" + data.value._id)
+                                if (customer.data.isSuccess) {
+                                    console.log(customer.data.document);
+                                    setcustomerData(customer.data.document)
+
+                                } else {
+                                    return
+                                }
+                            }}
                             blurHandler={null}
                         />
 
@@ -410,6 +466,7 @@ export default function Invoice() {
                                         <tr>
                                             <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "2rem" }}>#</th>
+                                            <th style={{ minWidth: "20rem" }}>Barcode</th>
                                             <th style={{ minWidth: "20rem" }}>Product</th>
                                             <th style={{ minWidth: "16rem" }}>Description</th>
                                             <th style={{ minWidth: "16rem" }}>UoM</th>
@@ -435,6 +492,66 @@ export default function Invoice() {
                                                 </td>
                                                 <td style={{ textAlign: 'center', paddingTop: '8px' }}>{index + 1}</td>
                                                 <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"invoiceLines"}
+                                                        field={{
+                                                            fieldId: "barcode",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={(e, data) => {
+                                                            setValue(`invoiceLines.${index}.name`, "");
+                                                            setValue(`invoiceLines.${index}.product`, [{ _id: "", name: "" }]);
+                                                            setValue(`invoiceLines.${index}.description`, "");
+                                                            setValue(`invoiceLines.${index}.unit`, [{ _id: "", name: "" }]);
+                                                            setValue(`invoiceLines.${index}.quantity`, 0);
+                                                            setValue(`invoiceLines.${index}.taxes`, "");
+                                                            setValue(`invoiceLines.${index}.unitPrice`, 0.00);
+                                                            setValue(`invoiceLines.${index}.mrp`, "");
+                                                            setValue(`invoiceLines.${index}.subTotal`, "");
+                                                            setValue(`invoiceLines.${index}.account`, "");
+                                                            setValue(`invoiceLines.${index}.index`, "");
+                                                            updateOrderLines(index)
+                                                        }}
+                                                        blurHandler={async (e, data) => {
+                                                            if (!e.target.value) return
+
+                                                            ApiService.setHeader();
+                                                            ApiService.get('product/barcode/' + e.target.value).then(response => {
+                                                                const productObj = response.data.document;
+                                                                console.log(productObj);
+
+                                                                // format value for line product field
+                                                                const prod = formatLineProductField(productObj)
+
+                                                                if (productObj) {
+                                                                    setValue(`invoiceLines.${index}.name`, productObj.name);
+                                                                    setValue(`invoiceLines.${index}.product`, prod);
+                                                                    setValue(`invoiceLines.${index}.description`, productObj.description);
+                                                                    setValue(`invoiceLines.${index}.unit`, productObj.uom);
+                                                                    setValue(`invoiceLines.${index}.quantity`, 1);
+                                                                    setValue(`invoiceLines.${index}.taxes`, productObj?.igstRate);
+                                                                    setValue(`invoiceLines.${index}.unitPrice`, productObj.cost);
+                                                                    // setValue(`invoiceLines.${index}.mrp`, productObj.salesPrice);
+                                                                    setValue(`invoiceLines.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
+                                                                    setValue(`invoiceLines.${index}.account`, productObj.assetAccount);
+                                                                    setValue(`invoiceLines.${index}.index`, index);
+                                                                    updateOrderLines(index)
+                                                                } else {
+                                                                }
+                                                            }).catch(err => {
+                                                                /** If there is no product with that barcode show notification and set barcode and product field to blank */
+                                                                infoNotification("No product with that barcode")
+                                                                setValue(`invoiceLines.${index}.barcode`, "")
+                                                                setValue(`invoiceLines.${index}.product`, [{ name: "" }])
+                                                                console.log("ERROR", err)
+                                                            })
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td>
                                                     <LineSelectField
                                                         control={control}
                                                         model={"invoiceLines"}
@@ -451,8 +568,9 @@ export default function Invoice() {
                                                         blurHandler={async (e, rest) => {
                                                             console.log(e);
                                                             console.log(rest);
+                                                            if (rest.okay == null) return
 
-                                                            if (rest.okay[0]._id) {
+                                                            if (rest.okay[0]?._id) {
                                                                 let quantity = getValues(`invoiceLines.${index}.quantity`);
                                                                 let unitPrice = getValues(`invoiceLines.${index}.unitPrice`);
                                                                 console.log(getValues(`invoiceLines.${index}.unitPrice`));
@@ -470,6 +588,8 @@ export default function Invoice() {
                                                                     // Calculate amount
                                                                     updateOrderLines(index)
                                                                 }
+                                                            } else {
+                                                                return
                                                             }
                                                         }}
 
@@ -792,22 +912,26 @@ export default function Invoice() {
                                         </Col>
                                     </Row> */}
 
-                                    <div>
-                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                            <Col>UTGST:</Col>
-                                            <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
-                                        </Row>
-                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                            <Col>SGST:</Col>
-                                            <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
-                                        </Row>
-                                    </div>
-                                    <div>
-                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
-                                            <Col>IGST:</Col>
-                                            <Col>{formatNumber(state?.estimation?.tax)}</Col>
-                                        </Row>
-                                    </div>
+                                    {
+                                        customerData?.isLocal ?
+                                            <div>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>UTGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                                </Row>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>SGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax / 2)}</Col>
+                                                </Row>
+                                            </div>
+                                            :
+                                            <div>
+                                                <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                    <Col>IGST:</Col>
+                                                    <Col>{formatNumber(state?.estimation?.tax)}</Col>
+                                                </Row>
+                                            </div>
+                                    }
 
                                     <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
                                         <Col>NET AMOUNT:</Col>

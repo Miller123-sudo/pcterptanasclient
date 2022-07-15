@@ -17,6 +17,7 @@ import AppLoader from '../../pcterp/components/AppLoader'
 import Address from '../../pcterp/components/Address'
 import { country, formatAddress, formatAddressByDefault } from '../../helpers/Utils';
 import { BsBoxArrowInUpRight, BsTrash } from 'react-icons/bs'
+import CheckboxField from '../../pcterp/field/CheckboxField'
 
 export default function Customer() {
     const [loderStatus, setLoderStatus] = useState(null);
@@ -43,9 +44,8 @@ export default function Customer() {
     const { append: addressAppend, remove: addressRemove, fields: addressFields, update: addressUpdate, insert: addressInsert } = useFieldArray({ control, name: "addresses" });
 
 
-
+    console.log(location?.pathname);
     // Functions
-
     const onSubmit = (formData) => {
 
         let addresses = [];
@@ -260,6 +260,21 @@ export default function Customer() {
                                 placeholder: "",
                                 // required: true,
                                 // validationMessage: "Please enter the address name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <CheckboxField
+                            register={register}
+                            errors={errors}
+                            field={{
+                                description: "",
+                                label: "IS LOCAL",
+                                fieldId: "isLocal",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Account Number!"
                             }}
                             changeHandler={null}
                             blurHandler={null}

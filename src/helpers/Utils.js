@@ -191,7 +191,7 @@ const errorMessage = (err, dispatch) => {
     dispatch({ type: "LOGOUT_USER" });
   } else {
     notification.error({
-      message: "Error",
+      message: "",
       description: err.response?.data.message,
       style: {
         color: "red",

@@ -222,6 +222,7 @@ export default function POSModule() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/payment/*" element={<Payment />} />
+          <Route path="/paymentByCash/*" element={<Payment />} />
           <Route path="/cashinout/*" element={<CashInOut />} />
           <Route path="/orders/*" element={<CashsaleApp />} />
           <Route path="/customers/*" element={<CustomerPOSApp />} />
