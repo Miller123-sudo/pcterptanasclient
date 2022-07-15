@@ -694,8 +694,8 @@ export default function Payment() {
 
         // newDoc.save('Receipt.pdf');
         //This is a key for printing
-        doc.autoPrint();
-        doc.output('dataurlnewwindow');
+        newDoc.autoPrint();
+        newDoc.output('dataurlnewwindow');
 
         // updateCustomer({ name: 'Walk-In Customer' });
         // }
