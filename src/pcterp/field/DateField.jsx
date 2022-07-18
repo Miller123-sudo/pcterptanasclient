@@ -1,8 +1,10 @@
+import moment from 'moment';
 import React from 'react';
 import { Form, Col, OverlayTrigger, Popover } from 'react-bootstrap';
 
 export default function DateField({ field, index, errors, register, changeHandler, blurHandler }) {
-    console.log("Key", index);
+
+    console.log("date", moment(new Date()).toISOString());
     return (
         <Form.Group key={index} as={Col} md="4" className="mb-2">
             <OverlayTrigger trigger="click" rootClose placement="auto" overlay={<Popover id="popover-basic">
@@ -15,7 +17,8 @@ export default function DateField({ field, index, errors, register, changeHandle
             </OverlayTrigger>
 
             <Form.Control size='sm' style={{ maxWidth: '400px' }}
-                defaultValue={new Date().toISOString().split("T")[0]}
+                // defaultValue={new Date().toISOString().split("T")[0]}
+                defaultValue={moment(new Date()).format("MM/DD/YYYY")}
                 type="date"
                 id={field?.fieldId}
                 name={field?.fieldId}

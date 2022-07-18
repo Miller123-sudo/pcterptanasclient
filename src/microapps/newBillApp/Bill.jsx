@@ -91,7 +91,7 @@ export default function Invoice() {
         formData.perPcsLess = vendorData?.perPcsLess
         formData.perMeterLess = vendorData?.perMeterLess
 
-        console.log(formData);
+        console.log(formData.billDate);
 
         // await ApiService.patch("newBill/findDuplicatereferenceNumber", { referenceNumber: getValues("referenceNumber") }).then(res => {
         //     console.log(res);
@@ -309,7 +309,7 @@ export default function Invoice() {
 
         setValue("estimation", {
             untaxedAmount: cumulativeSum,
-            tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition))),
+            tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0)),
             total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? getValues("fredgeCost") : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
         });
 
@@ -319,7 +319,7 @@ export default function Invoice() {
                 untaxedAmount: cumulativeSum,
                 fredgeCost: !isAddMode ? state?.estimation.fredgeCost : parseFloat((getValues("fredgeCost"))),
                 discountCharge: !isAddMode ? state?.estimation.discountCharge : parseFloat((getValues("discountCharge"))),
-                tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition))),
+                tax: totalTax + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0)),
                 // total: parseFloat(cumulativeSum + totalTax)
                 total: parseFloat(cumulativeSum + totalTax) + parseFloat((getValues("fredgeCost") ? parseFloat(getValues("fredgeCost")) : 0) + parseFloat(getValues("discountCharge") ? getValues("discountCharge") : 0) + parseFloat(discountOraddition == 0 ? 0 : parseFloat(discountOraddition)))
             }
