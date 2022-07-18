@@ -149,6 +149,7 @@ export default function Dashboard() {
                                 <div style={{ flex: 3, textAlign: 'center', fontWeight: 600 }}>ITEM</div>
                                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>RATE</div>
                                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>QTY.</div>
+                                <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>TAX(%)</div>
                                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>DISC.(%)</div>
                                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>AMOUNT</div>
                                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>CODE</div>

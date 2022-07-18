@@ -12,6 +12,7 @@ export default function CartList({ cartItem, onClick, selectedItem, handleDelete
             <div className="cartItem__list itemName" style={{ flex: 4 }}>{cartItem?.name}</div>
             <div className="cartItem__list unitRate" style={{ flex: 1 }}>{formatNumber(cartItem?.salesPrice)}</div>
             <div className="cartItem__list quantity" style={{ flex: 1 }}>{cartItem?.quantity}</div>
+            <div className="cartItem__list quantity" style={{ flex: 1 }}>{cartItem?.igstRate}</div>
             <div className="cartItem__list quantity" style={{ flex: 1 }}>{cartItem?.discountPercentage}</div>
             <div className="cartItem__list amount" style={{ flex: 1 }}>{formatNumber((cartItem?.quantity * cartItem?.salesPrice) - (((cartItem?.quantity * cartItem?.salesPrice) / 100) * cartItem?.discountPercentage))}</div>
             <div className="cartItem__list quantity" style={{ flex: 1 }}>{cartItem?.salesCode}</div>

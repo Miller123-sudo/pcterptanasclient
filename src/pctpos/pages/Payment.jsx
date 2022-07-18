@@ -200,6 +200,7 @@ export default function Payment() {
                 product.unitRate = e.salesPrice;
                 product.discountPercentage = e.discountPercentage;
                 product.mrp = e.salesPrice;
+                product.taxes = e.igstRate;
                 product.subTotal = (e.quantity * e.salesPrice);
                 product.grossAmount = (e.quantity * e.salesPrice);
                 product.netAmount = Math.round(((e.quantity * e.salesPrice) - (((e.quantity * e.salesPrice) / 100) * e.discountPercentage)));

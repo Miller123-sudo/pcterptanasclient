@@ -31,7 +31,8 @@ export const sumItems = (cartItems) => {
   let taxes = cartItems
     .reduce(
       (total, product) =>
-        total + ((product.salesPrice * product.quantity) / 100) * 5,
+        total +
+        ((product.salesPrice * product.quantity) / 100) * product?.igstRate,
       0
     )
     .toFixed(2);
@@ -52,7 +53,8 @@ export const sumItems = (cartItems) => {
             (product.salesPrice * product.quantity -
               ((product.salesPrice * product.quantity) / 100) *
                 product.discountPercentage +
-              ((product.salesPrice * product.quantity) / 100) * 5)
+              ((product.salesPrice * product.quantity) / 100) *
+                product?.igstRate)
         ),
       0
     )

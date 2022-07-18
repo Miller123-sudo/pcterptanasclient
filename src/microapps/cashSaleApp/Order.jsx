@@ -17,6 +17,7 @@ import AppLoader from '../../pcterp/components/AppLoader';
 import TextField from '../../pcterp/field/TextField';
 import DateField from '../../pcterp/field/DateField';
 import { Typeahead } from 'react-bootstrap-typeahead';
+import { formatNumber } from '../../helpers/Utils';
 // import PCTEmployee from '../../components/form/searchAndSelect/PCTEmployee';
 // import PCTProduct from '../../components/form/searchAndSelect/PCTProduct';
 // import ApiService from '../../../helpers/ApiServices';
@@ -27,6 +28,7 @@ export default function Order() {
     const [state, setstate] = useState({ total: 0 });
     const [tabKey, setTabKey] = useState('products');
     const [ordersGLData, setOrdersGLData] = useState([])
+    const [customerData, setcustomerData] = useState()
     const [isShippingTick, setIsShippingTick] = useState([]);
     const [Products, setProducts] = useState([]);
     const [isShippingTickAdd, setIsShippingTickAdd] = useState(false);
@@ -100,6 +102,36 @@ export default function Order() {
 
     }
 
+    const updateOrderLines = () => {
+        let cumulativeSum = 0, totalTax = 0;
+        const products = getValues('products')
+        console.log(state?.estimation.discount);
+
+        products?.map((val) => {
+            cumulativeSum += parseFloat(val?.subTotal);
+            totalTax += (parseFloat(val?.taxes) * parseFloat(val?.subTotal)) / 100
+        });
+
+        setValue("estimation", {
+            subTotal: cumulativeSum,
+            discount: state?.estimation.discount,
+            igst: totalTax,
+            sgst: parseFloat((totalTax / 2).toFixed(2)),
+            total: parseFloat(cumulativeSum + totalTax)
+        });
+
+        setstate(prevState => ({
+            ...prevState,    // keep all other key-value pairs
+            estimation: {
+                subTotal: cumulativeSum,
+                discount: state?.estimation.discount,
+                igst: totalTax,
+                sgst: parseFloat((totalTax / 2).toFixed(2)),
+                total: parseFloat(cumulativeSum + totalTax)
+            }
+        }));
+    }
+
     useEffect(async () => {
         setLoderStatus("RUNNING");
 
@@ -147,6 +179,16 @@ export default function Order() {
                 reset(response.data.document);
                 setValue('date', response.data.document.date.split("T")[0])
 
+                //Get customer details
+                ApiService.get(`/customer/${response.data.document.customer[0]._id}`,).then(res => {
+                    if (res?.data?.isSuccess) {
+                        console.log(res.data.document);
+                        setcustomerData(res.data.document);
+                    }
+                }).catch(e => {
+                    console.log(e)
+                })
+
             }).catch(e => {
                 console.log(e)
             })
@@ -159,6 +201,8 @@ export default function Order() {
             }).catch(e => {
                 console.log(e)
             })
+
+
         }
     }, [])
 
@@ -272,19 +316,28 @@ export default function Order() {
                                         <Table responsive striped bordered hover>
                                             <thead>
                                                 <tr>
+                                                    <th></th>
                                                     <th style={{ minWidth: "16rem" }}>Product</th>
                                                     <th style={{ minWidth: "16rem" }}>Description</th>
                                                     <th style={{ minWidth: "16rem" }}>Size</th>
                                                     <th style={{ minWidth: "16rem" }}>Quantity</th>
                                                     <th style={{ minWidth: "16rem" }}>Unit Price</th>
-                                                    <th style={{ minWidth: "16rem" }}>Sub Total</th>
+                                                    <th style={{ minWidth: "16rem" }}>Tax(%)</th>
                                                     <th style={{ minWidth: "16rem" }}>MRP</th>
-                                                    <th></th>
+                                                    <th style={{ minWidth: "16rem" }}>Sub Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {itemFields.map((field, index) => {
                                                     return (<tr key={field.id}>
+                                                        <td>
+                                                            <Button size="sm" variant="light"
+                                                                onClick={() => {
+                                                                    itemRemove(index)
+                                                                    updateOrderLines()
+                                                                }}
+                                                            ><BsTrash /></Button>
+                                                        </td>
                                                         <td>
                                                             <Form.Group>
                                                                 <PCTProduct control={control} name={"product"} {...register(`products.${index}.product`, { required: true })} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
@@ -298,9 +351,12 @@ export default function Order() {
                                                                             setValue(`products.${index}.quantity`, 1);
                                                                             setValue(`products.${index}.description`, product.data.document[0]?.description);
                                                                             setValue(`products.${index}.size`, product.data.document[0]?.size);
+                                                                            setValue(`products.${index}.taxes`, product.data.document[0]?.igstRate);
                                                                             setValue(`products.${index}.unitRate`, product.data.document[0]?.salesPrice);
                                                                             setValue(`products.${index}.subTotal`, (product.data.document[0]?.salesPrice * 1));
                                                                             setValue(`products.${index}.mrp`, product.data.document[0]?.salesPrice);
+
+                                                                            updateOrderLines()
                                                                         }
                                                                     }} />
 
@@ -383,6 +439,8 @@ export default function Order() {
                                                                         const unitPrice = getValues(`products.${index}.unitRate`);
                                                                         const subTotal = parseFloat(parseFloat(e.target?.value) * parseFloat(unitPrice)).toFixed(2)
                                                                         setValue(`products.${index}.subTotal`, subTotal);
+
+                                                                        updateOrderLines()
                                                                     }}
                                                                 />
                                                             </Form.Group>
@@ -398,6 +456,8 @@ export default function Order() {
                                                                         const quantity = getValues(`products.${index}.quantity`);
                                                                         const subTotal = parseFloat(parseFloat(e.target?.value) * parseFloat(quantity)).toFixed(2)
                                                                         setValue(`products.${index}.subTotal`, subTotal);
+
+                                                                        updateOrderLines()
                                                                     }}
                                                                 >
                                                                 </Form.Control>
@@ -407,9 +467,9 @@ export default function Order() {
                                                             <Form.Group>
                                                                 <Form.Control size='sm' style={{ maxWidth: '400px' }}
                                                                     // type="number"
-                                                                    id="subTotal"
-                                                                    name="subTotal"
-                                                                    {...register(`products.${index}.subTotal`)}
+                                                                    id="taxes"
+                                                                    name="taxes"
+                                                                    {...register(`products.${index}.taxes`)}
                                                                 >
                                                                 </Form.Control>
                                                             </Form.Group>
@@ -426,11 +486,15 @@ export default function Order() {
                                                             </Form.Group>
                                                         </td>
                                                         <td>
-                                                            <Button size="sm" variant="light"
-                                                                onClick={() => {
-                                                                    itemRemove(index)
-                                                                }}
-                                                            ><BsTrash /></Button>
+                                                            <Form.Group>
+                                                                <Form.Control size='sm' style={{ maxWidth: '400px' }}
+                                                                    // type="number"
+                                                                    id="subTotal"
+                                                                    name="subTotal"
+                                                                    {...register(`products.${index}.subTotal`)}
+                                                                >
+                                                                </Form.Control>
+                                                            </Form.Group>
                                                         </td>
                                                     </tr>
                                                     )
@@ -450,6 +514,112 @@ export default function Order() {
                             </Tab>
                         </Tabs>
                     </Container>
+
+                    <Container className="mt-4 mb-4" style={{ marginTop: -10 }} fluid>
+                        <Row style={{ marginTop: -5 }}>
+                            <Col sm="12" md="8">
+                                <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+                                    <Form.Control as="textarea" id="termsAndConditions" name="termsAndConditions" {...register("termsAndConditions")} placeholder="Define your terms and conditions" rows={3} />
+                                </Form.Group>
+                            </Col>
+                            <Col sm="12" md="4">
+                                <Card>
+                                    {/* <Card.Header as="h5">Featured</Card.Header> */}
+                                    <Card.Body>
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>GROSS TOTAL:</Col>
+                                            <Col>{formatNumber(state?.estimation?.subTotal)}</Col>
+                                        </Row>
+                                        {/* <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>FREIGHT COST:</Col>
+                                            <Col>
+                                                {
+                                                    !isAddMode ? <Col>{formatNumber(state?.estimation?.fredgeCost)}</Col> :
+                                                        <input step="0.001" type="number" id='fredgeCost' name="fredgeCost" {...register(`fredgeCost`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
+                                                            onBlur={(e) => {
+                                                                // fredgeCostCalculation()
+                                                                updateOrderLines()
+                                                                console.log(e.target.value);
+                                                                if (e.target.value == "") {
+                                                                    setValue("fredgeCost", 0)
+                                                                }
+                                                            }}
+                                                        // onChange={(e) => {
+                                                        //     console.log(e.target.value);
+                                                        //     if (e.target.value == "") {
+                                                        //         setValue("fredgeCost", 0)
+                                                        //     }
+                                                        // }}
+                                                        />
+                                                }
+                                            </Col>
+                                        </Row> */}
+
+                                        {
+                                            customerData?.isLocal ?
+                                                <div>
+                                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                        <Col>UTGST:</Col>
+                                                        <Col>{formatNumber(state?.estimation?.sgst)}</Col>
+                                                    </Row>
+                                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                        <Col>SGST:</Col>
+                                                        <Col>{formatNumber(state?.estimation?.sgst)}</Col>
+                                                    </Row>
+                                                </div>
+                                                : <div>
+                                                    <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                                        <Col>IGST:</Col>
+                                                        <Col>{formatNumber(state?.estimation?.igst)}</Col>
+                                                    </Row>
+                                                </div>
+
+
+
+                                        }
+
+                                        {/* <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600 }}>
+                                            <Col>DISCOUNT CHARGES:</Col>
+                                            <Col>
+                                                {
+                                                    !isAddMode ? <Col>{formatNumber(state?.estimation?.discountCharge)}</Col> :
+                                                        <input step="0.001" type="number" id='discountCharge' name="discountCharge" {...register(`discountCharge`)} style={{ border: "none", backgroundColor: 'transparent', outline: "none", borderBottom: "1px solid black" }}
+                                                            onBlur={(e) => {
+                                                                // discountChargesCalculation()
+                                                                updateOrderLines()
+                                                                console.log(e.target.value);
+                                                                if (e.target.value == "") {
+                                                                    setValue("discountCharge", 0)
+                                                                }
+                                                            }}
+                                                        // onChange={(e) => {
+                                                        //     console.log(e.target.value);
+                                                        //     if (e.target.value == "") {
+                                                        //         setValue("discountCharge", 0)
+                                                        //     }
+                                                        // }}
+                                                        />
+                                                }
+                                            </Col>
+                                        </Row> */}
+
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600, marginTop: 3 }}>
+                                            <Col>DISCOUNT:</Col>
+                                            <Col>{formatNumber(state?.estimation?.discount)}</Col>
+                                        </Row>
+                                        <Row style={{ textAlign: 'right', fontSize: '16px', fontWeight: 600, marginTop: 3 }}>
+                                            <Col>NET AMOUNT:</Col>
+                                            <Col style={{ borderTop: '1px solid black' }}>{formatNumber(state?.estimation?.total)}</Col>
+                                        </Row>
+
+                                    </Card.Body>
+                                </Card>
+
+                            </Col>
+                        </Row>
+
+                    </Container>
+
 
                 </Container>
             </Form>

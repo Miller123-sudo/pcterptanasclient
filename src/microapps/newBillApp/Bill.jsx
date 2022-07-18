@@ -120,6 +120,7 @@ export default function Invoice() {
             console.log(res);
             if (res.data.isFindBill) {
                 infoNotification("There is another bill with same reference number ❕. Please enter different reference number")
+                setisspin(false)
             } else {
 
 
