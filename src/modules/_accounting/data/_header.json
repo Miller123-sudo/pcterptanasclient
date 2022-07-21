@@ -39,10 +39,6 @@
               {
                 "item_name": "Print Acknowledgement",
                 "item_navigation": "printacknoledge"
-              },
-              {
-                "item_name": "Print Acknowledgement page",
-                "item_navigation": "printacknoledgepage"
               }
             ]
           }

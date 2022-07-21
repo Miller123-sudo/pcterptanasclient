@@ -75,6 +75,7 @@ export default function OrderList() {
         { headerName: 'Customer', field: 'customer', valueGetter: (params) => params.data?.customer ? params.data?.customer[0]?.name : 'Walk-In Customer' },
         { headerName: 'Employee', field: 'salesRep', valueGetter: (params) => params.data?.salesRep ? params.data?.salesRep[0]?.name : 'Not Available' },
         { headerName: 'Date', field: `date`, valueGetter: (params) => params.data?.date ? moment(params.data?.date).format("MM/DD/YYYY ") : "Not Available" },
+        { headerName: 'Total', field: `date`, valueGetter: (params) => params.data?.estimation.total ? formatNumber(params.data?.estimation.total) : "Not Available" },
     ]
 
     const renderStatus = (value) => {

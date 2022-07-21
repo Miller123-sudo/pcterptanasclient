@@ -18,6 +18,7 @@ import TextField from '../../pcterp/field/TextField';
 import DateField from '../../pcterp/field/DateField';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { formatNumber } from '../../helpers/Utils';
+import LineSelectField from '../../pcterp/field/LineSelectField';
 // import PCTEmployee from '../../components/form/searchAndSelect/PCTEmployee';
 // import PCTProduct from '../../components/form/searchAndSelect/PCTProduct';
 // import ApiService from '../../../helpers/ApiServices';
@@ -339,7 +340,7 @@ export default function Order() {
                                                             ><BsTrash /></Button>
                                                         </td>
                                                         <td>
-                                                            <Form.Group>
+                                                            {/* <Form.Group>
                                                                 <PCTProduct control={control} name={"product"} {...register(`products.${index}.product`, { required: true })} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
                                                                     onBlur={async (e) => {
                                                                         console.log(e.target.value);
@@ -360,54 +361,42 @@ export default function Order() {
                                                                         }
                                                                     }} />
 
-                                                            </Form.Group>
-                                                            {/* <Controller
-                                                                name={`products.${index}.product`}
+                                                            </Form.Group> */}
+
+                                                            <LineSelectField
                                                                 control={control}
-                                                                render={({ field: { onChange, value }, fieldState: { error } }) => {
+                                                                model={"products"}
+                                                                field={{
 
-                                                                    return (
-                                                                        <Typeahead size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
+                                                                    fieldId: "product",
+                                                                    placeholder: "",
+                                                                    selectRecordType: "product",
+                                                                    multiple: false
+                                                                }}
+                                                                index={index}
+                                                                errors={errors}
+                                                                changeHandler={null}
+                                                                blurHandler={async (e, rest) => {
+                                                                    console.log(e.target.value);
+                                                                    if (e.target.value) {
+                                                                        const product = await ApiService.get(`product/search/${e.target.value}`);
+                                                                        console.log(product.data.document);
 
-                                                                            id="product"
-                                                                            {...register(`products.${index}.product`)}
-                                                                            labelKey="name"
-                                                                            onChange={null}
-                                                                            onBlur={async (e, data) => {
-                                                                                console.log(e.target.value);
-                                                                                if (e.target.value) {
-                                                                                    const product = await ApiService.get(`product/search/${e.target.value}`);
-                                                                                    console.log(product.data.document);
-                                                                                    const productObj = product.data.document;
+                                                                        setValue(`products.${index}.name`, product.data.document[0]?.name);
+                                                                        setValue(`products.${index}.quantity`, 1);
+                                                                        setValue(`products.${index}.description`, product.data.document[0]?.description);
+                                                                        setValue(`products.${index}.size`, product.data.document[0]?.size);
+                                                                        setValue(`products.${index}.taxes`, product.data.document[0]?.igstRate);
+                                                                        setValue(`products.${index}.unitRate`, product.data.document[0]?.salesPrice);
+                                                                        setValue(`products.${index}.subTotal`, (product.data.document[0]?.salesPrice * 1));
+                                                                        setValue(`products.${index}.mrp`, product.data.document[0]?.salesPrice);
 
-                                                                                    let obj = new Object();
-                                                                                    obj._id = productObj?._id
-                                                                                    obj.id = productObj?.id
-                                                                                    obj.name = productObj?.name
+                                                                        updateOrderLines()
+                                                                    }
+                                                                }}
 
-                                                                                    if (productObj) {
-                                                                                        setValue(`products.${index}.product`, [obj]);
-                                                                                        setValue(`products.${index}.name`, product.data.document[0]?.name);
-                                                                                        setValue(`products.${index}.quantity`, 1);
-                                                                                        setValue(`products.${index}.description`, product.data.document[0]?.description);
-                                                                                        setValue(`products.${index}.size`, product.data.document[0]?.size);
-                                                                                        setValue(`products.${index}.unitRate`, product.data.document[0]?.salesPrice);
-                                                                                        setValue(`products.${index}.subTotal`, (product.data.document[0]?.salesPrice * 1));
-                                                                                        setValue(`products.${index}.mrp`, product.data.document[0]?.salesPrice);
-                                                                                    }
-                                                                                }
-                                                                            }}
-                                                                            options={Products}
-                                                                            selected={value}
-                                                                            positionFixed={true}
-                                                                            flip={true}
-                                                                            clearButton
 
-                                                                        />
-                                                                    )
-                                                                }
-                                                                }
-                                                            /> */}
+                                                            />
 
                                                         </td>
                                                         <td>

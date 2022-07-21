@@ -81,7 +81,6 @@ export default function Invoice() {
     let totalBilled = 0;
 
     // Functions
-    console.log(rootPath);
     const onSubmit = async (formData) => {
         setisspin(true)
 
@@ -731,7 +730,7 @@ export default function Invoice() {
                                 label: "BILL DATE",
                                 fieldId: "billDate",
                                 placeholder: "",
-                                required: true,
+                                // required: true,
                                 validationMessage: "Please enter the bill's created date!",
                                 disabled: isAddMode ? false : true
                             }}

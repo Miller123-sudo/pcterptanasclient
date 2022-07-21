@@ -63,7 +63,7 @@ export default function BillListForAcknoledge() {
     const findAllDocument = async () => {
         try {
             ApiService.setHeader();
-            const response = await ApiService.get('newBill');
+            const response = await ApiService.get('newBill/getpaidBills');
             if (response.data.isSuccess) {
                 console.log(response.data.documents)
                 setstate(response.data.documents)
@@ -231,13 +231,9 @@ export default function BillListForAcknoledge() {
 
 
     useEffect(async () => {
-
         setLoderStatus("RUNNING");
-
         findAllDocument();
-
     }, []);
-    console.log(Total);
 
     if (loderStatus === "RUNNING") {
         return (

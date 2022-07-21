@@ -19,9 +19,7 @@ export default function PCTProduct({ control, name, multiple, onBlur, disabled }
     return <Controller
         name={name}
         control={control}
-
         render={({ field: { onChange, value }, fieldState: { error } }) => (
-
             < Typeahead style={{ width: "100%" }} size='sm'
                 id={name}
                 labelKey='name'
@@ -33,6 +31,7 @@ export default function PCTProduct({ control, name, multiple, onBlur, disabled }
                 options={state}
                 placeholder="Select..."
                 selected={value}
+                flip={true}
             />)
         }
     />;

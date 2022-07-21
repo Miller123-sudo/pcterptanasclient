@@ -129,7 +129,14 @@ export default function Dashboard() {
         }
 
         console.log(contextValues.cartItems[contextValues.cartItems.length - 1])
+        document.getElementById("posbarcode").focus()
     }
+
+    useEffect(() => {
+
+        document.getElementById("posbarcode").focus();
+
+    });
 
     if (loderStatus === "RUNNING") {
         return (

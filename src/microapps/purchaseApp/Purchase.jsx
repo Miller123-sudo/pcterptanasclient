@@ -34,6 +34,7 @@ import AppContentStatusPanel from '../../pcterp/builder/AppContentStatusPanel';
 import swal from "sweetalert2"
 import Calculator from '../../pcterp/components/Calculator';
 import ManualEnterCostAndMrp from '../../pcterp/components/ManualEnterCostAndMRP';
+import SearchByBarcodeAndUpdateCost from '../../pcterp/components/SearchByBarcodeAndUpdateCost';
 
 export default function Purchase() {
     const [loderStatus, setLoderStatus] = useState("NOTHING");
@@ -57,9 +58,11 @@ export default function Purchase() {
     const [secondCategoryList, setSecondCategoryList] = useState([])
     const [calculatorObj, setcalculatorObj] = useState()
     const [manualEnterCostMRP, setmanualEnterCostMRP] = useState()
+    const [updatedProductsCost, setupdatedProductsCost] = useState()
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [ShowManualModal, setShowManualModal] = useState(false);
     const [ShowCalclatorBtn, setShowCalclatorBtn] = useState(false);
+    const [showSearchByBarcode, setshowSearchByBarcode] = useState(false);
     const [ShowChartBtn, setShowChartBtn] = useState(true);
     const [ShowManualBtn, setShowManualBtn] = useState(false);
     const [productGrade, setproductGrade] = useState([])
@@ -633,6 +636,7 @@ export default function Purchase() {
                             obj.subTotal = r.data?.document.cost
                             obj.received = 0
                             obj.billed = 0
+                            obj.index = products.length
                             products.push(obj)
                             console.log(obj);
                             setValue(`products`, products)
@@ -715,6 +719,7 @@ export default function Purchase() {
                         obj.subTotal = parseInt(formData.costPrice)
                         obj.received = 0
                         obj.billed = 0
+                        obj.index = products.length
                         products.push(obj)
 
                         await updateProductList();
@@ -748,6 +753,7 @@ export default function Purchase() {
         obj.subTotal = productData.cost
         obj.received = 0
         obj.billed = 0
+        obj.index = products.length
         products.push(obj)
         console.log(obj);
         setValue(`products`, products)
@@ -848,6 +854,10 @@ export default function Purchase() {
         setShowManualModal(value);
     }
 
+    const handleSearchByBarcodeModalShow = (value) => {
+        setshowSearchByBarcode(value);
+    }
+
     /**
      * Get data from calculator modal and according to that data get MRP
      */
@@ -874,6 +884,39 @@ export default function Purchase() {
         setmanualEnterCostMRP(data)
 
         handleManualShow(false)
+    }
+
+    /**
+     * Get data from search by barcode modal for cost update
+     */
+    const setUpdatedProductObj = async (data) => {
+        console.log(data);
+        // Get product by barcode
+        const response = await ApiService.get(`product/barcode/${data.barcode}`)
+        console.log(response);
+
+        // Get MRP by given cost from priceChart
+        const res = await ApiService.patch(`priceChartUpload/findMRP?search=${data.cost}`)
+        console.log(res);
+
+        // Update products costPrice, salesprice(MRP), gst, sgst and utgst
+        let cost = parseFloat(data.cost).toFixed(2)
+        let salesPrice = parseFloat(res.data.document.MRP).toFixed(2)
+        let igstRate = res.data.document.MRP >= 1000 ? 12.00 : 5.00
+        let sgstRate = res.data.document.MRP >= 1000 ? 6.00 : 2.50
+
+        await ApiService.patch(`product/${response.data.document._id}`, { cost: cost, salesPrice: salesPrice, igstRate: igstRate, sgstRate: sgstRate, utgstRate: sgstRate }).then(r => {
+            if (r.data.isSuccess) {
+                infoNotification("Cost update successfull")
+                setInLine(r.data.document);
+            } else {
+                infoNotification("Can't update cost")
+            }
+        })
+
+        // setupdatedProductsCost(data)
+
+        setshowSearchByBarcode(false)
     }
 
 
@@ -1199,7 +1242,9 @@ export default function Purchase() {
                                                                 id="custom-switch"
                                                             />
                                                         </Form>
-                                                        <span class="badge bg-info text-dark">Search by barcode</span>
+                                                        <span class="badge bg-info text-dark" onClick={() => {
+                                                            handleSearchByBarcodeModalShow(true)
+                                                        }}>Search by barcode</span>
                                                     </div>
                                                 </Row>
                                                 <Row>
@@ -1475,6 +1520,7 @@ export default function Purchase() {
                                                         onClick={(ele) => {
                                                             const v = getValues("products")
                                                             console.log(v);
+                                                            console.log(ele);
 
                                                             v?.map(async e => {
                                                                 if (e.product == null) {
@@ -1984,6 +2030,13 @@ export default function Purchase() {
                         isEditMode={!isAddMode}
                         show={ShowManualModal}
                         handleManualShow={(e) => handleManualShow(e)}
+                    />
+
+                    <SearchByBarcodeAndUpdateCost
+                        setUpdatedProductObj={(e) => setUpdatedProductObj(e)}
+                        isEditMode={!isAddMode}
+                        show={showSearchByBarcode}
+                        handleSearchByBarcodeModalShow={(e) => handleSearchByBarcodeModalShow(e)}
                     />
 
                 </Container >

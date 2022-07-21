@@ -234,9 +234,9 @@ export default function Invoice() {
         <AppContentForm onSubmit={handleSubmit(onSubmit)}>
             <AppContentHeader>
                 <Row>
-                    <Col>
-                        <Breadcrumb style={{ fontSize: '24px' }}>
-                            <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/invoices` }} ><h3 className="breadcrum-label">INVOICES</h3></Breadcrumb.Item>
+                    <Col className='p-0 ps-2'>
+                        <Breadcrumb style={{ fontSize: '24px', marginLeft: 15 }}>
+                            <Breadcrumb.Item className="breadcrumb-item" linkAs={Link} linkProps={{ to: `/${rootPath}/invoices` }} ><div className='breadcrum-label'>INVOICES</div></Breadcrumb.Item>
                             {/* {!isAddMode &&
                                 state?.sourceDocument ? <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/accounting/customerinvoices/edit/${state?.sourceDocument?.id}?mode=view` }} ><span className="breadcrum-label">{state?.sourceDocument?.name}</span></Breadcrumb.Item> :
                                 <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/accounting/customerinvoices/edit/${state?.attachedPO?._id}?mode=view` }} ><span className="breadcrum-label">{state?.attachedPO?.name}</span></Breadcrumb.Item>
@@ -246,7 +246,7 @@ export default function Invoice() {
                     </Col>
                 </Row>
                 <Row>
-                    <Col>
+                    <Col style={{ marginLeft: 8 }}>
                         {isAddMode || state?.status == "Draft" ? <Button type="submit" variant="primary" size="sm" disabled={isspin ? true : false}>
                             {isspin && <Spinner
                                 as="span"
@@ -394,7 +394,7 @@ export default function Invoice() {
                             errors={errors}
                             field={{
                                 description: "",
-                                label: "Invoice Date",
+                                label: "INVOICE DATE",
                                 fieldId: "invoiceDate",
                                 placeholder: "",
                                 required: true,
@@ -411,7 +411,7 @@ export default function Invoice() {
                             errors={errors}
                             field={{
                                 description: "Recipient Bank",
-                                label: "Recipient Bank",
+                                label: "RECIPIENT BANK",
                                 fieldId: "recepientAccount",
                                 placeholder: "",
                                 // required: true,
@@ -427,7 +427,7 @@ export default function Invoice() {
                             errors={errors}
                             field={{
                                 description: "",
-                                label: "Reference Number",
+                                label: "REFERENCE NUMBER",
                                 fieldId: "referenceNumber",
                                 placeholder: "",
                                 // required: true,
@@ -466,17 +466,16 @@ export default function Invoice() {
                                         <tr>
                                             <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "2rem" }}>#</th>
-                                            <th style={{ minWidth: "20rem" }}>Barcode</th>
-                                            <th style={{ minWidth: "20rem" }}>Product</th>
-                                            <th style={{ minWidth: "16rem" }}>Description</th>
+                                            <th style={{ minWidth: "20rem" }}>BARCODE</th>
+                                            <th style={{ minWidth: "20rem" }}>PRODUCT</th>
+                                            <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
                                             <th style={{ minWidth: "16rem" }}>UoM</th>
                                             <th style={{ minWidth: "16rem" }}>HSN</th>
-                                            <th style={{ minWidth: "16rem" }}>Account</th>
-                                            <th style={{ minWidth: "16rem" }}>Quantity</th>
-                                            <th style={{ minWidth: "16rem" }}>Price</th>
-                                            <th style={{ minWidth: "16rem" }}>Taxes (%)</th>
-                                            <th style={{ minWidth: "16rem" }}>Sub Total</th>
-
+                                            <th style={{ minWidth: "16rem" }}>ACCOUNT</th>
+                                            <th style={{ minWidth: "16rem" }}>QUANTITY</th>
+                                            <th style={{ minWidth: "16rem" }}>PRICE</th>
+                                            <th style={{ minWidth: "16rem" }}>TAXES (%)</th>
+                                            <th style={{ minWidth: "16rem" }}>SUB TOTAL</th>
                                         </tr>
                                     </thead>
                                     <tbody>

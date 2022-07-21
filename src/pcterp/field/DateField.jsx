@@ -17,8 +17,8 @@ export default function DateField({ field, index, errors, register, changeHandle
             </OverlayTrigger>
 
             <Form.Control size='sm' style={{ maxWidth: '400px' }}
-                // defaultValue={new Date().toISOString().split("T")[0]}
-                defaultValue={moment(new Date()).format("MM/DD/YYYY")}
+                defaultValue={new Date().toISOString().split("T")[0]}
+                // defaultValue={moment(new Date()).format("MM/DD/YYYY")}
                 type="date"
                 id={field?.fieldId}
                 name={field?.fieldId}

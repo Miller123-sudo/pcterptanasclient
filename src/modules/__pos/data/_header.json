@@ -16,20 +16,12 @@
             "nav_dropdown_name": "Reports",
             "nav_dropdown_items": [
               {
-                "item_name": "Sales Report",
-                "item_navigation": "salesreport"
+                "item_name": "Total Customer Handled",
+                "item_navigation": "totalCustomerHandled"
               },
               {
-                "item_name": "Customer Report",
-                "item_navigation": "customersreport"
-              },
-              {
-                "item_name": "Employees Report",
-                "item_navigation": "employeesreport"
-              },
-              {
-                "item_name": "Inventory",
-                "item_navigation": "inventory"
+                "item_name": "Product Wise Sales Report",
+                "item_navigation": "productWiseSalesReport"
               }
             ]
           }

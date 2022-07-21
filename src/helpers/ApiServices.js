@@ -4,7 +4,7 @@ import { TokenService } from "./StorageServices";
 
 const ApiService = {
   init(baseURL) {
-    // axios.defaults.baseURL = `http://192.168.0.152:2022/api/v1/`;
+    // axios.defaults.baseURL = `http://192.168.2.6:2022/api/v1/`;
     //axios.defaults.baseURL = `http://13.68.137.56:86/api/v1/`;
     axios.defaults.baseURL = `https://pcterp-tanas-customapp.herokuapp.com/api/v1/`;
   },

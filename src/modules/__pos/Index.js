@@ -1,6 +1,6 @@
 import "./index.css";
 import { React, useState, useEffect, useContext } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import {
   Navbar,
   Container,
@@ -33,11 +33,17 @@ import InventoryReport from "../../pctpos/reports/InventoryReport";
 import Refund from "../../pctpos/pages/Refund";
 import CashsaleApp from "../../microapps/cashSaleApp/Index";
 import CustomerPOSApp from "../../microapps/customerPOSApp/Index";
+import TotalCustomerHandledByDate from "../../microapps/salesReportApp/TotalCustomerHandledByDate";
+import ProductWiseSalesReport from "../../microapps/salesReportApp/ProductWiseSalesReport";
 
 export default function POSModule() {
   const { dispatch, user } = useContext(UserContext);
   const [appNavigationCenter, setAppNavigationCenter] = useState(null);
   const contextValues = useContext(CartContext);
+  const location = useLocation();
+  console.log(
+    location.pathname.split("/")[location.pathname.split("/").length - 1]
+  );
 
   const getAppNavigationCenter = async () => {
     const response = await ApiService.get(
@@ -60,7 +66,7 @@ export default function POSModule() {
   // }
 
   const handleAddItemToCart = async () => {
-    const value = document.getElementById("barcode").value;
+    const value = document.getElementById("posbarcode").value;
     const response = await ApiService.get(`/product/barcode/${value}`);
     console.log(response);
     if (response.data.isSuccess && response.data.document) {
@@ -90,7 +96,7 @@ export default function POSModule() {
       );
       console.log(cartItemMatchedWithItem);
 
-      document.getElementById("barcode").value = "";
+      document.getElementById("posbarcode").value = "";
     }
   };
 
@@ -174,19 +180,24 @@ export default function POSModule() {
                     }
                   )}
               </Nav>
-              <Form onSubmit={handleBarcodeSubmit} className="d-flex">
-                <InputGroup size="sm" style={{ marginRight: "10px" }}>
-                  <FormControl
-                    placeholder="Bar Code"
-                    aria-label="Bar Code"
-                    aria-describedby="BarCode"
-                    id="barcode"
-                  />
-                  <Button variant="light" type="submit">
-                    <BsSearch />
-                  </Button>
-                </InputGroup>
-              </Form>
+
+              {location.pathname.split("/")[
+                location.pathname.split("/").length - 1
+              ] == "pos" && (
+                <Form onSubmit={handleBarcodeSubmit} className="d-flex">
+                  <InputGroup size="sm" style={{ marginRight: "10px" }}>
+                    <FormControl
+                      placeholder="Bar Code"
+                      aria-label="Bar Code"
+                      aria-describedby="BarCode"
+                      id="posbarcode"
+                    />
+                    <Button variant="light" type="submit">
+                      <BsSearch />
+                    </Button>
+                  </InputGroup>
+                </Form>
+              )}
 
               <Nav>
                 <Nav.Link href="#home">
@@ -207,9 +218,9 @@ export default function POSModule() {
                 <Nav.Link active>
                   <BsWifi />
                 </Nav.Link>
-                <Nav.Link as={Link} to="/settings">
+                {/* <Nav.Link as={Link} to="/settings">
                   <BsGearFill />
-                </Nav.Link>
+                </Nav.Link> */}
                 <Nav.Link active as={Link} to="/">
                   <HiOutlineLogout />
                 </Nav.Link>
@@ -231,6 +242,14 @@ export default function POSModule() {
           <Route path="/employeesreport/*" element={<EmployeesReport />} />
           <Route path="/inventory/*" element={<InventoryReport />} />
           <Route path="/refund/*" element={<Refund />} />
+          <Route
+            path="/productWiseSalesReport/*"
+            element={<ProductWiseSalesReport />}
+          />
+          <Route
+            path="/totalCustomerHandled/*"
+            element={<TotalCustomerHandledByDate />}
+          />
         </Routes>
       </AppContentContainer>
     </AppContainer>
