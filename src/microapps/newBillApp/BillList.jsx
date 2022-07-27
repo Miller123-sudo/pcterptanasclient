@@ -95,7 +95,7 @@ export default function BillList() {
         },
         { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
         { headerName: 'SUB VENDOR', field: 'subVendor', valueGetter: (params) => params.data?.subVendor ? params.data?.subVendor : "Not Available" },
-        { headerName: 'Bill#', field: 'name' },
+        { headerName: 'SUPPILER BILL NUMBER', field: 'name' },
         // { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
         { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY") : "Not Available" },
         { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },

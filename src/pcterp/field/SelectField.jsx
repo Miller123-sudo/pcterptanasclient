@@ -4,6 +4,7 @@ import { React, useState, useEffect } from 'react';
 import { Form, Col, OverlayTrigger, Popover } from 'react-bootstrap';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { Controller } from 'react-hook-form';
+import { array } from 'yup/lib/locale';
 import ApiService from '../../helpers/ApiServices';
 
 
@@ -13,13 +14,30 @@ export default function SelectField({ control, field, errors, queryPath, index, 
 
 
     const getList = async () => {
+        let array = new Array()
         ApiService.setHeader();
         // if (field?.selectRecordType == "productType") {
         //     setState(productTypeArray)
         // } else {
         const response = await ApiService.get(`/${field?.selectRecordType}/list`);
-        console.log(response.data.documents);
-        setState(response.data.documents)
+        if (response.data.isSuccess) {
+            console.log(response.data?.documents);
+
+            if (field?.selectRecordType == "newBill/getunusedBill") {
+                response?.data?.documents.map(e => {
+                    console.log(e);
+                    let obj = new Object()
+                    obj = e
+                    obj.vendorName = e?.vendorArray ? e?.vendorArray[0]?.name : ""
+                    array.push(obj)
+                })
+                setState(array)
+            } else {
+                setState(response.data?.documents)
+            }
+        }
+
+        // if (array.length == response?.data?.documents.length)
         // }
     }
 
@@ -28,7 +46,6 @@ export default function SelectField({ control, field, errors, queryPath, index, 
             getList();
         }
     }, []);
-    console.log(field?.default);
 
     return <Form.Group key={index} as={Col} md="4" className="mb-2">
         <OverlayTrigger trigger="click" rootClose placement="auto" overlay={<Popover id="popover-basic">
@@ -53,7 +70,8 @@ export default function SelectField({ control, field, errors, queryPath, index, 
                     <Typeahead id={index} size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
                         isInvalid={errors[field?.fieldId]}
                         disabled={field?.disabled}
-                        labelKey="name"
+                        // labelKey="name"
+                        labelKey={option => `${option?.name} ${option.vendorName}`}// If we write lableKey this way then we can search results by multiple lablekey
                         multiple={field?.multiple}
                         onChange={(event) => {
                             onChange(event);

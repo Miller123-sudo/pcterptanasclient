@@ -6,6 +6,7 @@ export default function LineTextField({ model, field, errors, index, register, b
     return (
         <Form.Control size='sm'
             disabled={field?.disabled}
+            required={field?.require ? true : false}
             type="text"
             id={field.fieldId}
             name={field.fieldId}

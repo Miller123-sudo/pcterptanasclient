@@ -20,7 +20,8 @@ export default function PurchaseList() {
     const rootPath = location?.pathname?.split('/')[1];
     const { dispatch, user } = useContext(UserContext)
     const [loderStatus, setLoderStatus] = useState(null);
-    const [state, setstate] = useState(null);
+    const [state, setstate] = useState([]);
+    const [array, setarray] = useState([]);
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
@@ -40,12 +41,33 @@ export default function PurchaseList() {
 
 
     const findAllDocument = async () => {
+
         ApiService.setHeader();
         const response = await ApiService.get('purchaseOrder');
         console.log(response.data.documents)
-        setstate(response.data.documents)
-        setLoderStatus("SUCCESS");
+
+        if (response.data.isSuccess) {
+            setstate(response.data.documents)
+            setLoderStatus("SUCCESS");
+        }
     }
+
+    // const columns = [
+    //     {
+    //         headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+    //             <>
+    //                 <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/${rootPath}/purchases/edit/${params.value}`}><BsBoxArrowInUpRight /></Button>
+    //                 {/* <Button style={{ minWidth: "4rem" }} size="sm" as={Link} to={`/employees/employee/${params.value}?mode=view`}><BsEyeFill /></Button> */}
+    //             </>
+    //     },
+    //     { headerName: 'PURCHASE ORDER', field: 'name' },
+    //     { headerName: 'VENDOR', field: `vendor`, valueGetter: (params) => params.data?.vendor ? params.data?.vendor?.name : "Not Available" },
+    //     { headerName: 'SUB VENDOR', field: `subVendor`, valueGetter: (params) => params.data?.subVendor ? params.data?.subVendor : "Not Available" },
+    //     { headerName: 'SUPPLIER BILL NO.', field: 'supplierBillNo', valueGetter: (params) => params.data?.supplierBillNo ? params.data?.supplierBillNo : "Not Available" },
+    //     { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("MM/DD/YYYY ") : "Not Available" },
+    //     { headerName: 'TOTAL', field: 'POTotal', valueGetter: (params) => params.data?.POTotal ? params.data?.POTotal : "Not Available" },
+
+    // ]
 
     const columns = [
         {

@@ -35,6 +35,7 @@ import swal from "sweetalert2"
 import Calculator from '../../pcterp/components/Calculator';
 import ManualEnterCostAndMrp from '../../pcterp/components/ManualEnterCostAndMRP';
 import SearchByBarcodeAndUpdateCost from '../../pcterp/components/SearchByBarcodeAndUpdateCost';
+import NumberField from '../../pcterp/field/NumberField';
 
 export default function Purchase() {
     const [loderStatus, setLoderStatus] = useState("NOTHING");
@@ -460,6 +461,83 @@ export default function Purchase() {
         }
     }
 
+    const createProduct = async (formData, itemName) => {
+        // Create single product if max min size ia not present
+        let sizeResponse, document, costPrice;
+        console.log("min and max size not present");
+        console.log(formData);
+        console.log(formData.itemQty);
+        // if (formData.size != "Choose..") {
+        try {
+            if (getValues("pricingType") == "Chart") {
+                console.log("chart");
+                const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+                console.log(res);
+                if (res.data.isSuccess) {
+                    document = res.data.document
+                    costPrice = formData.costPrice
+                } else {
+                    infoNotification("Given cost price is not in the range of price list. Please select 'Calculator' or 'Manual'")
+                }
+            } else if (getValues("pricingType") == "Calculator") {
+                document = calculatorObj
+                costPrice = calculatorObj.costPrice
+            } else if (getValues("pricingType") == "Manual") {
+                document = manualEnterCostMRP
+                costPrice = manualEnterCostMRP.cost
+            }
+            // if (res.data.isSuccess) {
+
+            //find size
+            if (formData.size != "Choose..") {
+                sizeResponse = await ApiService.get(`itemCategory/${formData.size}`)
+            }
+            // if (sizeResponse?.data.isSuccess) {
+            const r = await ApiService.post(`product/procedure`, {
+                name: `${itemName}_${costPrice}`,
+                description: `${itemName}`,
+                // cost: formData.costPrice,
+                cost: costPrice,
+                HSNSACS: getValues("hsn"),
+                salesPrice: document.MRP,
+                igstRate: document.MRP >= 1000 ? 12.00 : 5.00,
+                sgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                utgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+            })
+            if (r.data.isSuccess) {
+                // itemId = await r.data.document.id;
+                await updateProductList();
+
+                let products = getValues('products')
+                let obj = new Object()
+                obj.barcode = r?.data.document.barcode
+                obj.product = [r.data.document]
+                obj.quantity = 1
+                obj.description = r.data.document?.description
+                obj.unit = r.data.document?.uom
+                obj.size = sizeResponse?.data.document.name ? sizeResponse?.data.document.name : ""
+                obj.unitPrice = r.data?.document.cost
+                obj.mrp = r.data?.document.salesPrice
+                obj.taxes = r.data?.document.igstRate
+                obj.subTotal = r.data?.document.cost
+                obj.HSNSACS = r.data?.document.HSNSACS
+                obj.received = 0
+                obj.billed = 0
+                obj.index = products.length
+                products.push(obj)
+                console.log(obj);
+                setValue(`products`, products)
+
+                // resetItemCategory() // test
+            }
+            // }
+
+        } catch (e) {
+            console.log(e);
+            errorMessage(e, null)
+        }
+    }
+
     const generateItemName = async () => {
 
         const formData = getValues();
@@ -492,14 +570,28 @@ export default function Purchase() {
             }
         ]
 
+        let itemId = "";
+        let itemCostPrice = "";
+        let cstPrice;
         let itemName = createItemName(categoryObjArr);
         // setValue("name", itemName)
-        let itemId;
+        if (getValues("pricingType") == "Chart") {
+            console.log("chart");
+            cstPrice = getValues("costPrice")
+        } else if (getValues("pricingType") == "Calculator") {
+            cstPrice = calculatorObj.costPrice
+        } else if (getValues("pricingType") == "Manual") {
+            cstPrice = manualEnterCostMRP.cost
+        }
+        console.log(`${itemName}_${cstPrice}`);
+
         if (itemName !== '') {
-            await ApiService.get(`product/search/${itemName}?costPrice=${getValues("costPrice")}`)
+            await ApiService.get(`product/search/${itemName}_${cstPrice}?costPrice=${getValues("costPrice")}`)
                 .then(async response => {
                     if (response.data.isSuccess && response.data.document.length > 0) {
+                        console.log(response.data.document);
                         itemId = response.data.document[0].id
+                        itemCostPrice = response.data.document[0].costPrice
                         await updateProductList();
                         if (itemId) {
                             console.log("Item already present in database");
@@ -550,6 +642,9 @@ export default function Purchase() {
                                 }
                             })
 
+                        } else {
+                            infoNotification("cost price is not same. so create product new cost price")
+                            createProduct(formData, itemName)
                         }
                     }
                     else {
@@ -562,7 +657,7 @@ export default function Purchase() {
                 })
 
             let productListLength = formData.products?.length
-            let itemAlreadyPresent = formData.products?.findIndex(element => element.product[0]._id === itemId);
+            let itemAlreadyPresent = formData.products?.findIndex(element => (element.product[0]._id === itemId && element.unitPrice == itemCostPrice));
             let categoryQty = formData.itemQty
             if (itemAlreadyPresent === -1) {
                 // itemAppend({})
@@ -609,10 +704,11 @@ export default function Purchase() {
                         }
                         // if (sizeResponse?.data.isSuccess) {
                         const r = await ApiService.post(`product/procedure`, {
-                            name: itemName,
+                            name: `${itemName}_${costPrice}`,
                             description: `${itemName}`,
                             // cost: formData.costPrice,
                             cost: costPrice,
+                            HSNSACS: getValues("hsn"),
                             salesPrice: document.MRP,
                             igstRate: document.MRP >= 1000 ? 12.00 : 5.00,
                             sgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
@@ -634,6 +730,7 @@ export default function Purchase() {
                             obj.mrp = r.data?.document.salesPrice
                             obj.taxes = r.data?.document.igstRate
                             obj.subTotal = r.data?.document.cost
+                            obj.HSNSACS = r.data?.document.HSNSACS
                             obj.received = 0
                             obj.billed = 0
                             obj.index = products.length
@@ -680,7 +777,25 @@ export default function Purchase() {
     const createAndSetItems = async (formData, itemName) => {
         const products = getValues("products")
         let array = new Array();
+        let sizeResponse, document, costPrice;
 
+        if (getValues("pricingType") == "Chart") {
+            console.log("chart");
+            const res = await ApiService.patch(`priceChartUpload/findMRP?search=${formData.costPrice}`)
+            console.log(res);
+            if (res.data.isSuccess) {
+                document = res.data.document
+                costPrice = formData.costPrice
+            } else {
+                infoNotification("Given cost price is not in the range of price list. Please select 'Calculator' or 'Manual'")
+            }
+        } else if (getValues("pricingType") == "Calculator") {
+            document = calculatorObj
+            costPrice = calculatorObj.costPrice
+        } else if (getValues("pricingType") == "Manual") {
+            document = manualEnterCostMRP
+            costPrice = manualEnterCostMRP.cost
+        }
 
         const tanasUtil = new TanasUtils();
         const rangeArray = tanasUtil.calculatePrice(parseInt(formData.minimunSize), parseInt(formData.mazimumSize), parseInt(formData.costPrice), 15, 8, 40, 5)
@@ -691,15 +806,17 @@ export default function Purchase() {
             console.log(itemName + e.size + productGrade);
 
             try {
-                const response = await ApiService.get(`product/search/${itemName}_${e.size}_${productGrade}`)
+                const response = await ApiService.get(`product/search/${itemName}_${e.size}_${costPrice}`)
                 if (response.data.document.length > 0) {
                     infoNotification("Item already present in database for max min")
                 } else {
                     const res = await ApiService.post(`product/procedure`, {
-                        name: `${itemName}_${e.size}_${productGrade}`,
-                        description: `${itemName}_${e.size}_${productGrade}`,
-                        cost: formData.costPrice,
+                        name: `${itemName}_${e.size}_${costPrice}`,
+                        description: `${itemName}_${e.size}`,
+                        // cost: formData.costPrice,
+                        cost: costPrice,
                         salesPrice: e.price,
+                        HSNSACS: getValues("hsn"),
                         igstRate: e.price >= 1000 ? 12.00 : 5.00,
                         sgstRate: e.price >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
                         utgstRate: e.price >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
@@ -717,6 +834,7 @@ export default function Purchase() {
                         obj.taxes = res?.data.document?.igstRate
                         // obj.salesPrice = parseInt(e.price)
                         obj.subTotal = parseInt(formData.costPrice)
+                        obj.HSNSACS = res.data?.document.HSNSACS
                         obj.received = 0
                         obj.billed = 0
                         obj.index = products.length
@@ -746,11 +864,12 @@ export default function Purchase() {
         obj.barcode = productData.barcode
         obj.product = [productData]
         obj.quantity = 1
-        obj.size = ""
+        obj.size = productData?.name.split("_")[productData?.name.split("_").length - 2]
         obj.unitPrice = productData.cost
         obj.mrp = productData.salesPrice
         obj.taxes = productData.igstRate
         obj.subTotal = productData.cost
+        obj.HSNSACS = productData.HSNSACS
         obj.received = 0
         obj.billed = 0
         obj.index = products.length
@@ -784,9 +903,10 @@ export default function Purchase() {
         })
 
         itemName = itemName.substring(0, itemName.length - 1)
-        console.log(productGrade);
-        console.log("itemName: ", `${itemName}_${productGrade}`);
-        itemName = `${itemName}_${productGrade}`
+        // console.log(productGrade);
+        // console.log("itemName: ", `${itemName}_${productGrade}`);
+        // itemName = `${itemName}_${productGrade}`
+        itemName = `${itemName}`
         return itemName
     }
 
@@ -862,15 +982,15 @@ export default function Purchase() {
      * Get data from calculator modal and according to that data get MRP
      */
     const setCalObj = (data) => {
+        console.log(data);
+        // const tanasUtil = new TanasUtils();
+        // const rangeArray = tanasUtil.calculatePrice(parseInt(1), parseInt(1), parseInt(data.cost), parseInt(data.expence), parseInt(data.transport), parseInt(data.profit), parseInt(data.gst))
+        // console.log(rangeArray);
 
-        const tanasUtil = new TanasUtils();
-        const rangeArray = tanasUtil.calculatePrice(parseInt(1), parseInt(1), parseInt(data.cost), parseInt(data.expence), parseInt(data.transport), parseInt(data.profit), parseInt(data.gst))
-        console.log(rangeArray);
-
-        const obj = new Object()
-        obj.MRP = rangeArray[0].price
-        obj.costPrice = data.cost
-        setcalculatorObj(obj)
+        // const obj = new Object()
+        // obj.MRP = rangeArray[0].price
+        // obj.costPrice = data.cost
+        setcalculatorObj(data)
 
         handleShow(false)
     }
@@ -1061,11 +1181,13 @@ export default function Purchase() {
                                 if (!data.value.length) {
                                     setValue("vendor", "")
                                     setValue("billStatus", "")
+                                    setValue("amountOfSelectedBill", "")
                                     console.log("empty");
                                 }
 
                                 if (data.value) {
                                     setValue("vendor", data.value?.vendor)
+                                    setValue("amountOfSelectedBill", data.value?.estimation?.total.toFixed(2))
                                     setbillObj(data.value)
                                 }
                                 if (data.value?.paymentStatus == "Paid") {
@@ -1112,6 +1234,22 @@ export default function Purchase() {
                                 description: "",
                                 label: "BILL STATUS",
                                 fieldId: "billStatus",
+                                placeholder: "",
+                                // required: true,
+                                // validationMessage: "Please enter the Product name!"
+                            }}
+                            changeHandler={null}
+                            blurHandler={null}
+                        />
+
+                        <Decimal128Field
+                            register={register}
+                            errors={errors}
+                            field={{
+                                disabled: true,
+                                description: "",
+                                label: "AMOUNT OF BILL",
+                                fieldId: "amountOfSelectedBill",
                                 placeholder: "",
                                 // required: true,
                                 // validationMessage: "Please enter the Product name!"
@@ -1404,6 +1542,11 @@ export default function Purchase() {
                                                                 }}>MANUAL COST ENTRY</Button>
                                                         </Form.Group>
                                                     }
+
+                                                    <Form.Group className="mb-2" as={Col} md="4">
+                                                        <Form.Label className="m-0">HSN</Form.Label>
+                                                        <Form.Control size='sm' style={{ maxWidth: '400px' }} type="text" min="0" id="hsn" name="hsn" {...register("hsn")} />
+                                                    </Form.Group>
                                                 </Row>
 
                                                 <Row>
@@ -1477,6 +1620,7 @@ export default function Purchase() {
                                             <th style={{ minWidth: "2rem" }}></th>
                                             <th style={{ minWidth: "20rem" }}>BARCODE</th>
                                             <th style={{ minWidth: "20rem" }}>PRODUCT</th>
+                                            <th style={{ minWidth: "20rem" }}>HSN</th>
                                             <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
                                             <th style={{ minWidth: "16rem" }}>UOM</th>
                                             <th style={{ minWidth: "16rem" }}>QUANTITY</th>
@@ -1594,6 +1738,7 @@ export default function Purchase() {
                                                             setValue(`products.${index}.taxes`, "");
                                                             setValue(`products.${index}.unitPrice`, 0.00);
                                                             setValue(`products.${index}.mrp`, "");
+                                                            setValue(`products.${index}.size`, "");
                                                             setValue(`products.${index}.subTotal`, "");
                                                             setValue(`products.${index}.account`, "");
                                                             setValue(`products.${index}.index`, "");
@@ -1619,6 +1764,7 @@ export default function Purchase() {
                                                                     setValue(`products.${index}.taxes`, productObj?.igstRate);
                                                                     setValue(`products.${index}.unitPrice`, productObj.cost);
                                                                     setValue(`products.${index}.mrp`, productObj.salesPrice);
+                                                                    setValue(`products.${index}.size`, productObj.name.split("_")[productObj.name.split("_").length - 2]);
                                                                     setValue(`products.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
                                                                     setValue(`products.${index}.account`, productObj.assetAccount);
                                                                     setValue(`products.${index}.index`, index);
@@ -1660,8 +1806,10 @@ export default function Purchase() {
                                                                 setValue(`products.${index}.unit`, [{ _id: "", name: "" }]);
                                                                 setValue(`products.${index}.quantity`, 0);
                                                                 setValue(`products.${index}.taxes`, "");
+                                                                setValue(`products.${index}.HSNSACS`, "");
                                                                 setValue(`products.${index}.unitPrice`, 0.00);
                                                                 setValue(`products.${index}.mrp`, "");
+                                                                setValue(`products.${index}.size`, "");
                                                                 setValue(`products.${index}.subTotal`, "");
                                                                 setValue(`products.${index}.account`, "");
                                                                 setValue(`products.${index}.index`, "");
@@ -1669,32 +1817,57 @@ export default function Purchase() {
                                                             }
                                                         }}
                                                         blurHandler={async (event, data) => {
+                                                            console.log(data);
+
                                                             if (!data?.okay) return
                                                             const productId = data?.okay[0]?._id;
-                                                            ApiService.setHeader();
-                                                            ApiService.get('product/' + productId).then(response => {
-                                                                const productObj = response.data.document;
-                                                                console.log(productObj);
-                                                                if (productObj) {
-                                                                    setValue(`products.${index}.name`, productObj.name);
-                                                                    setValue(`products.${index}.barcode`, productObj.barcode);
-                                                                    setValue(`products.${index}.description`, productObj.description);
-                                                                    setValue(`products.${index}.unit`, productObj.uom);
-                                                                    setValue(`products.${index}.quantity`, 1);
-                                                                    setValue(`products.${index}.taxes`, productObj?.igstRate);
-                                                                    setValue(`products.${index}.unitPrice`, productObj.cost);
-                                                                    setValue(`products.${index}.mrp`, productObj.salesPrice);
-                                                                    setValue(`products.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
-                                                                    setValue(`products.${index}.account`, productObj.assetAccount);
-                                                                    setValue(`products.${index}.index`, index);
-                                                                    updateOrderLines(index)
-                                                                }
-                                                            }).catch(err => {
-                                                                console.log("ERROR", err)
-                                                            })
+
+                                                            if (productId) {
+                                                                ApiService.setHeader();
+                                                                ApiService.get('product/' + productId).then(response => {
+                                                                    const productObj = response.data.document;
+                                                                    console.log(productObj);
+                                                                    if (productObj) {
+                                                                        setValue(`products.${index}.name`, productObj.name);
+                                                                        setValue(`products.${index}.barcode`, productObj.barcode);
+                                                                        setValue(`products.${index}.description`, productObj.description);
+                                                                        setValue(`products.${index}.unit`, productObj.uom);
+                                                                        setValue(`products.${index}.quantity`, 1);
+                                                                        setValue(`products.${index}.taxes`, productObj?.igstRate);
+                                                                        setValue(`products.${index}.HSNSACS`, productObj?.HSNSACS);
+                                                                        setValue(`products.${index}.unitPrice`, productObj.cost);
+                                                                        setValue(`products.${index}.mrp`, productObj.salesPrice);
+                                                                        setValue(`products.${index}.size`, productObj.name.split("_")[productObj.name.split("_").length - 2]);
+                                                                        setValue(`products.${index}.subTotal`, (parseFloat(productObj.cost) * 1).toFixed(2));
+                                                                        setValue(`products.${index}.account`, productObj.assetAccount);
+                                                                        setValue(`products.${index}.index`, index);
+                                                                        updateOrderLines(index)
+                                                                    }
+                                                                }).catch(err => {
+                                                                    console.log("ERROR", err.response.data)
+                                                                })
+                                                            } else {
+
+                                                                infoNotification("Product not found. Please select product fron dropdown")
+                                                            }
                                                         }}
                                                     />
 
+                                                </td>
+
+                                                <td>
+                                                    <LineTextField
+                                                        register={register}
+                                                        model={"products"}
+                                                        field={{
+                                                            fieldId: "HSNSACS",
+                                                            placeholder: ""
+                                                        }}
+                                                        index={index}
+                                                        errors={errors}
+                                                        changeHandler={null}
+                                                        blurHandler={null}
+                                                    />
                                                 </td>
 
                                                 <td>

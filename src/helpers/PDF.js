@@ -2395,40 +2395,40 @@ const BarcodePDF = {
               }
               switch (parseInt(data.size)) {
                 case 18:
-                  size = "18, Age: 1 to 2";
+                  size = "18 as 1 to 2 years";
                   break;
                 case 20:
-                  size = "20, Age: 2 to 3";
+                  size = "20 as 2 to 3 years";
                   break;
                 case 22:
-                  size = "22, Age: 3 to 4";
+                  size = "22 as 3 to 4 years";
                   break;
                 case 24:
-                  size = "24, Age: 5 to 6";
+                  size = "24 as 5 to 6 years";
                   break;
                 case 26:
-                  size = "26, Age: 7 to 8";
+                  size = "26 as 7 to 8 years";
                   break;
                 case 28:
-                  size = "28, Age: 9 to 10";
+                  size = "28 as 9 to 10 years";
                   break;
                 case 30:
-                  size = "30, Age: 11 to 12";
+                  size = "30 as 11 to 12 years";
                   break;
                 case 32:
-                  size = "32, Age: 13 to 14";
+                  size = "32 as 13 to 14 years";
                   break;
                 case 34:
-                  size = "34, Age: 15 to 16";
+                  size = "34 as 15 to 16 years";
                   break;
                 case 36:
-                  size = "36, Age: 17 to 18";
+                  size = "36 as 17 to 18 years";
                   break;
                 case 38:
-                  size = "38, Age: 19 to 20";
+                  size = "38 as 19 to 20 years";
                   break;
                 case 40:
-                  size = "40, Age: 21 to 22";
+                  size = "40 as 21 to 22 years";
                   break;
               }
 

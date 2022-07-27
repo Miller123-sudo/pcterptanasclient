@@ -6,6 +6,7 @@ export default function LineDecimal128Field({ model, field, errors, index, regis
     return (
         <Form.Control size='sm'
             disabled={field?.disabled}
+            required={field?.require}
             type="number"
             step="0.001"
             id={field.fieldId}

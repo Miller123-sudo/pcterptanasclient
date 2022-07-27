@@ -151,7 +151,7 @@ export default function AccountingModule() {
           <Route path="/printrtgs/*" element={<RtgsApp />} />
           <Route path="/printcheque/*" element={<ChequeApp />} />
           <Route path="/printacknoledge/*" element={<AcknoledgeApp />} />
-          <Route path="/printacknoledgepage/*" element={<PrintAckPage />} />
+          {/* <Route path="/printacknoledgepage/*" element={<PrintAckPage />} /> */}
 
           <Route
             path="/inventoryanalysis/*"

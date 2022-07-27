@@ -143,7 +143,9 @@ export default function BillListForAcknoledge() {
                         });
 
                         //Get vendor address
-                        const res = await ApiService.get(`vendor/${arr[0]?.vendor._id}`)
+                        console.log("Selected bills: ", arr);
+                        console.log("total: ", total);
+                        const res = await ApiService.get(`vendor/${arr[0]?.vendor}`)
                         if (res.data.isSuccess) {
                             console.log(res.data.document.address);
                             setaddress(res.data.document.address)
@@ -198,7 +200,7 @@ export default function BillListForAcknoledge() {
             window.location.reload()
 
         } else {
-            infoNotification("Please add some bill for print RTGS")
+            infoNotification("Please add some bill for print Acknowledgement")
         }
     }
 
@@ -210,19 +212,24 @@ export default function BillListForAcknoledge() {
         }
     }
 
+    const handleRowSelection = e => {
+        console.log(e);
+        set.add(e.node.data)
+
+    }
+
 
     const columns = [
-        {
-            headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
-                <>
-                    <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
-                    {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
-                </>
-        },
+        // {
+        //     headerName: ' ', field: 'id', sortable: false, filter: false, cellRendererFramework: (params) =>
+        //         <>
+        //             <Button style={{ minWidth: "4rem" }} size="sm"><BsBoxArrowInUpRight /></Button>
+        //             {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
+        //         </>
+        // },
         { headerName: 'Bill#', field: 'name' },
-        { headerName: 'SOURCED DOCUMENT', field: 'sourceDocumentArray', valueGetter: (params) => params.data?.sourceDocumentArray ? params.data?.sourceDocumentArray[0]?.name : "Not Available" },
         { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
-        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY HH:mm:ss") : "Not Available" },
+        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY") : "Not Available" },
         { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
         { headerName: 'Is Used', field: 'isUsed' },
         { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
@@ -249,26 +256,26 @@ export default function BillListForAcknoledge() {
                         <Col className='p-0 ps-2'>
                             <Breadcrumb style={{ fontSize: '24px', marginBottom: '0 !important' }}>
 
-                                <Breadcrumb.Item active> <div className='breadcrum-label-active'>PRINT ACKNOLEDGE</div></Breadcrumb.Item>
+                                <Breadcrumb.Item active> <div className='breadcrum-label-active'>PRINT ACKNOWLEDGEMENT</div></Breadcrumb.Item>
 
                             </Breadcrumb>
                         </Col>
                     </Row>
                     <Row style={{ marginTop: '-10px' }}>
                         <Col className='p-0 ps-1'>
-                            {(rootPath == "accounting" && location?.pathname?.split('/')[2] == "bills") && <Button size="sm" as={Link} to={`/${rootPath}/bills/add`}>CREATE</Button>}
+
 
                         </Col>
                         {/* <Col md="4" sm="6"> */}
-                        <Col md="7" sm="8">
-                            <Row>
+                        <Col className='p-0 ps-1'>
+                            <Row style={{ display: "flex", justifyContent: "flex-end" }}>
                                 {/* <Col md="8"><input type="text" className="openning-cash-control__amount--input" placeholder="Search..." onChange={handleSearch}></input></Col>
                                 <Col md="4"><Button onClick={handleExportAsCsv} variant="primary" size="sm"><span>EXPORT CSV</span></Button></Col> */}
-                                <Col md="4"><input type="text" className="openning-cash-control__amount--input" name="search" ref={ref} placeholder="Search..." /></Col>{""}
-                                <Col md="1"><Button variant="primary" size="sm" onClick={searchHandler}><span>ADD</span></Button></Col>{""}
+                                <Col md="4"><input type="text" className="openning-cash-control__amount--input" name="search" ref={ref} placeholder="Search..." onChange={handleSearch} /></Col>{""}
+                                {/* <Col md="1"><Button variant="primary" size="sm" onClick={searchHandler}><span>ADD</span></Button></Col>{""} */}
                                 <Col md="1"><Button variant="primary" size="sm" onClick={resetList}><span>RESET</span></Button></Col>{""}
                                 <Col md="2"><Button variant="primary" size="sm" onClick={toggleHandler}><span>SELECTED BILL'S</span></Button></Col>{""}
-                                <Col md="2"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>PRINT ACKNOLEDGE</span></Button></Col>{""}
+                                <Col md="2"><Button variant="primary" size="sm" onClick={printCHEQUE}><span>PRINT ACKNOWLEDGE</span></Button></Col>{""}
 
                             </Row>
                         </Col>
@@ -282,14 +289,15 @@ export default function BillListForAcknoledge() {
                     onGridReady={onGridReady}
                     rowData={state}
                     columnDefs={columns}
+                    rowSelection="multiple"
+                    onCellClicked={handleRowSelection}
                     defaultColDef={{
                         editable: true,
                         sortable: true,
                         flex: 1,
-                        minWidth: 100,
+                        minWidth: 80,
                         filter: true,
                         resizable: true,
-                        minWidth: 200
                     }}
                     pagination={true}
                     paginationPageSize={50}
@@ -344,7 +352,7 @@ export default function BillListForAcknoledge() {
                     </Row>
                 </div>
                 <div>To,</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendor.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 20 }} /></div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendorArray.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 20 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
                 <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. <b>{chequeNo}</b> Dt. {new Date().toLocaleDateString()} for Rs. <b>{Total.toFixed(2)}</b> Rupees <b>{converter.toWords(Total)}</b> only
                     drawn on Axis Bank against  PART / FULL payment of your bills as per following details.

@@ -954,7 +954,7 @@ export default function Invoice() {
                                             <th style={{ minWidth: "16rem" }}>DESCRIPTION</th>
                                             <th style={{ minWidth: "16rem" }}>UOM</th>
                                             <th style={{ minWidth: "16rem" }}>HSN</th>
-                                            <th style={{ minWidth: "16rem" }}>ACCOUNT</th>
+                                            {/* <th style={{ minWidth: "16rem" }}>ACCOUNT</th> */}
                                             <th style={{ minWidth: "16rem" }}>QUANTITY</th>
                                             <th style={{ minWidth: "16rem" }}>PRICE</th>
                                             <th style={{ minWidth: "16rem" }}>MRP</th>
@@ -1053,7 +1053,8 @@ export default function Invoice() {
                                                                     onChange={(e) => {
                                                                         console.log(e);
                                                                         if (!e.length) {
-                                                                            setValue(`invoiceLines.${index}.productArray`, [{ id: "", name: '' }]);
+                                                                            invoiceLineRemove(index)
+                                                                            updateOrderLines(index)
                                                                         } else {
                                                                             setValue(`invoiceLines.${index}.productArray`, e);
 
@@ -1096,6 +1097,9 @@ export default function Invoice() {
                                                                                 }
                                                                             }).catch(err => {
                                                                                 console.log("ERROR", err)
+                                                                                infoNotification("Product not found. Please select product fron dropdown")
+                                                                                invoiceLineRemove(index)
+                                                                                updateOrderLines(index)
                                                                             })
                                                                         }
                                                                     }}
@@ -1137,7 +1141,8 @@ export default function Invoice() {
                                                             fieldId: "unitArray",
                                                             placeholder: "",
                                                             selectRecordType: "uom",
-                                                            multiple: false
+                                                            multiple: false,
+                                                            require: true
                                                         }}
                                                         index={index}
                                                         errors={errors}
@@ -1156,7 +1161,8 @@ export default function Invoice() {
                                                         model={"invoiceLines"}
                                                         field={{
                                                             fieldId: "hsnCode",
-                                                            placeholder: ""
+                                                            placeholder: "",
+                                                            require: true
                                                         }}
                                                         index={index}
                                                         errors={errors}
@@ -1166,7 +1172,7 @@ export default function Invoice() {
 
                                                 </td>
 
-                                                <td>
+                                                {/* <td>
                                                     <LineSelectField
                                                         control={control}
                                                         model={"invoiceLines"}
@@ -1186,27 +1192,39 @@ export default function Invoice() {
                                                         blurHandler={null}
                                                     />
 
-                                                </td>
+                                                </td> */}
                                                 <td>
                                                     <LineNumberField
                                                         register={register}
                                                         model={"invoiceLines"}
                                                         field={{
                                                             fieldId: "quantity",
-                                                            placeholder: ""
+                                                            placeholder: "",
+                                                            require: true
                                                         }}
                                                         index={index}
                                                         errors={errors}
                                                         changeHandler={async (event, data) => {
+                                                            console.log(data.value);
                                                             if (!data?.value) return;
-                                                            let quantity = data?.value;
-                                                            let unitPrice = getValues(`invoiceLines.${index}.unitPrice`);
-                                                            let taxes = getValues(`invoiceLines.${index}.taxes`);
-                                                            let netAmount = (parseFloat(quantity) * parseFloat(unitPrice));
-                                                            setValue(`invoiceLines.${index}.subTotal`, (parseFloat(netAmount)).toFixed(2));
-                                                            updateOrderLines(index)
+                                                            if (data?.value) {
+                                                                let quantity = data?.value ? data?.value : 1;
+                                                                let unitPrice = getValues(`invoiceLines.${index}.unitPrice`) ? getValues(`invoiceLines.${index}.unitPrice`) : 0.00;
+                                                                let netAmount = (parseFloat(quantity) * parseFloat(unitPrice));
+                                                                console.log(unitPrice);
+                                                                console.log(netAmount);
+                                                                setValue(`invoiceLines.${index}.subTotal`, (parseFloat(netAmount)).toFixed(2));
+                                                                updateOrderLines(index)
+                                                            }
                                                         }}
-                                                        blurHandler={null}
+                                                        blurHandler={(e, data) => {
+                                                            console.log(e.target.value);
+                                                            console.log(data.value);
+                                                            if (!data.value) {
+                                                                setValue(`invoiceLines.${index}.quantity`, 1)
+                                                                setValue(`invoiceLines.${index}.subTotal`, getValues(`invoiceLines.${index}.unitPrice`) * getValues(`invoiceLines.${index}.quantity`))
+                                                            }
+                                                        }}
                                                     />
 
                                                 </td>
@@ -1217,19 +1235,29 @@ export default function Invoice() {
                                                         field={{
                                                             disabled: false,
                                                             fieldId: "unitPrice",
-                                                            placeholder: ""
+                                                            placeholder: "",
+                                                            require: true
                                                         }}
                                                         index={index}
                                                         errors={errors}
                                                         changeHandler={async (event, data) => {
                                                             console.log(event, data)
-                                                            let unitPrice = data?.value;
+                                                            // if (!data?.value) return;
+
+                                                            let unitPrice = data?.value ? data?.value : 0;
                                                             let quantity = getValues(`invoiceLines.${index}.quantity`);
                                                             let taxes = getValues(`invoiceLines.${index}.taxes`);
                                                             setValue(`invoiceLines.${index}.subTotal`, (parseFloat(quantity) * parseFloat(unitPrice)).toFixed(2))
                                                             updateOrderLines(index)
                                                         }}
-                                                        blurHandler={null}
+                                                        blurHandler={(e, data) => {
+                                                            console.log(e.target.value);
+                                                            console.log(data.value);
+                                                            if (!data.value) {
+                                                                setValue(`invoiceLines.${index}.unitPrice`, 0)
+                                                                setValue(`invoiceLines.${index}.subTotal`, 0.00)
+                                                            }
+                                                        }}
                                                     />
 
                                                 </td>
@@ -1258,7 +1286,8 @@ export default function Invoice() {
                                                         field={{
                                                             disabled: false,
                                                             fieldId: "taxes",
-                                                            placeholder: ""
+                                                            placeholder: "",
+                                                            require: true
                                                         }}
                                                         index={index}
                                                         errors={errors}

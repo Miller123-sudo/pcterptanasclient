@@ -6,6 +6,7 @@ export default function LineNumberField({ model, field, errors, index, register,
     return (
         <Form.Control size='sm'
             disabled={field?.disabled}
+            required={field?.require}
             type="number"
             id={field?.fieldId}
             name={field?.fieldId}

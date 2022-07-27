@@ -32,11 +32,6 @@
             "nav_dropdown_name": "Settings",
             "nav_dropdown_items": [
               {
-                "item_name": "Print RTGS",
-                "item_navigation": "printrtgs"
-              },
-
-              {
                 "item_name": "Print Acknowledgement",
                 "item_navigation": "printacknoledge"
               }
