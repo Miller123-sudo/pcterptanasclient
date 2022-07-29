@@ -2,7 +2,7 @@
 import { React, useState, useEffect } from 'react'
 import { BsTrash } from 'react-icons/bs';
 import { BiEditAlt } from "react-icons/bi";
-import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form, Spinner } from 'react-bootstrap'
+import { Container, Button, Col, Row, DropdownButton, Dropdown, ButtonGroup, Tab, Tabs, Table, Breadcrumb, Card, Form, Spinner, InputGroup } from 'react-bootstrap'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { Link, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ApiService from '../../helpers/ApiServices'
@@ -1044,7 +1044,7 @@ export default function Invoice() {
                                                         // rules={{ required: field?.required ? field?.validationMessage : false }}
                                                         render={({ field: { onChange, value }, fieldState: { error } }) => {
 
-                                                            return (
+                                                            return (<InputGroup style={{ maxWidth: '400px' }}>
                                                                 <Typeahead size='sm' className='is-invalid' style={{ maxWidth: '400px' }}
 
                                                                     id="productArray"
@@ -1110,6 +1110,11 @@ export default function Invoice() {
                                                                     clearButton
 
                                                                 />
+                                                                <Button size="sm"><BiEditAlt style={{ marginLeft: 3, marginTop: 0 }}
+                                                                    onClick={() => {
+                                                                        navigate(`/accounting/product/add`)
+                                                                    }} /></Button>
+                                                            </InputGroup>
                                                             )
                                                         }
                                                         }

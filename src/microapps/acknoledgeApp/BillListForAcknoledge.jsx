@@ -32,6 +32,7 @@ export default function BillListForAcknoledge() {
     const [selectedBill, setselectedBill] = useState([]);
     const [Total, setTotal] = useState(0);
     const [address, setaddress] = useState("");
+    const [name, setname] = useState("");
     const [chequeNo, setchequeNo] = useState();
     const [show, setshow] = useState(false);
     const [array, setarray] = useState([]);
@@ -59,6 +60,13 @@ export default function BillListForAcknoledge() {
         gridApi.exportDataAsCsv();
     }
 
+    const getRowStyle = params => {
+        console.log(params);
+        if (params.data.isacknoledged) {
+            return { background: '#baf5ea' };
+        }
+
+    };
 
     const findAllDocument = async () => {
         try {
@@ -121,45 +129,49 @@ export default function BillListForAcknoledge() {
     }
 
     const toggleHandler = async () => {
-        if (show) {
-            infoNotification("Selected bills are shown. If you not selected any bill then refresh the page.")
-        } else {
-            swal.fire({
-                title: `Enter cheque number`,
-                text: "",
-                input: 'text',
-                showCancelButton: true
-            }).then(async (result) => {
-                if (result.value == undefined) {
-                    // infoNotification("please enter something in popup..")
-                } else {
-                    for (const element of set) {
-                        arr.push(element)
-                    }
+        if (selectedBill.length > 0) {
+            if (show) {
+                infoNotification("Selected bills are shown. If you not selected any bill then refresh the page.")
+            } else {
+                swal.fire({
+                    title: `Enter cheque number`,
+                    text: "",
+                    input: 'text',
+                    showCancelButton: true
+                }).then(async (result) => {
+                    if (result.value == undefined) {
+                        // infoNotification("please enter something in popup..")
+                    } else {
+                        for (const element of set) {
+                            arr.push(element)
+                        }
 
-                    if (set.size == arr.length) {
-                        arr?.map((ele) => {
-                            total += ele.estimation.total
-                        });
+                        if (set.size == arr.length) {
+                            arr?.map((ele) => {
+                                total += ele.estimation.total
+                            });
 
-                        //Get vendor address
-                        console.log("Selected bills: ", arr);
-                        console.log("total: ", total);
-                        const res = await ApiService.get(`vendor/${arr[0]?.vendor}`)
-                        if (res.data.isSuccess) {
-                            console.log(res.data.document.address);
-                            setaddress(res.data.document.address)
-                            setchequeNo(result.value)
-                            setTotal(total)
-                            setselectedBill(arr)
-                            setshow(true)
+                            //Get vendor address
+                            console.log("Selected bills: ", arr);
+                            console.log("total: ", total);
+                            const res = await ApiService.get(`vendor/${arr[0]?.vendor}`)
+                            if (res.data.isSuccess) {
+                                console.log(res.data.document.address);
+                                setaddress(res.data.document.address)
+                                setname(res.data.document.name)
+                                setchequeNo(result.value)
+                                setTotal(total)
+                                setselectedBill(arr)
+                                setshow(true)
+                            }
                         }
                     }
-                }
-            })
+                })
 
+            }
+        } else {
+            infoNotification("Please add some bill for print Acknowledgement")
         }
-
     }
 
     // Print cheque and after that set payment status to "paid" of every selected bills for cheque 
@@ -199,6 +211,11 @@ export default function BillListForAcknoledge() {
             navigate(`/${rootPath}/bills`)
             window.location.reload()
 
+            // Update all bills as isAcknowledge true
+            selectedBill?.map(async e => {
+                await ApiService.patch(`newBill/${e._id}`, { isacknoledged: true })
+            })
+
         } else {
             infoNotification("Please add some bill for print Acknowledgement")
         }
@@ -227,13 +244,15 @@ export default function BillListForAcknoledge() {
         //             {/* <input type="checkbox" onClick={() => getSelectedRow(params)} /> */}
         //         </>
         // },
-        { headerName: 'Bill#', field: 'name' },
-        { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available" },
-        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY") : "Not Available" },
-        { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available" },
-        { headerName: 'Is Used', field: 'isUsed' },
-        { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)) },
-        { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)) }
+        { headerName: 'Bill#', field: 'name', tooltipField: 'isacknoledged' },
+        { headerName: 'VENDOR', field: 'vendorArray', valueGetter: (params) => params.data?.vendorArray ? params.data?.vendorArray[0]?.name : "Not Available", tooltipField: 'isacknoledged' },
+        { headerName: 'SUB VENDOR', field: 'subVendor', valueGetter: (params) => params.data?.subVendor ? params.data?.subVendor : "Not Available", tooltipField: 'isacknoledged' },
+        { headerName: 'BILL DATE', field: 'billDate', valueGetter: (params) => params.data?.billDate ? moment(params.data?.billDate).format("DD/MM/YYYY") : "Not Available", tooltipField: 'isacknoledged' },
+        { headerName: 'TOTAL PRICE', field: 'estimation', valueGetter: (params) => params.data.estimation ? formatNumber(params.data?.estimation.total) : "Not Available", tooltipField: 'isacknoledged' },
+        { headerName: 'USED IN BILL', field: 'isUsed', tooltipField: 'isacknoledged' },
+        { headerName: 'ACKNOWLEDGED', field: 'isacknoledged', tooltipField: 'isacknoledged' },
+        { headerName: 'STATUS', field: 'status', cellRendererFramework: (params) => (renderStatus(params.value)), tooltipField: 'isacknoledged' },
+        { headerName: 'PAYMENT STATUS', field: 'paymentStatus', cellRendererFramework: (params) => (renderStatus(params.value)), tooltipField: 'isacknoledged' }
     ]
 
 
@@ -300,6 +319,8 @@ export default function BillListForAcknoledge() {
                         resizable: true,
                     }}
                     pagination={true}
+                    getRowStyle={getRowStyle}
+                    enableBrowserTooltips={true}
                     paginationPageSize={50}
                     // overlayNoRowsTemplate="No Purchase Order found. Let's create one!"
                     overlayNoRowsTemplate='<span style="color: rgb(128, 128, 128); font-size: 2rem; font-weight: 100;">No Records Found!</span>'
@@ -352,7 +373,7 @@ export default function BillListForAcknoledge() {
                     </Row>
                 </div>
                 <div>To,</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {selectedBill[0]?.vendorArray.name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 20 }} /></div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;M/s  {name}<hr />{address}<hr style={{ marginTop: 20 }} /><hr style={{ marginTop: 20 }} /></div>
                 <div style={{ fontWeight: "bold" }}>Dear Sir,</div>
                 <div >We have a pleasure to inform you that today we are enclosing herewith one D.D/Cheque No. <b>{chequeNo}</b> Dt. {new Date().toLocaleDateString()} for Rs. <b>{Total.toFixed(2)}</b> Rupees <b>{converter.toWords(Total)}</b> only
                     drawn on Axis Bank against  PART / FULL payment of your bills as per following details.

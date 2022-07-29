@@ -69,6 +69,10 @@
               {
                 "item_name": "Stock Adjustment",
                 "item_navigation": "stockAdjustment"
+              },
+              {
+                "item_name": "City Wise Order",
+                "item_navigation": "cityWiseOrder"
               }
             ]
           }

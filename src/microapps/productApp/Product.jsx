@@ -84,7 +84,11 @@ export default function Product() {
         ApiService.setHeader();
         return ApiService.post('/product', data).then(response => {
             if (response.data.isSuccess) {
-                navigate(`/${rootPath}/product/list`)
+                if (rootPath == "accounting") {
+                    navigate(`/${rootPath}/bills/add`)
+                } else {
+                    navigate(`/${rootPath}/product/list`)
+                }
             }
         }).catch(e => {
             console.log(e.response?.data.message);
@@ -743,7 +747,7 @@ export default function Product() {
                     <Row style={{ marginTop: '-10px' }}>
                         <Col md="4" className='p-0 ps-1'>
                             <Button type="submit" variant="primary" size="sm">SAVE</Button>{" "}
-                            <Button as={Link} to={`/${rootPath}/product/list`} variant="secondary" size="sm">DISCARD</Button>
+                            <Button as={Link} to={rootPath == "accounting" ? `/${rootPath}/bills/add` : `/${rootPath}/product/list`} variant="secondary" size="sm">DISCARD</Button>
                             {!isAddMode && <DropdownButton size="sm" as={ButtonGroup} variant="light" title="ACTION">
                                 <Dropdown.Item onClick={deleteDocument} eventKey="4">Delete</Dropdown.Item>
                             </DropdownButton>}

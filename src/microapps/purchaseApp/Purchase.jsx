@@ -673,7 +673,7 @@ export default function Purchase() {
                     createAndSetItems(formData, itmName)
                 } else {
                     // Create single product if max min size ia not present
-                    let sizeResponse, document, costPrice;
+                    let sizeResponse, document, costPrice, gst;
                     console.log("min and max size not present");
                     console.log(formData);
                     console.log(formData.itemQty);
@@ -692,6 +692,7 @@ export default function Purchase() {
                         } else if (getValues("pricingType") == "Calculator") {
                             document = calculatorObj
                             costPrice = calculatorObj.costPrice
+                            gst = calculatorObj.gst
                         } else if (getValues("pricingType") == "Manual") {
                             document = manualEnterCostMRP
                             costPrice = manualEnterCostMRP.cost
@@ -710,9 +711,9 @@ export default function Purchase() {
                             cost: costPrice,
                             HSNSACS: getValues("hsn"),
                             salesPrice: document.MRP,
-                            igstRate: document.MRP >= 1000 ? 12.00 : 5.00,
-                            sgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
-                            utgstRate: document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                            igstRate: getValues("pricingType") == "Calculator" ? gst : document.MRP >= 1000 ? 12.00 : 5.00,
+                            sgstRate: getValues("pricingType") == "Calculator" ? parseFloat(parseFloat(gst) / 2).toFixed(2) : document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
+                            utgstRate: getValues("pricingType") == "Calculator" ? parseFloat(parseFloat(gst) / 2).toFixed(2) : document.MRP >= 1000 ? parseFloat(12 / 2).toFixed(2) : parseFloat(5 / 2).toFixed(2),
                         })
                         if (r.data.isSuccess) {
                             itemId = await r.data.document.id;
